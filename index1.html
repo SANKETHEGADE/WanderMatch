@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0F120F">
+<title>WanderMatch — Go together.</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --bg:#0F120F;
+  --card:#1C211C;
+  --ink:#F3EFE6;
+  --muted:rgba(243,239,230,.6);
+  --gold:#D9A566;
+  --teal:#5FA88C;
+  --line:rgba(243,239,230,.12);
+  --serif:"Fraunces",Georgia,serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:90px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Arial,sans-serif;overflow-x:hidden}
+button,input{font:inherit}
+button,a{touch-action:manipulation}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:5px}
+button:disabled{opacity:.3;cursor:default}
+h1,h2,h3,p{margin:0}
+::selection{background:var(--gold);color:var(--bg)}
+[hidden]{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+.skip-link{position:fixed;top:10px;left:10px;z-index:100;background:var(--gold);color:var(--bg);padding:12px;transform:translateY(-150%)}
+.skip-link:focus{transform:none}
+
+.eyebrow{font-size:10px;letter-spacing:.2em;text-transform:uppercase;line-height:1.8}
+.eyebrow::before{content:"";display:inline-block;width:25px;height:1px;background:var(--gold);vertical-align:middle;margin-right:12px}
+.muted{color:var(--muted)}
+.serif{font-family:var(--serif);font-weight:400}
+.accent{color:var(--gold)}
+.button{display:inline-flex;align-items:center;justify-content:center;gap:28px;min-height:50px;padding:15px 23px;background:var(--gold);color:var(--bg);border:0;border-radius:3px;font-size:12px;font-weight:600;transition:transform .2s,background .2s}
+.button:hover{background:#edbc80;transform:translateY(-2px)}
+.section{position:relative;z-index:1;background:var(--bg);padding:110px 6vw}
+.section-title{font:400 clamp(43px,6.4vw,86px)/1.06 var(--serif);letter-spacing:-.055em}
+
+/* Navigation */
+.nav{position:fixed;inset:0 0 auto;z-index:30;height:86px;display:flex;align-items:center;justify-content:space-between;padding:0 4vw;border-bottom:1px solid transparent;transition:background .3s,height .3s}
+.nav.scrolled,.nav.menu-open{height:74px;background:rgba(15,18,15,.88);backdrop-filter:blur(18px);border-color:var(--line)}
+.logo{display:flex;align-items:center;gap:9px;font-size:17px;font-weight:600;letter-spacing:-.6px}
+.logo svg{width:29px;height:29px;color:var(--gold)}
+.logo span span{font-weight:400;color:var(--muted)}
+.nav-links{display:flex;gap:30px}
+.nav-links a{font-size:11px;color:rgba(243,239,230,.8)}
+.nav-links a:hover{color:var(--gold)}
+.nav-cta{font-size:11px;border:1px solid rgba(243,239,230,.3);padding:12px 18px;border-radius:3px}
+.nav-account{display:flex;align-items:center;gap:8px;margin-left:14px;padding:9px 14px;border:1px solid rgba(243,239,230,.3);border-radius:30px;background:none;color:var(--ink);font-size:11px}
+.nav-account:hover{border-color:var(--gold);color:var(--gold)}
+.nav-account .account-avatar{width:20px;height:20px;border-radius:50%;background:var(--gold);color:var(--bg);display:grid;place-items:center;font-size:9px;font-weight:600}
+
+.modal-backdrop{position:fixed;inset:0;z-index:50;background:rgba(6,9,6,.72);backdrop-filter:blur(4px)}
+.auth-modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:51;width:min(400px,88vw);max-height:88vh;overflow-y:auto;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:34px 30px 28px;box-shadow:0 40px 90px #000a}
+.modal-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border:0;background:none;color:var(--muted);font-size:14px;border-radius:50%}
+.modal-close:hover{color:var(--ink);background:#ffffff10}
+.auth-tabs{display:flex;gap:4px;padding:4px;background:#00000030;border-radius:30px;margin-bottom:22px}
+.auth-tab{flex:1;padding:9px;border:0;border-radius:30px;background:none;color:var(--muted);font-size:11px;font-weight:600}
+.auth-tab[aria-selected="true"]{background:var(--gold);color:var(--bg)}
+.auth-title{font:400 26px var(--serif);letter-spacing:-.03em}
+.auth-sub{font-size:12px;margin-top:6px;margin-bottom:22px}
+.oauth-row{display:flex;flex-direction:column;gap:10px}
+.oauth-button{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:44px;border-radius:4px;border:1px solid rgba(243,239,230,.25);background:#fff;color:#1f1f1f;font-size:12px;font-weight:600}
+.oauth-button:hover{background:#f2f2f2}
+.oauth-apple{background:#000;color:#fff;border-color:#000}
+.oauth-apple:hover{background:#1a1a1a}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:20px 0;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;background:var(--line)}
+.auth-form{display:flex;flex-direction:column;gap:10px}
+.auth-form input{padding:13px 14px;border-radius:4px;border:1px solid rgba(243,239,230,.25);background:#00000030;color:var(--ink);font-size:12px}
+.auth-form input::placeholder{color:#F3EFE660}
+.auth-form input:focus{outline:none;border-color:var(--gold)}
+.auth-submit{width:100%;margin-top:4px}
+.auth-error{margin-top:14px;padding:10px 12px;border-radius:4px;background:#c1583010;border:1px solid #c1583055;color:#e0a685;font-size:11px}
+.auth-note{margin-top:18px;font-size:9px;line-height:1.7;text-align:center}
+.menu-toggle{display:none;position:relative;width:42px;height:42px;border:1px solid var(--line);border-radius:3px;background:none}
+.menu-toggle span{position:absolute;left:12px;right:12px;height:1px;background:var(--ink);transition:transform .25s}
+.menu-toggle span:first-child{top:17px}
+.menu-toggle span:last-child{bottom:17px}
+.nav.menu-open .menu-toggle span:first-child{transform:translateY(4px) rotate(45deg)}
+.nav.menu-open .menu-toggle span:last-child{transform:translateY(-4px) rotate(-45deg)}
+
+/* Fixed terrain — must stay transparent behind, never an opaque hero background */
+#terrain-wrap{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at 65% 20%,#829480,transparent 60%),linear-gradient(#56766d,#263c30 60%,#101b13);cursor:grab;touch-action:pan-y;overflow:hidden;transition:opacity .5s}
+#terrain-wrap.dragging{cursor:grabbing}
+#terrain-wrap canvas{display:block;width:100%;height:100%}
+.terrain-shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(4,15,9,.22),transparent 35%,rgba(5,15,8,.25) 65%,#0F120F),linear-gradient(90deg,rgba(5,13,8,.3),transparent 80%)}
+.climbers{position:absolute;top:24%;right:9%;width:150px;pointer-events:none;filter:drop-shadow(0 6px 10px rgba(0,0,0,.4))}
+.climbers svg{width:100%;height:auto;display:block}
+.climber-anim{transform-box:fill-box;transform-origin:center}
+.climber-lead{animation:climb-bob 3.2s ease-in-out infinite}
+.climber-follow{animation:climb-bob 3.2s ease-in-out infinite .55s}
+@keyframes climb-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@media(max-width:600px){.climbers{width:104px;top:20%;right:6%}}
+
+.hero{position:relative;z-index:1;height:100vh;height:100svh;min-height:660px;background:transparent;pointer-events:none}
+.hero .terrain-status,.hero .hero-link,.hero .scroll-cue{pointer-events:auto}
+.terrain-status{position:absolute;top:108px;left:6vw;right:6vw;max-width:430px;display:flex;align-items:center;gap:10px;padding:11px 14px;border:1px solid var(--line);border-radius:4px;background:rgba(15,18,15,.72);font-size:10px;line-height:1.6;backdrop-filter:blur(12px)}
+.spinner{width:12px;height:12px;flex-shrink:0;border:1px solid #ffffff35;border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.terrain-status.error{border-color:#D9A56666}
+.terrain-status.error .spinner{display:none}
+
+.hero-content{position:absolute;top:33%;left:6vw;right:6vw}
+.hero h1{font:400 clamp(80px,15vw,230px)/.95 var(--serif);letter-spacing:-.075em;margin:25px 0 30px -.045em}
+.hero-bottom{display:flex;justify-content:space-between;gap:40px;max-width:1100px}
+.hero-copy{max-width:325px;font-size:13px;line-height:1.9;color:rgba(243,239,230,.8)}
+.hero-link{display:inline-flex;align-items:center;gap:40px;margin-top:18px;padding-bottom:9px;border-bottom:1px solid rgba(243,239,230,.5);font-size:11px;color:var(--ink)}
+.crew{display:flex;gap:13px;align-items:center;align-self:flex-start}
+.avatars{display:flex}
+.avatars .avatar{display:grid;place-items:center;width:32px;height:32px;margin-left:-6px;border:2px solid #3d5141;border-radius:50%;background:#c4ac8b;color:#24352a;font-size:9px}
+.avatars .avatar:nth-child(2){background:#9bab9c}
+.avatars .avatar:nth-child(3){background:#c9977c}
+.avatars .avatar:last-child{background:#344b3c;color:var(--ink)}
+.crew-label{font-size:10px;line-height:1.7}
+
+.hero-meta{position:absolute;bottom:30px;left:6vw;right:6vw;display:flex;justify-content:space-between;gap:60px;font-size:9px;line-height:1.9;letter-spacing:.04em}
+.hero-meta span{display:block;color:rgba(243,239,230,.5);font-size:8px}
+.explore-hint{text-align:right}
+.scroll-cue{position:absolute;bottom:30px;left:50%;margin-left:-22px;display:grid;place-items:center;width:44px;height:44px;border:1px solid rgba(243,239,230,.4);border-radius:50%}
+.scroll-cue::after{content:"";position:absolute;inset:-1px;border:1px solid rgba(243,239,230,.3);border-radius:50%;animation:pulse 2.8s infinite}
+@keyframes pulse{to{transform:scale(1.5);opacity:0}}
+
+/* Introduction */
+.intro{display:grid;grid-template-columns:1fr 2fr;gap:60px;padding-top:135px;padding-bottom:135px}
+.intro-aside{display:flex;flex-direction:column;justify-content:space-between}
+.section-number{font:70px var(--serif);color:#ffffff18;letter-spacing:-.06em}
+.intro em{color:var(--gold);font-style:normal}
+.intro p{max-width:480px;font-size:13px;line-height:1.95;margin-top:28px}
+.section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:40px}
+.section-head .section-title{margin-top:23px}
+.section-head>p{max-width:255px;font-size:12px;line-height:1.9}
+
+/* Destination depth carousel */
+.gallery{background:#151a15;overflow:hidden;padding-top:80px;padding-bottom:70px}
+.carousel{position:relative;height:550px;margin-top:35px;perspective:1250px;touch-action:pan-y;cursor:grab}
+.carousel.dragging{cursor:grabbing}
+.destination-card{position:absolute;top:35px;left:50%;width:min(360px,72vw);height:440px;margin-left:max(-180px,-36vw);padding:0;overflow:hidden;background:#29392d;color:var(--ink);border:1px solid #ffffff22;border-radius:6px;text-align:left;box-shadow:0 30px 70px #0006;will-change:transform,filter;user-select:none}
+.destination-card.is-focused{border-color:rgba(217,165,102,.55)}
+.destination-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .6s;pointer-events:none}
+.destination-card img.loaded{opacity:1}
+.card-shade{position:absolute;inset:0;background:linear-gradient(180deg,#0003,transparent 35%,#041209eb)}
+.card-top{position:absolute;top:24px;left:24px;right:24px;display:flex;justify-content:space-between;align-items:center;font-size:10px}
+.card-type{padding:7px 10px;border:1px solid #ffffff66;border-radius:30px;font-size:8px;letter-spacing:.12em;text-transform:uppercase;background:#0f120f33;backdrop-filter:blur(6px)}
+.card-content{position:absolute;left:24px;right:24px;bottom:28px}
+.card-season{font-size:9px;letter-spacing:.13em;text-transform:uppercase;opacity:.8}
+.card-action{display:flex;justify-content:space-between;margin-top:22px;font-size:10px;color:var(--gold)}
+.photo-state{position:absolute;top:38%;left:20px;right:20px;text-align:center;font-size:11px;line-height:1.8;color:#F3EFE6aa;pointer-events:none}
+.carousel-bottom{display:flex;align-items:center;justify-content:space-between;gap:25px;margin-top:23px}
+.carousel-caption{font-size:10px;color:var(--muted)}
+.carousel-controls{display:flex;align-items:center;gap:18px}
+.circle-button{width:42px;height:42px;border:1px solid var(--line);border-radius:50%;background:none;color:var(--ink);font-size:18px}
+.circle-button:hover:not(:disabled){border-color:var(--gold)}
+.dots{display:flex}
+.dot{width:26px;height:32px;border:0;background:none;padding:11px 8px}
+.dot::after{content:"";display:block;width:5px;height:5px;border-radius:50%;background:#ffffff44}
+.dot[aria-current="true"]::after{background:var(--gold);transform:scale(1.5)}
+.autoplay-button{font-size:10px;width:34px;height:34px}
+.photo-credit{margin-top:23px;min-height:18px;font-size:9px;line-height:1.8;color:rgba(243,239,230,.45)}
+.photo-credit a{text-decoration:underline;text-underline-offset:3px}
+
+/* Process */
+.process .section-head{margin-bottom:55px}
+.process-grid{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.process-card{padding:36px 30px 42px;border-right:1px solid var(--line)}
+.process-card:first-child{padding-left:0}
+.process-card:last-child{border-right:0}
+.process-card.confirmed{background:linear-gradient(130deg,#5FA88C1c,transparent)}
+.stage{display:flex;justify-content:space-between;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:34px}
+.stage-label{font-weight:400}
+.stage-label::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#9aab98;margin-right:8px}
+.process-card.voting .stage-label::before{background:var(--gold)}
+.process-card.confirmed .stage-label{color:var(--teal)}
+.process-card.confirmed .stage-label::before{background:var(--teal)}
+.process-card h3{font:400 32px/1.15 var(--serif);letter-spacing:-.04em}
+.process-card ul{padding-left:15px;margin:23px 0 0;color:var(--muted);font-size:11px;line-height:1.9}
+.process-card li{padding-left:4px;margin-bottom:8px}
+.process-card li::marker{color:var(--gold)}
+
+/* Start a trip */
+.start{text-align:center;padding-top:45px;padding-bottom:130px}
+.start .section-title{margin-top:24px}
+.start>p{font-size:12px;line-height:1.8;margin-top:22px}
+.trip-form{position:relative;max-width:670px;margin:35px auto 0;display:flex;gap:10px;align-items:center;padding:7px;border:1px solid #ffffff33;background:var(--card);border-radius:5px}
+.trip-form:focus-within{border-color:var(--gold)}
+.search-icon{color:var(--gold);padding-left:16px;font-size:24px}
+.trip-form input{min-width:0;flex:1;border:0;background:none;padding:15px 8px;color:var(--ink);font-size:12px}
+.trip-form input::placeholder{color:#F3EFE660}
+.trip-form input:focus{outline:none}
+.quick-select{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:9px;margin-top:18px}
+.quick-select>span{font-size:10px;color:var(--muted);margin-right:4px}
+.chip{background:none;border:1px solid var(--line);color:var(--muted);border-radius:30px;padding:8px 13px;font-size:10px}
+.chip:hover,.chip[aria-pressed="true"]{border-color:var(--gold);color:var(--gold);background:#D9A5660c}
+.confirmation{max-width:670px;margin:24px auto 0;padding:18px 22px;border:1px solid #5FA88C55;border-radius:4px;background:#5FA88C10;text-align:left;font-size:12px;line-height:1.8}
+.confirmation strong{color:var(--teal);font-weight:500}
+.confirmation #confirmation-copy{color:var(--muted);font-size:11px}
+.confirmation #confirmation-copy a{color:var(--gold);text-decoration:underline;text-underline-offset:2px}
+
+.search-results{position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:5;max-height:340px;overflow-y:auto;background:var(--card);border:1px solid var(--line);border-radius:5px;box-shadow:0 20px 45px #0007;text-align:left}
+.search-result{display:flex;align-items:center;gap:12px;width:100%;padding:10px 14px;background:none;border:0;border-bottom:1px solid var(--line);color:var(--ink)}
+.search-result:last-child{border-bottom:0}
+.search-result:hover,.search-result:focus-visible{background:#D9A5660c}
+.search-result img{width:40px;height:40px;border-radius:4px;object-fit:cover;flex-shrink:0}
+.search-result-noimg{display:grid;place-items:center;width:40px;height:40px;border-radius:4px;background:#ffffff10;flex-shrink:0;color:var(--muted);font-size:16px}
+.search-result-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+.search-result-title{font-size:12px;color:var(--ink)}
+.search-result-desc{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.search-status{padding:14px;font-size:11px;color:var(--muted)}
+
+/* CTA and footer */
+.cta{position:relative;z-index:1;min-height:600px;display:grid;place-items:center;overflow:hidden;background:#2b4234;padding:100px 24px;text-align:center}
+.cta-image{position:absolute;inset:-8%;width:116%;height:116%;object-fit:cover;opacity:0;transition:opacity .6s;will-change:transform}
+.cta-image.loaded{opacity:1}
+.cta::after{content:"";position:absolute;inset:0;background:linear-gradient(#05110977,#05110944,#051109bb)}
+.cta-content{position:relative;z-index:2}
+.cta-content h2{font:400 clamp(52px,8.3vw,115px)/1 var(--serif);letter-spacing:-.055em;margin:28px 0 36px}
+.cta-content h2 em{font-style:normal}
+.cta .photo-credit{position:absolute;z-index:2;bottom:16px;left:24px;right:24px;color:#F3EFE6aa}
+.cta .photo-state{z-index:2;top:20px;font-size:9px}
+
+footer{position:relative;z-index:1;background:var(--bg);padding:65px 6vw 25px}
+.footer-top{display:flex;align-items:center;justify-content:space-between;gap:25px;margin-bottom:40px}
+.footer-top>p{font:24px var(--serif);letter-spacing:-.03em;color:var(--muted)}
+.source-credits{max-width:1000px;font-size:9px;line-height:1.9;color:#F3EFE666;margin-bottom:25px}
+.source-credits a{text-decoration:underline;text-underline-offset:2px}
+.source-credits details{margin-top:12px}
+.source-credits summary{cursor:pointer;color:var(--muted)}
+.source-credits details p{margin-top:8px}
+#all-photo-credits{display:flex;flex-wrap:wrap;gap:5px 18px;margin-top:8px}
+.footer-bottom{display:flex;justify-content:space-between;gap:20px;border-top:1px solid var(--line);padding-top:22px;font-size:9px;line-height:1.8;color:#F3EFE666}
+.footer-bottom a,.back-top{color:var(--gold)}
+
+.terrain-retry{padding:5px 8px;background:transparent;color:var(--gold);border:1px solid currentColor;border-radius:3px;font-size:10px;white-space:nowrap}
+.terrain-retry[hidden]{display:none}
+
+@media(max-width:900px){
+  .nav-cta{display:none}
+  .intro{grid-template-columns:1fr;gap:30px}
+  .intro-aside{flex-direction:row;align-items:center}
+  .section-number{font-size:45px}
+  .crew{display:none}
+  .process-card{padding:30px 20px}
+}
+@media(max-width:600px){
+  .nav{height:74px;padding:0 22px}
+  .menu-toggle{display:block}
+  .nav-account{margin-left:8px;padding:7px 10px;font-size:10px}
+  .nav-links{display:none;position:absolute;top:74px;left:0;right:0;background:rgba(15,18,15,.98);padding:20px 24px;border-bottom:1px solid var(--line)}
+  .nav.menu-open .nav-links{display:flex;flex-direction:column;gap:0}
+  .nav-links a{padding:14px 0;font-size:13px}
+  .hero{min-height:620px}
+  .hero-content{top:35%;left:22px;right:22px}
+  .hero h1{font-size:14vw;margin-top:26px;margin-bottom:27px}
+  .hero .eyebrow{font-size:8px;letter-spacing:.13em}
+  .hero-copy{font-size:12px;max-width:275px}
+  .hero-meta{left:22px;right:22px;font-size:8px}
+  .hero-meta>div{max-width:120px}
+  .hero-meta span{font-size:7px}
+  .scroll-cue{width:36px;height:36px;margin-left:-18px}
+  .terrain-status{top:90px;left:22px;right:22px;font-size:9px}
+  .section{padding:75px 22px}
+  .intro .section-title{font-size:45px}
+  .section-head{display:block}
+  .section-head>p{margin-top:20px}
+  .carousel{height:470px;margin-top:20px;perspective:950px}
+  .destination-card{height:385px}
+  .card-content h3{font-size:44px}
+  .carousel-bottom{flex-direction:column-reverse;gap:18px}
+  .photo-credit{text-align:center}
+  .process-grid{grid-template-columns:1fr}
+  .process-card,.process-card:first-child{padding:30px 22px;border-right:0;border-bottom:1px solid var(--line)}
+  .process-card:last-child{border-bottom:0}
+  .stage{margin-bottom:22px}
+  .trip-form{flex-wrap:wrap;padding:10px}
+  .trip-form .button{width:100%}
+  .search-icon{width:30px}
+  .cta{min-height:540px}
+  .footer-top{flex-direction:column;align-items:flex-start}
+  .footer-bottom{flex-direction:column;gap:12px}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+
+<body>
+<a class="skip-link" href="#intro">Skip to content</a>
+
+<div id="terrain-wrap" aria-label="Interactive mountain terrain of the Munnar region">
+  <div class="terrain-shade"></div>
+  <div class="climbers" aria-hidden="true">
+    <svg viewBox="0 0 220 140" xmlns="http://www.w3.org/2000/svg">
+      <path class="climber-rope" d="M78 96 C 100 82, 118 72, 138 58" fill="none" stroke="#F3EFE699" stroke-width="1.6" stroke-dasharray="1 5" stroke-linecap="round"/>
+
+      <g transform="translate(128,34)">
+        <g class="climber-anim climber-lead">
+          <circle cx="10" cy="6" r="6" fill="#D9A566"/>
+          <path d="M10 12 L9 29" stroke="#F3EFE6" stroke-width="4" stroke-linecap="round"/>
+          <path d="M9 17 L-4 5" stroke="#F3EFE6" stroke-width="4" stroke-linecap="round"/>
+          <path d="M-4 5 L-5 -8" stroke="#5FA88C" stroke-width="3" stroke-linecap="round"/>
+          <path d="M9 17 L23 21" stroke="#F3EFE6" stroke-width="4" stroke-linecap="round"/>
+          <path d="M9 29 L1 45" stroke="#F3EFE6" stroke-width="4" stroke-linecap="round"/>
+          <path d="M9 29 L20 43" stroke="#F3EFE6" stroke-width="4" stroke-linecap="round"/>
+        </g>
+      </g>
+
+      <g transform="translate(56,68)">
+        <g class="climber-anim climber-follow">
+          <circle cx="10" cy="6" r="6" fill="#D9A566"/>
+          <path d="M10 12 L10 29" stroke="#F3EFE6" stroke-width="4" stroke-linecap="round"/>
+          <path d="M10 17 L-2 25" stroke="#F3EFE6" stroke-width="4" stroke-linecap="round"/>
+          <path d="M10 17 L24 10" stroke="#F3EFE6" stroke-width="4" stroke-linecap="round"/>
+          <path d="M10 29 L2 45" stroke="#F3EFE6" stroke-width="4" stroke-linecap="round"/>
+          <path d="M10 29 L18 45" stroke="#F3EFE6" stroke-width="4" stroke-linecap="round"/>
+        </g>
+      </g>
+    </svg>
+  </div>
+</div>
+
+<header class="nav" id="navbar" aria-label="Main navigation">
+  <a class="logo" href="#home" aria-label="WanderMatch home">
+    <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+      <path d="M2 25 12 7l7 12 4-7 7 13H2Z" stroke="currentColor" stroke-width="1.7"/>
+      <path d="m8 15 4 3 4-4" stroke="currentColor" stroke-width="1.4"/>
+    </svg>
+    <span>Wander<span>Match</span></span>
+  </a>
+
+  <nav class="nav-links" id="nav-links">
+    <a href="#home">Home</a>
+    <a href="#destinations">Destinations</a>
+    <a href="#how-it-works">How it works</a>
+    <a href="#start">Start a trip</a>
+  </nav>
+
+  <a class="nav-cta" href="#start">Find your somewhere ↗</a>
+
+  <button class="nav-account" id="nav-account" type="button">
+    <span id="nav-account-label">Log in</span>
+  </button>
+
+  <button class="menu-toggle" id="menu-toggle" type="button"
+    aria-label="Open navigation" aria-expanded="false" aria-controls="nav-links">
+    <span></span><span></span>
+  </button>
+</header>
+
+<div class="modal-backdrop" id="auth-backdrop" hidden></div>
+
+<div class="auth-modal" id="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title" hidden>
+  <button class="modal-close" id="auth-close" type="button" aria-label="Close">✕</button>
+
+  <div class="auth-tabs" role="tablist">
+    <button class="auth-tab" id="tab-login" role="tab" aria-selected="true" type="button">Log in</button>
+    <button class="auth-tab" id="tab-signup" role="tab" aria-selected="false" type="button">Sign up</button>
+  </div>
+
+  <h2 class="auth-title" id="auth-title">Welcome back</h2>
+  <p class="auth-sub muted" id="auth-sub">Log in to keep your group's plans in one place.</p>
+
+  <div class="oauth-row">
+    <button class="oauth-button" id="google-button" type="button">
+      <svg viewBox="0 0 18 18" width="18" height="18" aria-hidden="true">
+        <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.91c1.7-1.57 2.69-3.88 2.69-6.62Z"/>
+        <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.91-2.26c-.81.54-1.85.86-3.05.86-2.35 0-4.34-1.58-5.05-3.71H.95v2.33A9 9 0 0 0 9 18Z"/>
+        <path fill="#FBBC05" d="M3.95 10.71a5.4 5.4 0 0 1 0-3.42V4.96H.95a9 9 0 0 0 0 8.08l3-2.33Z"/>
+        <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.9 11.43 0 9 0A9 9 0 0 0 .95 4.96l3 2.33C4.66 5.16 6.65 3.58 9 3.58Z"/>
+      </svg>
+      Continue with Google
+    </button>
+    <button class="oauth-button oauth-apple" id="apple-button" type="button">
+      <svg viewBox="0 0 17 20" width="16" height="16" aria-hidden="true" fill="currentColor">
+        <path d="M13.9 10.6c0-2.1 1.7-3.1 1.8-3.2-1-1.4-2.5-1.6-3-1.6-1.3-.1-2.5.7-3.1.7-.6 0-1.6-.7-2.7-.7-1.4 0-2.7.8-3.4 2-1.4 2.5-.4 6.2 1 8.3.7 1 1.5 2.1 2.6 2 1-.1 1.4-.6 2.7-.6s1.6.6 2.7.6c1.1 0 1.9-1 2.5-2 .8-1.2 1.1-2.3 1.1-2.4-.1 0-2.2-.8-2.2-3.1ZM11.8 4.3c.5-.6.9-1.5.8-2.3-.8 0-1.7.5-2.3 1.1-.5.6-.9 1.4-.8 2.3.9.1 1.8-.5 2.3-1.1Z"/>
+      </svg>
+      Continue with Apple
+    </button>
+  </div>
+
+  <div class="auth-divider"><span>or</span></div>
+
+  <form class="auth-form" id="auth-form">
+    <label class="sr-only" for="auth-name">Name</label>
+    <input id="auth-name" type="text" placeholder="Your name" autocomplete="name" hidden>
+    <label class="sr-only" for="auth-email">Email</label>
+    <input id="auth-email" type="email" placeholder="you@example.com" autocomplete="email" required>
+    <label class="sr-only" for="auth-password">Password</label>
+    <input id="auth-password" type="password" placeholder="Password" autocomplete="current-password" required minlength="6">
+    <button class="button auth-submit" id="auth-submit" type="submit">Log in</button>
+  </form>
+
+  <p class="auth-error" id="auth-error" role="alert" hidden></p>
+  <p class="auth-note muted">Demo auth only: passwords are hashed and stored in this browser's local storage, not a real server.</p>
+</div>
+
+<main>
+  <section class="hero" id="home" aria-labelledby="hero-title">
+    <div class="terrain-status" id="terrain-status" role="status" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <span id="terrain-status-text">Preparing your mountain escape…</span>
+      <button class="terrain-retry" id="terrain-retry" type="button" hidden>Retry</button>
+    </div>
+
+    <div class="hero-content" id="hero-content">
+      <div class="eyebrow">Less back-and-forth. More out-there.</div>
+      <h1 id="hero-title">TOGETHER.</h1>
+      <div class="hero-bottom">
+        <div class="hero-copy">
+          <p>The best trips begin with your people.<br>Find a place. Make a plan. Get everyone in.</p>
+          <a class="hero-link" href="#start">Your next story starts here <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="crew" aria-label="Designed for your whole group">
+          <div class="avatars" aria-hidden="true">
+            <span class="avatar">A</span><span class="avatar">R</span><span class="avatar">M</span><span class="avatar">+you</span>
+          </div>
+          <div class="crew-label">Your people. One plan.<br><span class="muted">No one left in the group chat.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-meta">
+      <div class="location">MUNNAR, KERALA · INDIA<span>Real elevation · satellite imagery</span></div>
+      <div class="explore-hint">↔ Drag to explore the hills<span>Scroll to discover · Shift + wheel to zoom</span></div>
+    </div>
+    <a class="scroll-cue" href="#intro" aria-label="Scroll to introduction"><span aria-hidden="true">↓</span></a>
+  </section>
+
+  <section class="section intro" id="intro" aria-labelledby="intro-title">
+    <div class="intro-aside">
+      <div class="eyebrow">Made for the whole group</div>
+      <span class="section-number" aria-hidden="true">01—</span>
+    </div>
+    <div>
+      <h2 class="section-title" id="intro-title">A hundred messages.<br>Still no plan?<br><em>Let's change that.</em></h2>
+      <p class="muted">Someone wants the mountains. Someone wants the sea. Everyone wants to actually go. WanderMatch brings your ideas, votes, and itinerary into one shared space—so "we should take a trip" becomes "we're going."</p>
+    </div>
+  </section>
+
+  <section class="section gallery" id="destinations" aria-labelledby="gallery-title">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">Different places. Same people.</div>
+        <h2 class="section-title" id="gallery-title">Where's your<br>group headed?</h2>
+      </div>
+      <p class="muted">Salt in your hair or clouds at your feet. Find the place that feels like all of you.</p>
+    </div>
+
+    <div class="carousel" id="carousel" tabindex="0"
+      role="region" aria-roledescription="carousel"
+      aria-label="Destinations. Use left and right arrow keys.">
+    </div>
+
+    <div class="carousel-bottom">
+      <p class="carousel-caption" id="carousel-caption" aria-live="polite">01 / 04 — Gokarna</p>
+      <div class="carousel-controls">
+        <button class="circle-button" id="previous" type="button" aria-label="Previous destination">←</button>
+        <div class="dots" id="dots" aria-label="Choose a destination slide"></div>
+        <button class="circle-button" id="next" type="button" aria-label="Next destination">→</button>
+        <button class="circle-button autoplay-button" id="autoplay" type="button"
+          aria-label="Pause carousel autoplay" aria-pressed="false">Ⅱ</button>
+      </div>
+    </div>
+
+    <p class="sr-only" id="carousel-announcement" aria-live="polite"></p>
+    <div class="photo-credit" id="gallery-credit">Finding source-verified photographs on Wikimedia Commons…</div>
+  </section>
+
+  <section class="section process" id="how-it-works" aria-labelledby="process-title">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow">From group chat to departure gate</div>
+        <h2 class="section-title" id="process-title">A little less "maybe."<br>A lot more "let's go."</h2>
+      </div>
+      <p class="muted">A shared plan, not another spreadsheet. Here's the idea behind WanderMatch.</p>
+    </div>
+
+    <div class="process-grid">
+      <article class="process-card">
+        <div class="stage"><span class="stage-label">Proposed</span><span>01 ↗</span></div>
+        <h3>Put it out there.</h3>
+        <ul>
+          <li>Bring your places, stays, and can't-miss experiences.</li>
+          <li>Give the whole crew a starting point to shape together.</li>
+        </ul>
+      </article>
+      <article class="process-card voting">
+        <div class="stage"><span class="stage-label">Voting</span><span>02 ↗</span></div>
+        <h3>Find your common ground.</h3>
+        <ul>
+          <li>Vote on the ideas that fit your group's mood and budget.</li>
+          <li>See what everyone loves, without a hundred messages.</li>
+        </ul>
+      </article>
+      <article class="process-card confirmed">
+        <div class="stage"><span class="stage-label">Confirmed</span><span>03 ✓</span></div>
+        <h3>Make "someday" a date.</h3>
+        <ul>
+          <li>Turn the group's favourites into one shared itinerary.</li>
+          <li>Lock in the plan. Leave a little room for the unexpected.</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section class="section start" id="start" aria-labelledby="start-title">
+    <div class="eyebrow">Every great trip starts somewhere</div>
+    <h2 class="section-title" id="start-title">Where are <span class="accent serif">we</span> going?</h2>
+    <p class="muted">Pick a place. Consider this your group's first "yes."</p>
+
+    <form class="trip-form" id="trip-form">
+      <span class="search-icon" aria-hidden="true">⌕</span>
+      <label class="sr-only" for="destination-input">Destination</label>
+      <input id="destination-input" name="destination" type="text"
+        placeholder="Somewhere like Munnar…" maxlength="80" required autocomplete="off"
+        role="combobox" aria-expanded="false" aria-controls="search-results" aria-autocomplete="list">
+      <button class="button" type="submit">Choose destination <span class="arrow" aria-hidden="true">↗</span></button>
+      <div class="search-results" id="search-results" role="listbox" aria-label="Destination suggestions" hidden></div>
+    </form>
+
+    <div class="quick-select" id="quick-select">
+      <span>Or follow the feeling:</span>
+    </div>
+
+    <div class="confirmation" id="confirmation" role="status" aria-live="polite" hidden>
+      <strong id="confirmation-title"></strong>
+      <div id="confirmation-copy"></div>
+    </div>
+  </section>
+
+  <section class="cta" id="closing" aria-labelledby="cta-title">
+    <img class="cta-image" id="cta-image" alt="Mountain scenery in the Munnar region" decoding="async">
+    <span class="photo-state" id="cta-photo-state">Finding a real photograph of Munnar…</span>
+    <div class="cta-content">
+      <div class="eyebrow">The world isn't getting any smaller</div>
+      <h2 id="cta-title">Go somewhere.<br><em>Mean something.</em></h2>
+      <a href="#start" class="button">Start with your people <span class="arrow" aria-hidden="true">↗</span></a>
+    </div>
+    <div class="photo-credit" id="cta-credit"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="footer-top">
+    <a class="logo" href="#home"><span>Wander<span>Match</span></span></a>
+    <p>Good places. Better company.</p>
+  </div>
+
+  <div class="source-credits">
+    Visual prototype · Photography via
+    <a href="https://unsplash.com" target="_blank" rel="noopener noreferrer">Unsplash</a>.
+    Images illustrate travel moods and are not verified photographs of the
+    named destinations. This preview does not use Mapzen elevation,
+    Esri satellite imagery, or Wikimedia photographs.
+    Live 3D terrain and shared-trip services remain unfinished.
+  </div>
+
+  <div class="footer-bottom">
+    <span>© <span id="year">2026</span> WanderMatch</span>
+    <span>PS-11 · Social &amp; Group Travel Planning · Kognivera Hackathon 2026</span>
+    <a class="back-top" href="#home">Back to the mountains ↑</a>
+  </div>
+</footer>
+
+<noscript>
+  <p style="position:relative;z-index:50;padding:24px;background:#1C211C">
+    Enable JavaScript for the interactive terrain, destination photographs, and trip selection.
+  </p>
+</noscript>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://appleid.cdn-apple.com/appleauth/one/appleid.auth.js" async defer></script>
+
+<script>
+"use strict";
+
+const $ = s => document.querySelector(s);
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+
+/*
+  ACCOUNTS "DATABASE":
+  A single JSON blob in this browser's localStorage. This is a real,
+  working demo database — it just lives on this device rather than a
+  server, since there is no backend for this preview. It persists
+  across reloads, unlike the rest of the app's in-memory state.
+
+  Shape:
+  { users: [{ id, name, email, provider, avatar, passwordHash, salt }],
+    sessionUserId: string | null }
+*/
+const AuthDB = (() => {
+  const KEY = "wandermatch:db:v1";
+
+  function read() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      return raw ? JSON.parse(raw) : { users: [], sessionUserId: null };
+    } catch {
+      return { users: [], sessionUserId: null };
+    }
+  }
+
+  function write(data) {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(data));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function findByEmail(email) {
+    return read().users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  }
+
+  function upsertOAuthUser({ name, email, provider, avatar }) {
+    const data = read();
+    let user = data.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+    if (!user) {
+      user = { id: crypto.randomUUID(), name, email, provider, avatar, passwordHash: null, salt: null };
+      data.users.push(user);
+    } else {
+      user.name = name || user.name;
+      user.avatar = avatar || user.avatar;
+    }
+
+    data.sessionUserId = user.id;
+    write(data);
+    return user;
+  }
+
+  async function hashPassword(password, salt) {
+    const encoder = new TextEncoder();
+    const digest = await crypto.subtle.digest("SHA-256", encoder.encode(salt + password));
+    return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  async function signUp({ name, email, password }) {
+    if (findByEmail(email)) throw new Error("An account with this email already exists.");
+
+    const salt = crypto.randomUUID();
+    const passwordHash = await hashPassword(password, salt);
+    const user = { id: crypto.randomUUID(), name, email, provider: "password", avatar: null, passwordHash, salt };
+
+    const data = read();
+    data.users.push(user);
+    data.sessionUserId = user.id;
+    write(data);
+    return user;
+  }
+
+  async function logIn({ email, password }) {
+    const user = findByEmail(email);
+    if (!user || !user.passwordHash) throw new Error("No account found for that email.");
+
+    const attemptHash = await hashPassword(password, user.salt);
+    if (attemptHash !== user.passwordHash) throw new Error("Incorrect password.");
+
+    const data = read();
+    data.sessionUserId = user.id;
+    write(data);
+    return user;
+  }
+
+  function logOut() {
+    const data = read();
+    data.sessionUserId = null;
+    write(data);
+  }
+
+  function currentUser() {
+    const data = read();
+    return data.users.find(u => u.id === data.sessionUserId) || null;
+  }
+
+  return { upsertOAuthUser, signUp, logIn, logOut, currentUser };
+})();
+
+/*
+  OAuth scaffolding for Google and Apple. Both need a Client ID/Service ID
+  that only the site owner can obtain (Google Cloud Console is free;
+  Apple requires a paid Apple Developer account). Until real IDs are set
+  below, the buttons explain that plainly instead of failing silently.
+*/
+const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+const APPLE_CLIENT_ID = "YOUR_APPLE_SERVICES_ID";
+
+function decodeJwt(token) {
+  const payload = token.split(".")[1];
+  const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+  return JSON.parse(decodeURIComponent(escape(atob(base64))));
+}
+
+function handleGoogleCredential(response) {
+  const claims = decodeJwt(response.credential);
+  const user = AuthDB.upsertOAuthUser({
+    name: claims.name,
+    email: claims.email,
+    provider: "google",
+    avatar: claims.picture
+  });
+  onAuthSuccess(user);
+}
+
+function initGoogleButton() {
+  if (!window.google?.accounts?.id || GOOGLE_CLIENT_ID.startsWith("YOUR_")) return false;
+
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleGoogleCredential
+  });
+  return true;
+}
+
+async function handleAppleSignIn() {
+  if (APPLE_CLIENT_ID.startsWith("YOUR_") || !window.AppleID) {
+    showAuthError(
+      "Apple sign-in isn't configured yet — add a real Apple Services ID (APPLE_CLIENT_ID) from your Apple Developer account to enable it."
+    );
+    return;
+  }
+
+  try {
+    AppleID.auth.init({
+      clientId: APPLE_CLIENT_ID,
+      scope: "name email",
+      redirectURI: window.location.href,
+      usePopup: true
+    });
+
+    const result = await AppleID.auth.signIn();
+    const claims = decodeJwt(result.authorization.id_token);
+    const user = AuthDB.upsertOAuthUser({
+      name: result.user
+        ? `${result.user.name?.firstName || ""} ${result.user.name?.lastName || ""}`.trim()
+        : claims.email,
+      email: claims.email,
+      provider: "apple",
+      avatar: null
+    });
+    onAuthSuccess(user);
+  } catch (error) {
+    showAuthError("Apple sign-in was cancelled or failed.");
+  }
+}
+
+/* Modal + form wiring */
+let authMode = "login";
+
+function showAuthError(message) {
+  const box = $("#auth-error");
+  box.hidden = false;
+  box.textContent = message;
+}
+
+function clearAuthError() {
+  $("#auth-error").hidden = true;
+}
+
+function setAuthMode(mode) {
+  authMode = mode;
+  clearAuthError();
+
+  const isLogin = mode === "login";
+  $("#tab-login").setAttribute("aria-selected", String(isLogin));
+  $("#tab-signup").setAttribute("aria-selected", String(!isLogin));
+  $("#auth-title").textContent = isLogin ? "Welcome back" : "Create your account";
+  $("#auth-sub").textContent = isLogin
+    ? "Log in to keep your group's plans in one place."
+    : "One account, every trip your group plans.";
+  $("#auth-name").hidden = isLogin;
+  $("#auth-name").required = !isLogin;
+  $("#auth-password").autocomplete = isLogin ? "current-password" : "new-password";
+  $("#auth-submit").textContent = isLogin ? "Log in" : "Create account";
+}
+
+function openAuthModal(mode = "login") {
+  setAuthMode(mode);
+  $("#auth-backdrop").hidden = false;
+  $("#auth-modal").hidden = false;
+  $("#auth-email").focus();
+}
+
+function closeAuthModal() {
+  $("#auth-backdrop").hidden = true;
+  $("#auth-modal").hidden = true;
+  $("#auth-form").reset();
+  clearAuthError();
+}
+
+function renderAccountState() {
+  const user = AuthDB.currentUser();
+  const label = $("#nav-account-label");
+  const button = $("#nav-account");
+
+  button.querySelector(".account-avatar")?.remove();
+
+  if (user) {
+    const avatar = document.createElement("span");
+    avatar.className = "account-avatar";
+
+    if (user.avatar) {
+      const img = document.createElement("img");
+      img.src = user.avatar;
+      img.alt = "";
+      img.style.cssText = "width:100%;height:100%;border-radius:50%;object-fit:cover";
+      avatar.append(img);
+    } else {
+      avatar.textContent = (user.name || user.email)[0].toUpperCase();
+    }
+
+    button.prepend(avatar);
+    label.textContent = user.name?.split(" ")[0] || "Account";
+  } else {
+    label.textContent = "Log in";
+  }
+}
+
+function onAuthSuccess(user) {
+  closeAuthModal();
+  renderAccountState();
+}
+
+$("#nav-account").addEventListener("click", () => {
+  if (AuthDB.currentUser()) {
+    AuthDB.logOut();
+    renderAccountState();
+  } else {
+    openAuthModal("login");
+  }
+});
+
+$("#auth-close").addEventListener("click", closeAuthModal);
+$("#auth-backdrop").addEventListener("click", closeAuthModal);
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && !$("#auth-modal").hidden) closeAuthModal();
+});
+
+$("#tab-login").addEventListener("click", () => setAuthMode("login"));
+$("#tab-signup").addEventListener("click", () => setAuthMode("signup"));
+
+$("#auth-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  clearAuthError();
+
+  const email = $("#auth-email").value.trim();
+  const password = $("#auth-password").value;
+  const name = $("#auth-name").value.trim();
+
+  try {
+    const user = authMode === "login"
+      ? await AuthDB.logIn({ email, password })
+      : await AuthDB.signUp({ name: name || email, email, password });
+
+    onAuthSuccess(user);
+  } catch (error) {
+    showAuthError(error.message);
+  }
+});
+
+$("#google-button").addEventListener("click", () => {
+  clearAuthError();
+  const ready = initGoogleButton();
+
+  if (!ready) {
+    showAuthError(
+      "Google sign-in isn't configured yet — add a real Client ID (GOOGLE_CLIENT_ID) from Google Cloud Console to enable it."
+    );
+    return;
+  }
+
+  google.accounts.id.prompt();
+});
+
+$("#apple-button").addEventListener("click", handleAppleSignIn);
+
+renderAccountState();
+
+/*
+  REAL DATA LAYER:
+  Destination search, descriptions, and photographs are fetched live
+  from Wikipedia's public REST/search APIs and Wikimedia Commons'
+  attribution metadata — no backend of our own, no mock data.
+*/
+const WIKI_SEARCH_API = "https://en.wikipedia.org/w/api.php";
+const WIKI_SUMMARY_API = "https://en.wikipedia.org/api/rest_v1/page/summary/";
+const COMMONS_API = "https://commons.wikimedia.org/w/api.php";
+
+function stripTags(html) {
+  return (html || "").replace(/<[^>]+>/g, "").trim();
+}
+
+// Live suggestions as the person types: title + short description +
+// a small thumbnail, in a single request.
+async function wikiSearch(query, limit = 6, signal) {
+  const url = `${WIKI_SEARCH_API}?action=query&format=json&origin=*` +
+    `&generator=search&gsrsearch=${encodeURIComponent(query)}` +
+    `&gsrlimit=${limit}&prop=pageimages|description&pithumbsize=120`;
+
+  const response = await fetch(url, { signal });
+  if (!response.ok) throw new Error("Wikipedia search failed.");
+
+  const data = await response.json();
+  const pages = data.query?.pages ? Object.values(data.query.pages) : [];
+
+  return pages
+    .sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
+    .map(page => ({
+      title: page.title,
+      description: page.description || "",
+      thumbnail: page.thumbnail?.source || null
+    }));
+}
+
+// Full summary for a chosen place: extract, larger photo, canonical link.
+async function wikiSummary(title, signal) {
+  const response = await fetch(
+    WIKI_SUMMARY_API + encodeURIComponent(title),
+    { signal }
+  );
+  if (!response.ok) throw new Error("No verified Wikipedia entry found.");
+
+  const data = await response.json();
+  if (data.type === "disambiguation") {
+    throw new Error("That name matches more than one place. Try being more specific.");
+  }
+
+  return {
+    title: data.title,
+    description: data.description || "",
+    extract: data.extract || "",
+    thumbnail: data.thumbnail?.source || null,
+    original: data.originalimage?.source || data.thumbnail?.source || null,
+    pageUrl: data.content_urls?.desktop?.page ||
+      `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`
+  };
+}
+
+function commonsFilenameFromUrl(url) {
+  if (!url) return null;
+  try {
+    const path = decodeURIComponent(new URL(url).pathname);
+    const parts = path.split("/");
+    // Thumbnail paths look like /.../thumb/a/ab/Name.jpg/220px-Name.jpg
+    return parts.includes("thumb") ? parts[parts.length - 2] : parts[parts.length - 1];
+  } catch {
+    return null;
+  }
+}
+
+// Real photographer/license credit for a given image, pulled from
+// Commons' own metadata — required for honest reuse of its photographs.
+async function commonsAttribution(imageUrl, signal) {
+  const filename = commonsFilenameFromUrl(imageUrl);
+  if (!filename) return null;
+
+  const url = `${COMMONS_API}?action=query&format=json&origin=*` +
+    `&titles=${encodeURIComponent("File:" + filename)}` +
+    `&prop=imageinfo&iiprop=extmetadata`;
+
+  try {
+    const response = await fetch(url, { signal });
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    const pages = data.query?.pages ? Object.values(data.query.pages) : [];
+    const meta = pages[0]?.imageinfo?.[0]?.extmetadata;
+    if (!meta) return null;
+
+    return {
+      artist: stripTags(meta.Artist?.value) || "Unknown author",
+      license: meta.LicenseShortName?.value || "see file page",
+      licenseUrl: meta.LicenseUrl?.value || "",
+      filePageUrl: `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(filename)}`
+    };
+  } catch {
+    return null;
+  }
+}
+
+function creditLine(attribution) {
+  if (!attribution) {
+    return 'Photo via <a href="https://commons.wikimedia.org" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>.';
+  }
+
+  const licenseLink = attribution.licenseUrl
+    ? `<a href="${attribution.licenseUrl}" target="_blank" rel="noopener noreferrer">${attribution.license}</a>`
+    : attribution.license;
+
+  return `Photo: <a href="${attribution.filePageUrl}" target="_blank" rel="noopener noreferrer">` +
+    `${attribution.artist}</a> · ${licenseLink}, via Wikimedia Commons.`;
+}
+
+const destinations = [
+  { name: "Gokarna", type: "Coastal", season: "October — March", wikiTitle: "Gokarna, Karnataka" },
+  { name: "Manali", type: "Mountain", season: "March — June", wikiTitle: "Manali, Himachal Pradesh" },
+  { name: "Jaisalmer", type: "Desert", season: "October — March", wikiTitle: "Jaisalmer" },
+  { name: "Mumbai", type: "Metro", season: "November — February", wikiTitle: "Mumbai" }
+];
+
+const terrain = $("#terrain-wrap");
+
+const mountainScene = (() => {
+  const status = $("#terrain-status");
+  const statusText = $("#terrain-status-text");
+  const spinner = $("#terrain-status .spinner");
+  const retry = $("#terrain-retry");
+
+  const source = "https://superspl.at/scene/189d8fe0?noui=true";
+
+  // Remove the old photographic background.
+  terrain.style.backgroundImage = "none";
+  terrain.style.backgroundColor = "#0F120F";
+  terrain.style.cursor = "auto";
+  terrain.style.touchAction = "auto";
+
+  const viewer = document.createElement("iframe");
+  viewer.id = "viewer";
+  viewer.title = "Explore the selected SuperSplat scenery";
+  viewer.allow = "fullscreen; xr-spatial-tracking";
+  viewer.allowFullscreen = true;
+
+  Object.assign(viewer.style, {
+    position: "absolute",
+    top: "-74px",
+    left: "0",
+    width: "calc(100% + 480px)",
+    height: "calc(100% + 74px)",
+    border: "0",
+    display: "block"
+  });
+
+  // NOTE: -74px / +480px crop out superspl.at's top bar and right
+  // sidebar based on this scene's current layout at desktop widths.
+  // superspl.at can change that layout at any time, which would throw
+  // this crop off or reveal chrome again — there is no supported
+  // "bare viewer" URL to embed instead. A self-hosted Viewer-App
+  // export from the SuperSplat Editor would remove this fragility.
+
+  // Preserve the existing cinematic shade above the viewer.
+  const shade = terrain.querySelector(".terrain-shade");
+  terrain.insertBefore(viewer, shade || null);
+
+  let timeout;
+  let lastInteractiveState = null;
+
+  function openViewer() {
+    clearTimeout(timeout);
+
+    status.classList.remove("ready", "error");
+    spinner.style.display = "";
+    statusText.textContent = "Opening the interactive scenery…";
+    retry.hidden = true;
+
+    timeout = setTimeout(() => {
+      spinner.style.display = "none";
+      status.classList.add("error");
+      statusText.textContent =
+        "The viewer is taking longer than expected. Check your connection or retry.";
+      retry.hidden = false;
+    }, 25000);
+
+    viewer.src = source;
+  }
+
+  viewer.addEventListener("load", () => {
+    clearTimeout(timeout);
+    spinner.style.display = "none";
+    status.classList.remove("error");
+
+    // This confirms the iframe document loaded—not the scene itself.
+    // SuperSplat handles its own scene-loading indicators and errors.
+    statusText.textContent =
+      "Viewer opened. Scene loading and controls appear inside the viewer.";
+
+    status.classList.add("ready");
+    retry.hidden = true;
+  });
+
+  viewer.addEventListener("error", () => {
+    clearTimeout(timeout);
+    spinner.style.display = "none";
+    status.classList.remove("ready");
+    status.classList.add("error");
+    statusText.textContent =
+      "The external viewer could not open. Check your connection and retry.";
+    retry.hidden = false;
+  });
+
+  retry.addEventListener("click", openViewer);
+  openViewer();
+
+  function update(now, progress) {
+    const interactive =
+      progress < 1 &&
+      window.scrollY < $("#home").offsetHeight - 40;
+
+    if (interactive === lastInteractiveState) return;
+    lastInteractiveState = interactive;
+
+    terrain.style.pointerEvents = interactive ? "auto" : "none";
+    viewer.style.pointerEvents = interactive ? "auto" : "none";
+    viewer.tabIndex = interactive ? 0 : -1;
+
+    if (!interactive && document.activeElement === viewer) {
+      viewer.blur();
+    }
+  }
+
+  return { update };
+})();
+
+
+
+/* Navigation */
+const nav = $("#navbar");
+const menuButton = $("#menu-toggle");
+
+function closeMenu() {
+  nav.classList.remove("menu-open");
+  menuButton.setAttribute("aria-expanded", "false");
+  menuButton.setAttribute("aria-label", "Open navigation");
+}
+
+menuButton.addEventListener("click", () => {
+  const open = nav.classList.toggle("menu-open");
+  menuButton.setAttribute("aria-expanded", String(open));
+  menuButton.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
+});
+
+$("#nav-links").addEventListener("click", e => {
+  if (e.target.closest("a")) closeMenu();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") closeMenu();
+});
+
+document.addEventListener("click", e => {
+  if (!nav.contains(e.target)) closeMenu();
+});
+
+$("#year").textContent = new Date().getFullYear();
+
+/* Honest photo loading states */
+function showPhoto(img, url, status) {
+  img.onload = () => {
+    img.classList.add("loaded");
+    status.hidden = true;
+  };
+  img.onerror = () => {
+    status.hidden = false;
+    status.textContent = "Photo unavailable. Please check your connection.";
+  };
+  img.src = url;
+}
+
+/* Functional destination selection, backed by a real Wikipedia lookup */
+selectDestination.requestId = 0;
+
+async function selectDestination(name, { scroll = false, wikiTitle = null } = {}) {
+  name = name.trim().replace(/\s+/g, " ").slice(0, 80);
+  if (!name) {
+    $("#destination-input").setCustomValidity("Please enter a destination.");
+    $("#destination-input").reportValidity();
+    return;
+  }
+
+  $("#destination-input").setCustomValidity("");
+  $("#destination-input").value = name;
+  $("#search-results").hidden = true;
+  $("#destination-input").setAttribute("aria-expanded", "false");
+
+  document.querySelectorAll(".chip").forEach(chip => {
+    chip.setAttribute(
+      "aria-pressed",
+      String(chip.textContent.toLowerCase() === name.toLowerCase())
+    );
+  });
+
+  $("#confirmation").hidden = false;
+  $("#confirmation-title").textContent = `Looking up ${name}…`;
+  $("#confirmation-copy").textContent = "Checking Wikipedia for a verified match.";
+
+  if (scroll) {
+    $("#start").scrollIntoView({
+      behavior: reduced ? "auto" : "smooth",
+      block: "start"
+    });
+  }
+
+  const requestId = ++selectDestination.requestId;
+
+  try {
+    const summary = wikiTitle
+      ? await wikiSummary(wikiTitle)
+      : await (async () => {
+          const matches = await wikiSearch(name, 1);
+          if (!matches.length) throw new Error("No matching place found.");
+          return wikiSummary(matches[0].title);
+        })();
+
+    if (requestId !== selectDestination.requestId) return;
+
+    const attribution = summary.original
+      ? await commonsAttribution(summary.original)
+      : null;
+
+    if (requestId !== selectDestination.requestId) return;
+
+    $("#confirmation-title").textContent = `✓ ${summary.title} is on your wishlist.`;
+    $("#confirmation-copy").innerHTML = `
+      ${summary.extract ? `<p style="margin-top:8px;color:var(--ink)">${summary.extract}</p>` : ""}
+      <p style="margin-top:8px"><a href="${summary.pageUrl}" target="_blank" rel="noopener noreferrer">Read more on Wikipedia ↗</a></p>
+      <p style="margin-top:8px;font-size:10px">${creditLine(attribution)}</p>
+      <p style="margin-top:8px;font-size:10px">Destination selected for this preview. Shared trips, invitations, and voting are not connected yet.</p>
+    `;
+  } catch (error) {
+    if (requestId !== selectDestination.requestId) return;
+    $("#confirmation-title").textContent = `Couldn't verify "${name}."`;
+    $("#confirmation-copy").textContent =
+      "No confirmed Wikipedia entry was found. Check the spelling, or try a nearby town or region.";
+  }
+}
+
+function debounce(fn, wait) {
+  let timer;
+  return (...args) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), wait);
+  };
+}
+
+let searchAbort = null;
+
+async function renderSearchResults(query) {
+  const box = $("#search-results");
+  searchAbort?.abort();
+
+  if (query.trim().length < 2) {
+    box.hidden = true;
+    box.innerHTML = "";
+    $("#destination-input").setAttribute("aria-expanded", "false");
+    return;
+  }
+
+  const controller = new AbortController();
+  searchAbort = controller;
+
+  box.hidden = false;
+  $("#destination-input").setAttribute("aria-expanded", "true");
+  box.innerHTML = '<div class="search-status">Searching Wikipedia…</div>';
+
+  try {
+    const results = await wikiSearch(query.trim(), 6, controller.signal);
+    if (controller.signal.aborted) return;
+
+    if (!results.length) {
+      box.innerHTML = '<div class="search-status">No matching places found.</div>';
+      return;
+    }
+
+    box.innerHTML = "";
+    results.forEach(result => {
+      const item = document.createElement("button");
+      item.type = "button";
+      item.className = "search-result";
+      item.setAttribute("role", "option");
+      item.innerHTML = `
+        ${result.thumbnail
+          ? `<img src="${result.thumbnail}" alt="" loading="lazy">`
+          : `<span class="search-result-noimg" aria-hidden="true">⌕</span>`}
+        <span class="search-result-text">
+          <span class="search-result-title">${result.title}</span>
+          <span class="search-result-desc">${result.description || "Wikipedia entry"}</span>
+        </span>`;
+
+      item.addEventListener("click", () => {
+        selectDestination(result.title, { scroll: true, wikiTitle: result.title });
+      });
+
+      box.append(item);
+    });
+  } catch (error) {
+    if (controller.signal.aborted) return;
+    box.innerHTML = '<div class="search-status">Search unavailable. Check your connection.</div>';
+  }
+}
+
+const debouncedSearch = debounce(renderSearchResults, 300);
+
+$("#trip-form").addEventListener("submit", e => {
+  e.preventDefault();
+  selectDestination($("#destination-input").value);
+});
+
+$("#destination-input").addEventListener("input", e => {
+  e.target.setCustomValidity("");
+  debouncedSearch(e.target.value);
+});
+
+$("#destination-input").addEventListener("focus", e => {
+  if (e.target.value.trim().length >= 2) debouncedSearch(e.target.value);
+});
+
+document.addEventListener("click", e => {
+  if (!e.target.closest(".trip-form")) {
+    $("#search-results").hidden = true;
+    $("#destination-input").setAttribute("aria-expanded", "false");
+  }
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    $("#search-results").hidden = true;
+    $("#destination-input").setAttribute("aria-expanded", "false");
+  }
+});
+
+/* Depth carousel */
+const deck = $("#carousel");
+const cards = [];
+const dots = [];
+let selected = 0;
+let autoplay = !reduced;
+let hovered = false;
+let lastAdvance = performance.now();
+let pointer = null;
+let ignoreClickUntil = 0;
+
+destinations.forEach((destination, index) => {
+  const card = document.createElement("button");
+  card.type = "button";
+  card.className = "destination-card";
+  card.setAttribute("aria-label", `Choose ${destination.name}`);
+
+  card.innerHTML = `
+    <img draggable="false" alt="Loading photograph of ${destination.name}">
+    <span class="photo-state">Loading verified photograph…</span>
+    <span class="card-shade"></span>
+    <span class="card-top">
+      <span>0${index + 1} / 04</span>
+      <span class="card-type">${destination.type}</span>
+    </span>
+    <span class="card-content">
+      <span style="
+        display:block;
+        font:400 50px/1.1 var(--serif);
+        letter-spacing:-.045em;
+        margin-bottom:12px;
+      ">${destination.name}</span>
+      <span class="card-season">${destination.season}</span>
+      <span class="card-action">
+        <span>Bring the group here</span>
+        <span aria-hidden="true">↗</span>
+      </span>
+    </span>`;
+
+  const img = card.querySelector("img");
+  const photoState = card.querySelector(".photo-state");
+  destination.status = "loading";
+
+  (async () => {
+    try {
+      const summary = await wikiSummary(destination.wikiTitle);
+      destination.summary = summary;
+      if (!summary.original) throw new Error("No photograph available.");
+
+      img.alt = summary.description || `Photograph of ${destination.name}`;
+      showPhoto(img, summary.original, photoState);
+
+      const attribution = await commonsAttribution(summary.original);
+      destination.status = "ready";
+      destination.creditHtml = creditLine(attribution);
+    } catch (error) {
+      destination.status = "error";
+      destination.creditHtml =
+        "No verified photograph found on Wikimedia for this destination.";
+      photoState.hidden = false;
+      photoState.textContent = "Photo unavailable. No verified source found.";
+    }
+
+    if (destinations[selected] === destination) updateGalleryCredit();
+  })();
+
+  card.addEventListener("click", () => {
+    if (performance.now() < ignoreClickUntil) return;
+    if (selected === index) {
+      selectDestination(destination.name, { scroll: true, wikiTitle: destination.wikiTitle });
+    } else {
+      go(index);
+    }
+  });
+
+  card.addEventListener("focus", () => {
+    if (selected !== index) go(index);
+  });
+
+  deck.append(card);
+  cards.push(card);
+
+  const dot = document.createElement("button");
+  dot.type = "button";
+  dot.className = "dot";
+  dot.setAttribute("aria-label", `Show ${destination.name}`);
+  dot.addEventListener("click", () => go(index));
+  $("#dots").append(dot);
+  dots.push(dot);
+
+  const chip = document.createElement("button");
+  chip.type = "button";
+  chip.className = "chip";
+  chip.textContent = destination.name;
+  chip.setAttribute("aria-pressed", "false");
+  chip.addEventListener("click", () =>
+    selectDestination(destination.name, { wikiTitle: destination.wikiTitle })
+  );
+  $("#quick-select").append(chip);
+});
+
+function updateGalleryCredit() {
+  const destination = destinations[selected];
+  const credit = $("#gallery-credit");
+  if (!destination) return;
+
+  if (destination.status === "ready") {
+    credit.innerHTML = destination.creditHtml;
+  } else if (destination.status === "error") {
+    credit.textContent = destination.creditHtml;
+  } else {
+    credit.textContent = "Finding a source-verified photograph on Wikimedia Commons…";
+  }
+}
+
+function renderCards() {
+  const spread = innerWidth < 600 ? 145 : 240;
+
+  cards.forEach((card, index) => {
+    const offset = index - selected;
+    const depth = Math.abs(offset);
+
+    card.style.transition = reduced
+      ? "none"
+      : "transform 750ms cubic-bezier(.22,1,.36,1), filter 750ms, opacity 750ms";
+
+    card.style.transform = `
+      translateX(${offset * spread}px)
+      translateZ(${-depth * 220}px)
+      rotateY(${-offset * 12}deg)
+      translateY(${depth * 12}px)
+    `;
+
+    card.style.filter =
+      `brightness(${Math.max(.4, 1 - depth * .2)}) blur(${depth * .6}px)`;
+
+    card.style.zIndex = String(10 - depth);
+    card.classList.toggle("is-focused", depth === 0);
+    dots[index].setAttribute("aria-current", String(depth === 0));
+  });
+
+  $("#previous").disabled = selected === 0;
+  $("#next").disabled = selected === destinations.length - 1;
+}
+
+function go(index, announce = true) {
+  selected = clamp(index, 0, destinations.length - 1);
+  lastAdvance = performance.now();
+  renderCards();
+  updateGalleryCredit();
+
+  if (announce) {
+    $("#carousel-announcement").textContent =
+      `${destinations[selected].name}, ${selected + 1} of ${destinations.length}`;
+  }
+}
+
+$("#previous").addEventListener("click", () => go(selected - 1));
+$("#next").addEventListener("click", () => go(selected + 1));
+
+deck.addEventListener("keydown", e => {
+  if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+    e.preventDefault();
+    go(selected + (e.key === "ArrowRight" ? 1 : -1));
+  }
+});
+
+deck.addEventListener("pointerdown", e => {
+  if (e.button !== 0) return;
+  pointer = { x: e.clientX, y: e.clientY, id: e.pointerId };
+});
+
+window.addEventListener("pointerup", e => {
+  if (!pointer || pointer.id !== e.pointerId) return;
+
+  const dx = e.clientX - pointer.x;
+  const dy = e.clientY - pointer.y;
+
+  if (Math.abs(dx) > 35 && Math.abs(dx) > Math.abs(dy)) {
+    ignoreClickUntil = performance.now() + 400;
+    go(selected + (dx < 0 ? 1 : -1));
+  }
+  pointer = null;
+});
+
+window.addEventListener("pointercancel", () => pointer = null);
+
+let lastWheel = 0;
+deck.addEventListener("wheel", e => {
+  const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY)
+    ? e.deltaX : e.deltaY;
+
+  if (Math.abs(delta) < 8) return;
+  const direction = Math.sign(delta);
+
+  // Release page scrolling at either end instead of trapping the user.
+  if ((selected === 0 && direction < 0) ||
+      (selected === destinations.length - 1 && direction > 0)) return;
+
+  e.preventDefault();
+  if (performance.now() - lastWheel > 650) {
+    go(selected + direction);
+    lastWheel = performance.now();
+  }
+}, { passive: false });
+
+$("#destinations").addEventListener("mouseenter", () => hovered = true);
+$("#destinations").addEventListener("mouseleave", () => hovered = false);
+
+function updateAutoplayButton() {
+  $("#autoplay").textContent = autoplay ? "Ⅱ" : "▶";
+  $("#autoplay").setAttribute("aria-pressed", String(!autoplay));
+  $("#autoplay").setAttribute(
+    "aria-label",
+    autoplay ? "Pause automatic browsing" : "Start automatic browsing"
+  );
+}
+
+$("#autoplay").addEventListener("click", () => {
+  autoplay = !autoplay;
+  lastAdvance = performance.now();
+  updateAutoplayButton();
+});
+
+updateAutoplayButton();
+renderCards();
+window.addEventListener("resize", renderCards);
+
+/* Closing image: a real, verified photograph of Munnar */
+(async () => {
+  try {
+    const summary = await wikiSummary("Munnar");
+    if (!summary.original) throw new Error("No Munnar photograph available.");
+
+    $("#cta-image").alt = summary.description || "Photograph of Munnar";
+    showPhoto($("#cta-image"), summary.original, $("#cta-photo-state"));
+
+    const attribution = await commonsAttribution(summary.original);
+    $("#cta-credit").innerHTML = creditLine(attribution);
+  } catch (error) {
+    $("#cta-photo-state").hidden = false;
+    $("#cta-photo-state").textContent =
+      "Photo unavailable. No verified source found for Munnar.";
+  }
+})();
+
+updateGalleryCredit();
+
+$(".source-credits").innerHTML = `
+  Interactive scenery:
+  <a
+    href="https://superspl.at/scene/189d8fe0"
+    target="_blank"
+    rel="noopener noreferrer"
+  >View the original scene on SuperSplat</a>.
+  Embedded through the scene's supplied viewer.
+  Scene ownership and applicable permissions remain with its creator.
+
+  Destination search, descriptions, and photographs are fetched live from
+  <a href="https://www.wikipedia.org" target="_blank" rel="noopener noreferrer">Wikipedia</a>
+  and
+  <a href="https://commons.wikimedia.org" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>
+  at page load — nothing here is a mock photograph. Each photo's specific
+  photographer and license are credited directly beneath it.
+`;
+
+/* One shared loop for the preview's scroll effects and autoplay. */
+let smoothScroll = window.scrollY;
+
+function animate(now) {
+  const actualScroll = window.scrollY;
+  smoothScroll = reduced
+    ? actualScroll
+    : smoothScroll + (actualScroll - smoothScroll) * .09;
+
+  const heroHeight = $("#home").offsetHeight;
+  const progress = clamp(smoothScroll / heroHeight, 0, 1);
+
+  nav.classList.toggle("scrolled", actualScroll > 35);
+
+  $("#hero-content").style.opacity = String(1 - progress);
+  $("#hero-content").style.transform = reduced
+    ? "none"
+    : `translateY(${smoothScroll * .16}px)`;
+
+  terrain.style.opacity = String(1 - progress);
+  terrain.style.visibility = actualScroll > heroHeight ? "hidden" : "visible";
+
+  if (!reduced && actualScroll < heroHeight) {
+    terrain.style.backgroundPosition =
+      `center ${50 + progress * 12}%`;
+  }
+
+  const ctaBounds = $("#closing").getBoundingClientRect();
+  if (!reduced && ctaBounds.top < innerHeight && ctaBounds.bottom > 0) {
+    const ctaProgress = clamp(
+      (innerHeight - ctaBounds.top) / (innerHeight + ctaBounds.height),
+      0, 1
+    );
+    $("#cta-image").style.transform = `scale(${1 + ctaProgress * .09})`;
+  }
+
+  const bounds = deck.getBoundingClientRect();
+  const visible = bounds.top < innerHeight && bounds.bottom > 0;
+  const focused = $("#destinations").contains(document.activeElement);
+
+  if (!visible || hovered || focused || pointer || document.hidden) {
+    lastAdvance = now;
+  } else if (autoplay && now - lastAdvance > 4800) {
+    go((selected + 1) % destinations.length, false);
+  }
+
+  mountainScene.update(now, progress);
+
+  requestAnimationFrame(animate);
+}
+
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
