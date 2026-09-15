@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0F120F">
 <title>WanderMatch — Go together.</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M2 25 12 7l7 12 4-7 7 13H2Z' fill='%23D9A566'/></svg>">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap');
@@ -277,21 +279,637 @@ footer{position:relative;z-index:1;background:var(--bg);padding:65px 6vw 25px}
   .carousel-bottom{flex-direction:column-reverse;gap:18px}
   .photo-credit{text-align:center}
   .process-grid{grid-template-columns:1fr}
-  .process-card,.process-card:first-child{padding:30px 22px;border-right:0;border-bottom:1px solid var(--line)}
-  .process-card:last-child{border-bottom:0}
-  .stage{margin-bottom:22px}
-  .trip-form{flex-wrap:wrap;padding:10px}
-  .trip-form .button{width:100%}
-  .search-icon{width:30px}
-  .cta{min-height:540px}
-  .footer-top{flex-direction:column;align-items:flex-start}
-  .footer-bottom{flex-direction:column;gap:12px}
 }
-@media(prefers-reduced-motion:reduce){
-  html{scroll-behavior:auto}
-  *,*::before,*::after{animation:none!important;transition:none!important}
+
+/* ================= DAY-BY-DAY ITINERARY BOARD & TRIP ROLES (WANDERMATCH DESIGN SYSTEM) ================= */
+.nav-itinerary-link { position: relative; display: inline-flex; align-items: center; gap: 7px; }
+.nav-live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); display: inline-block; box-shadow: 0 0 8px var(--teal); animation: live-pulse 2.2s infinite ease-in-out; }
+@keyframes live-pulse { 0%, 100% { transform: scale(1); opacity: 0.75; } 50% { transform: scale(1.35); opacity: 1; } }
+
+.itinerary-section {
+  position: relative;
+  z-index: 1;
+  background: var(--bg);
+  padding: 110px 6vw;
+  border-top: 1px solid var(--line);
+}
+
+.itinerary-section .section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 40px;
+  margin-bottom: 50px;
+}
+.itinerary-section .section-head > div:first-child { max-width: 600px; }
+.itinerary-section .section-head > div:last-child { max-width: 360px; display: flex; flex-direction: column; gap: 18px; }
+
+/* Trip Master Card */
+.itinerary-trip-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 36px 40px 32px;
+  margin-bottom: 30px;
+  position: relative;
+}
+.itinerary-trip-card .stage {
+  margin-bottom: 18px;
+  font-size: 10px;
+}
+.itinerary-trip-card h3 {
+  font: 400 clamp(30px, 4.4vw, 52px)/1.1 var(--serif);
+  letter-spacing: -.045em;
+  color: var(--ink);
+  margin-bottom: 18px;
+}
+.trip-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.trip-meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 30px;
+  border: 1px solid var(--line);
+  font-size: 10px;
+  letter-spacing: .05em;
+  color: var(--muted);
+  background: rgba(0,0,0,0.2);
+}
+.trip-meta-chip.gold { border-color: rgba(217,165,102,.4); color: var(--gold); }
+.trip-meta-chip.teal { border-color: rgba(95,168,140,.4); color: var(--teal); }
+
+/* Members Strip */
+.trip-members-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.member-avatar-pill {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gold);
+  background: rgba(217,165,102,0.18);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform .2s, border-color .2s;
+}
+.member-avatar-pill:hover { transform: translateY(-2px); border-color: #fff; }
+.member-avatar-pill .role-pip {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  font-size: 8px;
+  display: grid;
+  place-items: center;
+}
+
+/* Persona Switcher matching .quick-select and .chip */
+.persona-switcher-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+}
+.persona-label-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.persona-chips-wrap {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+.persona-chip {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  border-radius: 30px;
+  padding: 8px 14px;
+  font-size: 11px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: all .2s;
+}
+.persona-chip:hover { border-color: var(--gold); color: var(--ink); }
+.persona-chip.active {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(217,165,102,0.08);
+  font-weight: 500;
+}
+.persona-chip .role-tag {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  opacity: .8;
+}
+.role-permission-hint {
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin: 0;
+  max-width: 680px;
+}
+
+/* Action Toolbar */
+.itinerary-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 35px 0 28px;
+}
+.itinerary-actions-left, .itinerary-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.action-chip-btn {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  border-radius: 3px;
+  padding: 11px 18px;
+  font-size: 11px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all .2s;
+}
+.action-chip-btn:hover { border-color: var(--gold); color: var(--gold); transform: translateY(-1px); }
+.action-chip-primary {
+  background: var(--gold);
+  color: var(--bg);
+  border-color: var(--gold);
+  font-weight: 600;
+}
+.action-chip-primary:hover { background: #edbc80; color: var(--bg); }
+.action-chip-sim {
+  border-color: rgba(95,168,140,0.4);
+  color: var(--teal);
+}
+.action-chip-sim:hover { border-color: var(--teal); background: rgba(95,168,140,0.1); color: #7ed0b0; }
+
+/* Day Tabs matching WanderMatch navigation */
+.itinerary-days-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+  margin-bottom: 30px;
+  scrollbar-width: thin;
+}
+.day-tab-btn {
+  padding: 14px 22px;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all .2s;
+}
+.day-tab-btn:hover { color: var(--ink); }
+.day-tab-btn.active {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+  font-weight: 600;
+}
+.day-tab-badge {
+  font-size: 9px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: rgba(243,239,230,0.08);
+  color: var(--muted);
+}
+.day-tab-btn.active .day-tab-badge {
+  background: rgba(217,165,102,0.18);
+  color: var(--gold);
+}
+.day-add-tab-btn {
+  padding: 14px 18px;
+  background: none;
+  border: 0;
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .2s;
+}
+.day-add-tab-btn:hover { color: var(--gold); }
+
+/* Day Metrics Bar matching .process-grid */
+.day-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 40px;
+}
+.day-metric-col {
+  padding: 28px 30px;
+  border-right: 1px solid var(--line);
+}
+.day-metric-col:first-child { padding-left: 0; }
+.day-metric-col:last-child { border-right: 0; }
+.day-metric-col .stage { margin-bottom: 14px; }
+.metric-value {
+  font: 400 32px/1 var(--serif);
+  letter-spacing: -.035em;
+  color: var(--ink);
+}
+.metric-value.accent { color: var(--gold); }
+.metric-desc {
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+/* Timeline Cards matching .process-card */
+.itinerary-timeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 30px;
+}
+.itinerary-item-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 30px 34px;
+  transition: transform .2s, border-color .2s, box-shadow .2s;
+}
+.itinerary-item-card:hover {
+  border-color: rgba(217,165,102,.4);
+  transform: translateY(-2px);
+  box-shadow: 0 16px 35px rgba(0,0,0,0.3);
+}
+.itinerary-item-card.highlight-broadcast {
+  border-color: var(--teal);
+  box-shadow: 0 0 30px rgba(95,168,140,0.35);
+  background: linear-gradient(135deg, rgba(95,168,140,0.08), var(--card));
+}
+.itinerary-item-card .stage {
+  margin-bottom: 16px;
+  font-size: 9.5px;
+}
+.itinerary-item-card h3 {
+  font: 400 25px/1.25 var(--serif);
+  letter-spacing: -.03em;
+  color: var(--ink);
+  margin: 0 0 10px;
+}
+.itinerary-item-card p {
+  font-size: 12.5px;
+  line-height: 1.85;
+  color: var(--muted);
+  margin: 0;
+}
+.item-footer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  color: var(--muted);
+}
+.item-footer-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.item-actions-btns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.item-action-btn {
+  padding: 6px 12px;
+  border-radius: 30px;
+  border: 1px solid var(--line);
+  background: none;
+  color: var(--muted);
+  font-size: 10px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.item-action-btn:hover { border-color: var(--gold); color: var(--gold); }
+.item-action-btn.delete-btn:hover { border-color: #E06C60; color: #E06C60; }
+.item-action-btn.propose-btn {
+  border-color: rgba(217,165,102,.5);
+  color: var(--gold);
+}
+
+/* Empty day notice */
+.empty-day-state {
+  padding: 48px 24px;
+  text-align: center;
+  border: 1px dashed var(--line);
+  border-radius: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 24px;
+}
+
+/* Big Add Activity Button */
+.add-activity-dashed-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 54px;
+  padding: 16px 24px;
+  border: 1px dashed var(--line);
+  border-radius: 4px;
+  background: rgba(28,33,28,0.3);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .2s;
+}
+.add-activity-dashed-btn:hover {
+  border-color: var(--gold);
+  border-style: solid;
+  color: var(--gold);
+  background: rgba(217,165,102,0.04);
+}
+
+/* Conflict resolution notice */
+.conflict-box {
+  background: rgba(224,108,96,0.1);
+  border: 1px solid rgba(224,108,96,0.4);
+  border-radius: 4px;
+  padding: 20px 24px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.conflict-box strong { color: #f09580; font-weight: 600; font-size: 12px; }
+.conflict-box p { font-size: 11.5px; color: var(--muted); margin: 4px 0 0; line-height: 1.6; }
+
+/* Toast Notifications matching WanderMatch */
+.wm-toast-container {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+  max-width: 400px;
+}
+.wm-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 15px 18px;
+  border-radius: 4px;
+  background: rgba(28,33,28,0.96);
+  border: 1px solid rgba(217,165,102,0.4);
+  color: var(--ink);
+  font-size: 12px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+  backdrop-filter: blur(14px);
+  animation: toast-slide 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes toast-slide {
+  from { transform: translateY(16px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.wm-toast.toast-teal { border-color: rgba(95,168,140,0.6); }
+.wm-toast.toast-warning { border-color: rgba(224,108,96,0.6); }
+.wm-toast-icon { font-size: 15px; line-height: 1; flex-shrink: 0; }
+.wm-toast-title { font-weight: 600; font-size: 12px; margin-bottom: 3px; }
+.wm-toast-desc { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+/* ================= MODALS & FORMS (MATCHING AUTH MODAL) ================= */
+.wm-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(6,9,6,.78);
+  backdrop-filter: blur(8px);
+}
+.wm-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  z-index: 91;
+  width: min(520px, 92vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 36px 32px 30px;
+  box-shadow: 0 40px 90px rgba(0,0,0,0.7);
+}
+.wm-modal-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 14px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background .2s, color .2s;
+}
+.wm-modal-close:hover {
+  color: var(--ink);
+  background: rgba(255,255,255,0.08);
+}
+.wm-modal-title {
+  font: 400 26px var(--serif);
+  letter-spacing: -.03em;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.wm-modal-sub {
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+
+/* Modal Form Controls matching .auth-form */
+.wm-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.wm-form-row {
+  display: flex;
+  gap: 14px;
+}
+.wm-form-row > .wm-form-group {
+  flex: 1;
+}
+.wm-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wm-form-group label {
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+}
+.wm-form-group input[type="text"],
+.wm-form-group input[type="email"],
+.wm-form-group input[type="date"],
+.wm-form-group input[type="time"],
+.wm-form-group input[type="number"],
+.wm-form-group select,
+.wm-form-group textarea {
+  padding: 12px 14px;
+  border-radius: 4px;
+  border: 1px solid rgba(243,239,230,.2);
+  background: rgba(0,0,0,0.35);
+  color: var(--ink);
+  font-size: 12px;
+  font-family: inherit;
+  transition: border-color .2s;
+}
+.wm-form-group input:focus,
+.wm-form-group select:focus,
+.wm-form-group textarea:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+.wm-form-group select option {
+  background: #1c211c;
+  color: var(--ink);
+}
+
+/* Member list in modal */
+.member-list-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.member-row-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  background: rgba(0,0,0,0.2);
+}
+.member-row-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.member-row-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  font-size: 11px;
+}
+.member-row-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.member-row-email {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.member-role-select {
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--line);
+  background: rgba(0,0,0,0.4);
+  color: var(--ink);
+  font-size: 11px;
+}
+.member-role-select:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+@media(max-width:900px) {
+  .itinerary-section .section-head { flex-direction: column; gap: 20px; }
+  .day-metrics-grid { grid-template-columns: 1fr; }
+  .day-metric-col { border-right: 0; border-bottom: 1px solid var(--line); padding: 22px 0; }
+  .day-metric-col:last-child { border-bottom: 0; }
+  .itinerary-actions-row { flex-direction: column; align-items: stretch; }
+  .itinerary-actions-left, .itinerary-actions-right { justify-content: flex-start; }
+}
+@media(max-width:600px) {
+  .itinerary-trip-card { padding: 26px 20px; }
+  .itinerary-item-card { padding: 22px 20px; }
+  .wm-toast-container { left: 20px; right: 20px; bottom: 20px; max-width: none; }
 }
 </style>
+
 </head>
 
 <body>
@@ -343,6 +961,7 @@ footer{position:relative;z-index:1;background:var(--bg);padding:65px 6vw 25px}
     <a href="#destinations">Destinations</a>
     <a href="#how-it-works">How it works</a>
     <a href="#start">Start a trip</a>
+    <a href="#itinerary-section" class="nav-itinerary-link">Itinerary Board <span class="nav-live-dot" title="Live Shared Board"></span></a>
   </nav>
 
   <a class="nav-cta" href="#start">Find your somewhere ↗</a>
@@ -538,7 +1157,347 @@ footer{position:relative;z-index:1;background:var(--bg);padding:65px 6vw 25px}
     </div>
   </section>
 
-  <section class="cta" id="closing" aria-labelledby="cta-title">
+  <!-- ================= DAY-BY-DAY ITINERARY BOARD + TRIP CREATION & ROLES ================= -->
+  <section class="section itinerary-section" id="itinerary-section" aria-labelledby="itinerary-title">
+    <div class="section-head">
+      <div>
+        <div class="eyebrow" id="itinerary-eyebrow">Shared Itinerary Board · Screen 1</div>
+        <h2 class="section-title" id="itinerary-title">One live plan.<br><span class="accent serif">No endless debates.</span></h2>
+      </div>
+      <div>
+        <p class="muted" id="itinerary-subtitle" style="margin-top:0;font-size:13px;line-height:1.8;">
+          Everyone sees the same day-by-day itinerary updated live. Roles govern who edits directly versus who proposes, with optimistic-concurrency conflict handling.
+        </p>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:16px;">
+          <button class="chip" id="lang-toggle-btn" type="button" aria-label="Switch Language">
+            <span>🌐</span> <span id="lang-text">Language: <strong class="active-lang">EN</strong> / HI</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Trip Master Card -->
+    <div class="itinerary-trip-card" id="trip-control-card">
+      <div class="stage">
+        <span class="stage-label">Live Shared Trip</span>
+        <span class="muted" id="version-counter" style="font-family:monospace;letter-spacing:normal;">v3 ● in sync</span>
+      </div>
+
+      <h3 id="trip-title-heading">Varanasi — Spiritual &amp; Cultural Exploration</h3>
+
+      <div class="trip-meta-row">
+        <span class="trip-meta-chip" id="trip-dest-badge">📍 Varanasi, Uttar Pradesh</span>
+        <span class="trip-meta-chip" id="trip-dates-badge">18 Sep – 21 Sep, 2026 (4 Days)</span>
+        <span class="trip-meta-chip teal" id="trip-type-badge">Group Trip · Open for Solo</span>
+        <span class="trip-meta-chip gold" id="presence-pill">
+          <span class="nav-live-dot"></span>
+          <span id="presence-text">4 members online</span>
+        </span>
+        <div class="trip-members-strip" id="trip-members-strip" title="Trip Members">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Persona Switcher matching .chip and .quick-select -->
+      <div class="persona-switcher-wrap">
+        <div class="persona-label-row">
+          <span id="persona-label">Testing as member:</span>
+        </div>
+        <div class="persona-chips-wrap" id="persona-chips">
+          <!-- Chips rendered by JS -->
+        </div>
+        <p class="role-permission-hint" id="role-permission-hint">
+          <!-- Role permission explanation rendered by JS -->
+        </p>
+      </div>
+    </div>
+
+    <!-- Conflict Warning Banner (Simulated) -->
+    <div class="conflict-alert-box" id="conflict-alert-box" hidden>
+      <div class="conflict-alert-text">
+        <span style="font-size:18px;">⚠️</span>
+        <div>
+          <strong id="conflict-alert-title">Optimistic Locking Conflict Detected!</strong>
+          <div style="font-size:11px;opacity:0.9;" id="conflict-alert-desc">
+            Another member updated the itinerary while your editor was open (version mismatch: expected v3, but remote is v4). WanderMatch prevents silent clobbering.
+          </div>
+        </div>
+      </div>
+      <button class="action-chip-btn action-chip-primary" id="conflict-resolve-btn" type="button">Reload Latest Plan ✓</button>
+    </div>
+
+    <!-- Action Toolbar -->
+    <div class="itinerary-actions-row">
+      <div class="itinerary-actions-left">
+        <button class="action-chip-btn action-chip-primary" id="btn-create-trip" type="button">
+          <span>+</span> <span id="btn-create-trip-text">New Group Trip</span>
+        </button>
+        <button class="action-chip-btn" id="btn-manage-members" type="button">
+          <span>👥</span> <span id="btn-manage-members-text">Members &amp; Roles</span>
+        </button>
+        <button class="action-chip-btn" id="btn-add-activity-top" type="button">
+          <span>+</span> <span id="btn-add-activity-text">Add Activity</span>
+        </button>
+      </div>
+
+      <div class="itinerary-actions-right">
+        <button class="action-chip-btn action-chip-sim" id="btn-sim-rohan" type="button" title="Simulate WebSocket push from another user">
+          <span>⚡</span> <span id="btn-sim-text">Simulate Rohan's Live Add</span>
+        </button>
+        <button class="action-chip-btn" id="btn-sim-conflict" type="button" title="Simulate optimistic concurrency conflict">
+          <span>⚠️</span> <span id="btn-conflict-text">Test Conflict Check</span>
+        </button>
+        <button class="action-chip-btn" id="btn-reset-demo" type="button" title="Reset to initial hackathon seed data">
+          <span>↺</span> <span id="btn-reset-text">Reset Demo</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Day Tabs Navigation -->
+    <div class="itinerary-days-nav" id="itinerary-days-container" role="tablist" aria-label="Itinerary Days">
+      <!-- Tabs rendered by JS -->
+    </div>
+
+    <!-- Day Summary Metrics Bar matching .process-grid -->
+    <div class="day-metrics-grid" id="day-summary-bar">
+      <div class="day-metric-col">
+        <div class="stage"><span class="stage-label" id="label-day-cost">Est. Cost / Person</span></div>
+        <div class="metric-value accent" id="stat-day-cost">₹950</div>
+        <div class="metric-desc">Per-person pooled budget estimate</div>
+      </div>
+      <div class="day-metric-col">
+        <div class="stage"><span class="stage-label" id="label-day-activities">Total Activities</span></div>
+        <div class="metric-value" id="stat-day-activities">4 items</div>
+        <div class="metric-desc">Curated group schedule</div>
+      </div>
+      <div class="day-metric-col">
+        <div class="stage"><span class="stage-label" id="label-day-pace">Pacing &amp; Focus</span></div>
+        <div class="metric-value" style="font-size:22px;line-height:1.2;" id="stat-day-pace">Balanced (2-3 hrs rest)</div>
+        <div class="metric-desc" id="stat-day-theme">Sacred Ghats &amp; Heritage Alleys</div>
+      </div>
+    </div>
+
+    <!-- Timeline Container -->
+    <div class="itinerary-timeline-list" id="itinerary-timeline">
+      <!-- Cards rendered by JS -->
+    </div>
+
+    <!-- Empty Day Notice -->
+    <div class="empty-day-state" id="empty-day-state" hidden>
+      <p id="empty-day-text">No activities scheduled for this day yet. Be the first to add an experience!</p>
+    </div>
+
+    <!-- Big Add Activity CTA -->
+    <button class="add-activity-dashed-btn" id="btn-add-activity-bottom" type="button">
+      <span style="font-size:16px;">+</span> <span id="btn-add-bottom-text">Add itinerary item to this day</span>
+    </button>
+  </section>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- 1. Create Trip Modal -->
+  <div class="wm-modal-backdrop" id="trip-modal-backdrop" hidden></div>
+  <div class="wm-modal" id="trip-modal" role="dialog" aria-modal="true" aria-labelledby="trip-modal-title" hidden>
+    <button class="wm-modal-close" id="trip-modal-close" type="button" aria-label="Close modal">✕</button>
+    <h3 class="wm-modal-title" id="trip-modal-title">Create a Group Trip</h3>
+    <p class="wm-modal-sub" id="trip-modal-sub">Set up your shared container. You will be assigned as the <strong>Trip Owner</strong>.</p>
+
+    <form class="wm-form" id="trip-create-form">
+      <div class="wm-form-group">
+        <label for="new-trip-title">Trip Title</label>
+        <input id="new-trip-title" type="text" placeholder="e.g. Varanasi Ghats & Heritage Walk" required>
+      </div>
+
+      <div class="wm-form-group">
+        <label for="new-trip-dest">Destination</label>
+        <input id="new-trip-dest" type="text" placeholder="e.g. Varanasi, Manali, Munnar, Goa..." required>
+      </div>
+
+      <div class="wm-form-row">
+        <div class="wm-form-group">
+          <label for="new-trip-start">Start Date</label>
+          <input id="new-trip-start" type="date" required>
+        </div>
+        <div class="wm-form-group">
+          <label for="new-trip-end">End Date</label>
+          <input id="new-trip-end" type="date" required>
+        </div>
+      </div>
+
+      <div class="wm-form-row">
+        <div class="wm-form-group">
+          <label for="new-trip-budget">Budget Band</label>
+          <select id="new-trip-budget">
+            <option value="Economy">Economy (Under ₹2,000 / day)</option>
+            <option value="Moderate" selected>Moderate (₹2,000 - ₹5,000 / day)</option>
+            <option value="Comfortable">Comfortable (₹5,000+ / day)</option>
+          </select>
+        </div>
+        <div class="wm-form-group">
+          <label for="new-trip-pace">Travel Pace</label>
+          <select id="new-trip-pace">
+            <option value="Relaxed">Relaxed (1-2 activities)</option>
+            <option value="Balanced" selected>Balanced (3-4 activities)</option>
+            <option value="Fast-Paced">Fast-Paced (5+ activities)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="wm-form-group" style="flex-direction:row;align-items:center;gap:10px;margin-top:6px;">
+        <input id="new-trip-solo-open" type="checkbox" checked style="width:auto;">
+        <label for="new-trip-solo-open" style="text-transform:none;font-size:11.5px;color:var(--ink);cursor:pointer;">
+          Open for Solo Traveller Matching (PS-11 Recommendation feature)
+        </label>
+      </div>
+
+      <button class="button" type="submit" style="margin-top:10px;width:100%;">Create Group Trip &amp; Open Board ↗</button>
+    </form>
+  </div>
+
+  <!-- 2. Manage Members & Roles Modal -->
+  <div class="wm-modal-backdrop" id="members-modal-backdrop" hidden></div>
+  <div class="wm-modal" id="members-modal" role="dialog" aria-modal="true" aria-labelledby="members-modal-title" hidden>
+    <button class="wm-modal-close" id="members-modal-close" type="button" aria-label="Close modal">✕</button>
+    <h3 class="wm-modal-title" id="members-modal-title">Trip Members &amp; Roles</h3>
+    <p class="wm-modal-sub" id="members-modal-sub">
+      Roles gate who can edit directly vs. propose. Owners have administrative rights; Editors modify items directly; Viewers propose changes.
+    </p>
+
+    <div class="member-list-items" id="modal-members-list">
+      <!-- Member rows rendered by JS -->
+    </div>
+
+    <div style="border-top:1px solid var(--line);padding-top:18px;">
+      <h4 style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--gold);" id="invite-heading">Invite a New Member</h4>
+      <form class="wm-form" id="invite-member-form">
+        <div class="wm-form-row">
+          <div class="wm-form-group">
+            <label for="invite-name">Member Name</label>
+            <input id="invite-name" type="text" placeholder="e.g. Sneha Roy" required>
+          </div>
+          <div class="wm-form-group">
+            <label for="invite-email">Email Address</label>
+            <input id="invite-email" type="email" placeholder="sneha@example.com" required>
+          </div>
+        </div>
+        <div class="wm-form-row">
+          <div class="wm-form-group">
+            <label for="invite-role">Assign Role</label>
+            <select id="invite-role">
+              <option value="editor">Editor (Can edit directly, bump version)</option>
+              <option value="viewer">Viewer (Can view, propose &amp; vote)</option>
+            </select>
+          </div>
+          <div class="wm-form-group" style="justify-content:flex-end;">
+            <button class="button" type="submit" style="min-height:44px;padding:10px 18px;width:100%;">Invite Member ↗</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. Add / Edit Itinerary Item Modal -->
+  <div class="wm-modal-backdrop" id="item-modal-backdrop" hidden></div>
+  <div class="wm-modal" id="item-modal" role="dialog" aria-modal="true" aria-labelledby="item-modal-title" hidden>
+    <button class="wm-modal-close" id="item-modal-close" type="button" aria-label="Close modal">✕</button>
+    <h3 class="wm-modal-title" id="item-modal-title">Add Itinerary Item</h3>
+    <p class="wm-modal-sub" id="item-modal-sub">Direct edit will bump the trip's version counter and sync live to all connected members.</p>
+
+    <form class="wm-form" id="item-form">
+      <input type="hidden" id="item-edit-id" value="">
+
+      <div class="wm-form-group">
+        <label for="item-title">Activity Title</label>
+        <input id="item-title" type="text" placeholder="e.g. Ganga Aarti at Assi Ghat" required maxlength="90">
+      </div>
+
+      <div class="wm-form-row">
+        <div class="wm-form-group">
+          <label for="item-day-select">Assigned Day</label>
+          <select id="item-day-select" required>
+            <!-- Rendered by JS -->
+          </select>
+        </div>
+        <div class="wm-form-group">
+          <label for="item-time">Time Slot</label>
+          <input id="item-time" type="time" value="09:00" required>
+        </div>
+      </div>
+
+      <div class="wm-form-row">
+        <div class="wm-form-group">
+          <label for="item-category">Category</label>
+          <select id="item-category">
+            <option value="Spiritual">Spiritual / Darshan</option>
+            <option value="Sunrise/Boat">Sunrise / Boat Ride</option>
+            <option value="Heritage">Heritage / History</option>
+            <option value="Culinary">Food / Culinary</option>
+            <option value="Culture">Culture / Music</option>
+            <option value="Walk">Walking Tour / Gallis</option>
+            <option value="Shopping">Shopping / Crafts</option>
+            <option value="Leisure">Leisure / Free Time</option>
+          </select>
+        </div>
+        <div class="wm-form-group">
+          <label for="item-cost">Est. Cost (₹ per person)</label>
+          <input id="item-cost" type="number" min="0" step="50" value="0" placeholder="0 for free">
+        </div>
+      </div>
+
+      <div class="wm-form-group">
+        <label for="item-location">Location / Landmark</label>
+        <input id="item-location" type="text" placeholder="e.g. Assi Ghat, Shivala" maxlength="100">
+      </div>
+
+      <div class="wm-form-group">
+        <label for="item-desc">Notes &amp; Details</label>
+        <textarea id="item-desc" placeholder="What to expect, dress codes, entry tips, meeting points..." rows="3"></textarea>
+      </div>
+
+      <div id="item-permission-note" style="font-size:11px;color:var(--gold);padding:8px 12px;background:rgba(217,165,102,0.08);border-radius:4px;" hidden>
+        ℹ️ As a Viewer, this item will be registered as a group proposal instead of writing directly to the board.
+      </div>
+
+      <button class="button" id="item-form-submit" type="submit" style="margin-top:8px;width:100%;">
+        Save Activity &amp; Bump Version ↗
+      </button>
+    </form>
+  </div>
+
+  <!-- 4. Viewer Proposal Intercept Modal -->
+  <div class="wm-modal-backdrop" id="proposal-modal-backdrop" hidden></div>
+  <div class="wm-modal" id="proposal-modal" role="dialog" aria-modal="true" aria-labelledby="proposal-modal-title" hidden>
+    <button class="wm-modal-close" id="proposal-modal-close" type="button" aria-label="Close modal">✕</button>
+    <h3 class="wm-modal-title" id="proposal-modal-title">Propose a Change</h3>
+    <p class="wm-modal-sub" id="proposal-modal-sub">
+      As a <strong>Viewer</strong>, direct board edits are protected. Submit this change as a group proposal so members can vote (Yes / No / Abstain).
+    </p>
+
+    <form class="wm-form" id="proposal-form">
+      <input type="hidden" id="proposal-target-id" value="">
+      <div class="wm-form-group">
+        <label for="proposal-action-type">Proposal Type</label>
+        <select id="proposal-action-type">
+          <option value="replace">Swap / Replace with Alternative</option>
+          <option value="reschedule">Reschedule Time / Day</option>
+          <option value="remove">Remove from Itinerary</option>
+        </select>
+      </div>
+
+      <div class="wm-form-group">
+        <label for="proposal-reason">Reasoning / Note for Group</label>
+        <textarea id="proposal-reason" placeholder="e.g. 'Ridge Lookout has better sunset views and is identical distance from our hotel...'" rows="3" required></textarea>
+      </div>
+
+      <button class="button" type="submit" style="width:100%;margin-top:6px;">Submit Proposal for Group Vote ↗</button>
+    </form>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="wm-toast-container" id="wm-toast-container" aria-live="polite"></div>
+
+  <!-- Closing CTA Section -->
+  <section class="section cta" id="closing" aria-labelledby="cta-title">
     <img class="cta-image" id="cta-image" alt="Mountain scenery in the Munnar region" decoding="async">
     <span class="photo-state" id="cta-photo-state">Finding a real photograph of Munnar…</span>
     <div class="cta-content">
@@ -578,7 +1537,6 @@ footer{position:relative;z-index:1;background:var(--bg);padding:65px 6vw 25px}
   </p>
 </noscript>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://appleid.cdn-apple.com/appleauth/one/appleid.auth.js" async defer></script>
@@ -1020,105 +1978,291 @@ const mountainScene = (() => {
   const spinner = $("#terrain-status .spinner");
   const retry = $("#terrain-retry");
 
-  const source = "https://superspl.at/scene/189d8fe0?noui=true";
+  // Clean any old iframes
+  const oldViewer = terrain.querySelector("#viewer");
+  if (oldViewer) oldViewer.remove();
 
-  // Remove the old photographic background.
-  terrain.style.backgroundImage = "none";
-  terrain.style.backgroundColor = "#0F120F";
-  terrain.style.cursor = "auto";
-  terrain.style.touchAction = "auto";
-
-  const viewer = document.createElement("iframe");
-  viewer.id = "viewer";
-  viewer.title = "Explore the selected SuperSplat scenery";
-  viewer.allow = "fullscreen; xr-spatial-tracking";
-  viewer.allowFullscreen = true;
-
-  Object.assign(viewer.style, {
-    position: "absolute",
-    top: "-74px",
-    left: "0",
-    width: "calc(100% + 480px)",
-    height: "calc(100% + 74px)",
-    border: "0",
-    display: "block"
-  });
-
-  // NOTE: -74px / +480px crop out superspl.at's top bar and right
-  // sidebar based on this scene's current layout at desktop widths.
-  // superspl.at can change that layout at any time, which would throw
-  // this crop off or reveal chrome again — there is no supported
-  // "bare viewer" URL to embed instead. A self-hosted Viewer-App
-  // export from the SuperSplat Editor would remove this fragility.
-
-  // Preserve the existing cinematic shade above the viewer.
-  const shade = terrain.querySelector(".terrain-shade");
-  terrain.insertBefore(viewer, shade || null);
-
-  let timeout;
-  let lastInteractiveState = null;
-
-  function openViewer() {
-    clearTimeout(timeout);
-
-    status.classList.remove("ready", "error");
-    spinner.style.display = "";
-    statusText.textContent = "Opening the interactive scenery…";
-    retry.hidden = true;
-
-    timeout = setTimeout(() => {
-      spinner.style.display = "none";
-      status.classList.add("error");
-      statusText.textContent =
-        "The viewer is taking longer than expected. Check your connection or retry.";
-      retry.hidden = false;
-    }, 25000);
-
-    viewer.src = source;
+  if (typeof THREE === "undefined") {
+    if (statusText) statusText.textContent = "Mountain scenery · Munnar, Kerala";
+    if (spinner) spinner.style.display = "none";
+    return { update: () => {} };
   }
 
-  viewer.addEventListener("load", () => {
-    clearTimeout(timeout);
-    spinner.style.display = "none";
-    status.classList.remove("error");
+  // Set up Three.js scene & WebGL Renderer
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x101b13, 0.0095);
 
-    // This confirms the iframe document loaded—not the scene itself.
-    // SuperSplat handles its own scene-loading indicators and errors.
-    statusText.textContent =
-      "Viewer opened. Scene loading and controls appear inside the viewer.";
+  const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.5, 600);
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+  } catch (e) {
+    if (statusText) statusText.textContent = "Mountain scenery · Munnar, Kerala";
+    if (spinner) spinner.style.display = "none";
+    return { update: () => {} };
+  }
 
-    status.classList.add("ready");
-    retry.hidden = true;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000, 0);
+
+  const shade = terrain.querySelector(".terrain-shade");
+  terrain.insertBefore(renderer.domElement, shade || null);
+
+  // Lighting: Sunlight, Ambient Skylight, Rim Light
+  const ambientLight = new THREE.AmbientLight(0xcde2d0, 0.7);
+  scene.add(ambientLight);
+
+  const sunLight = new THREE.DirectionalLight(0xffecd0, 1.2);
+  sunLight.position.set(-45, 55, 30);
+  scene.add(sunLight);
+
+  const rimLight = new THREE.DirectionalLight(0x5fa88c, 0.45);
+  rimLight.position.set(45, 20, -30);
+  scene.add(rimLight);
+
+  // Camera Orbit Angles & Drag
+  let theta = 0.85, phi = 1.08, radius = 68;
+  let targetTheta = 0.85, targetPhi = 1.08, targetRadius = 68;
+  let isDragging = false, lastX = 0, lastY = 0;
+
+  function updateCamera() {
+    camera.position.x = radius * Math.sin(phi) * Math.sin(theta);
+    camera.position.z = radius * Math.sin(phi) * Math.cos(theta);
+    camera.position.y = radius * Math.cos(phi) + 9;
+    camera.lookAt(0, 3.5, 0);
+  }
+  updateCamera();
+
+  terrain.style.pointerEvents = "auto";
+  terrain.style.cursor = "grab";
+
+  terrain.addEventListener("pointerdown", e => {
+    if (e.button !== 0) return;
+    isDragging = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    terrain.classList.add("dragging");
   });
 
-  viewer.addEventListener("error", () => {
-    clearTimeout(timeout);
-    spinner.style.display = "none";
-    status.classList.remove("ready");
-    status.classList.add("error");
-    statusText.textContent =
-      "The external viewer could not open. Check your connection and retry.";
-    retry.hidden = false;
+  window.addEventListener("pointerup", () => {
+    isDragging = false;
+    terrain.classList.remove("dragging");
   });
 
-  retry.addEventListener("click", openViewer);
-  openViewer();
+  window.addEventListener("pointermove", e => {
+    if (!isDragging) return;
+    const dx = e.clientX - lastX, dy = e.clientY - lastY;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    targetTheta -= dx * 0.0045;
+    targetPhi = Math.min(1.48, Math.max(0.45, targetPhi - dy * 0.0035));
+  });
 
-  function update(now, progress) {
-    const interactive =
-      progress < 1 &&
-      window.scrollY < $("#home").offsetHeight - 40;
+  terrain.addEventListener("wheel", e => {
+    targetRadius = Math.min(115, Math.max(32, targetRadius + e.deltaY * 0.035));
+  }, { passive: true });
 
-    if (interactive === lastInteractiveState) return;
-    lastInteractiveState = interactive;
+  // Sky Dome Gradient
+  const skyCanvas = document.createElement("canvas");
+  skyCanvas.width = 4; skyCanvas.height = 256;
+  const sCtx = skyCanvas.getContext("2d");
+  const sGrad = sCtx.createLinearGradient(0, 0, 0, 256);
+  sGrad.addColorStop(0, "#2c4034");
+  sGrad.addColorStop(0.35, "#526e5d");
+  sGrad.addColorStop(0.7, "#889e87");
+  sGrad.addColorStop(1, "#c5bb9c");
+  sCtx.fillStyle = sGrad;
+  sCtx.fillRect(0, 0, 4, 256);
+  const skyTex = new THREE.CanvasTexture(skyCanvas);
+  const skyMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(260, 24, 16),
+    new THREE.MeshBasicMaterial({ map: skyTex, side: THREE.BackSide, fog: false })
+  );
+  scene.add(skyMesh);
 
-    terrain.style.pointerEvents = interactive ? "auto" : "none";
-    viewer.style.pointerEvents = interactive ? "auto" : "none";
-    viewer.tabIndex = interactive ? 0 : -1;
+  // High Drifting Clouds
+  const cloudCanvas = document.createElement("canvas");
+  cloudCanvas.width = cloudCanvas.height = 128;
+  const cCtx = cloudCanvas.getContext("2d");
+  const cGrad = cCtx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  cGrad.addColorStop(0, "rgba(243,239,230,0.65)");
+  cGrad.addColorStop(0.5, "rgba(243,239,230,0.2)");
+  cGrad.addColorStop(1, "rgba(243,239,230,0)");
+  cCtx.fillStyle = cGrad;
+  cCtx.fillRect(0, 0, 128, 128);
+  const cloudTex = new THREE.CanvasTexture(cloudCanvas);
+  const clouds = [];
+  for (let i = 0; i < 6; i++) {
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex, transparent: true, opacity: 0.35, depthWrite: false }));
+    const s = 65 + Math.random() * 55;
+    sp.scale.set(s, s * 0.45, 1);
+    sp.position.set((Math.random() - 0.5) * 200, 48 + Math.random() * 25, (Math.random() - 0.5) * 200);
+    sp.userData = { speed: 0.02 + Math.random() * 0.02, phase: i * 1.1 };
+    scene.add(sp);
+    clouds.push(sp);
+  }
 
-    if (!interactive && document.activeElement === viewer) {
-      viewer.blur();
+  // 3D Mountain Elevation Geometry (Munnar tea hills, valleys, and rocky ridges)
+  const gridResolution = 90;
+  const worldDim = 100;
+  const geo = new THREE.PlaneGeometry(worldDim, worldDim, gridResolution - 1, gridResolution - 1);
+  geo.rotateX(-Math.PI / 2);
+  const pos = geo.attributes.position;
+  const colors = new Float32Array(pos.count * 3);
+
+  for (let j = 0; j < gridResolution; j++) {
+    for (let i = 0; i < gridResolution; i++) {
+      const idx = j * gridResolution + i;
+      const u = (i / (gridResolution - 1) - 0.5) * 2;
+      const v = (j / (gridResolution - 1) - 0.5) * 2;
+      const dist = Math.sqrt(u * u + v * v);
+      const bowl = Math.max(0, 1 - Math.pow(dist, 1.8));
+
+      // Layered undulating harmonics representing tea plantations and Western Ghats ridges
+      const n1 = Math.sin(u * 2.8 + 0.4) * Math.cos(v * 2.4 - 0.3);
+      const n2 = Math.sin(u * 5.6 - v * 4.2) * 0.45;
+      const n3 = Math.cos(u * 9.2 + v * 8.1) * 0.22;
+      const n4 = Math.sin(u * 16.5 - 1.2) * Math.cos(v * 15.2 + 0.8) * 0.1;
+      const ridge = 1 - Math.abs(Math.sin(u * 3.2 + v * 2.1));
+
+      let elevation = (n1 + n2 + n3 + n4 + ridge * 0.6) * 9.2 * bowl;
+      if (elevation < 0) elevation *= 0.4;
+      pos.setY(idx, elevation);
+
+      // Height-based elevation coloring: Deep forest -> Tea plantation emerald -> Moss ridge -> Stone summit
+      const t = Math.max(0, Math.min(1, (elevation + 1) / 11));
+      let r, g, b;
+      if (t < 0.28) {
+        r = 0.15; g = 0.26; b = 0.18;
+      } else if (t < 0.58) {
+        r = 0.23; g = 0.38; b = 0.25;
+      } else if (t < 0.82) {
+        r = 0.35; g = 0.46; b = 0.31;
+      } else {
+        r = 0.52; g = 0.55; b = 0.44;
+      }
+      colors[idx * 3] = r;
+      colors[idx * 3 + 1] = g;
+      colors[idx * 3 + 2] = b;
     }
+  }
+  geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  geo.computeVertexNormals();
+
+  const mat = new THREE.MeshStandardMaterial({
+    vertexColors: true,
+    roughness: 0.88,
+    metalness: 0.05,
+    flatShading: false
+  });
+  const mountainMesh = new THREE.Mesh(geo, mat);
+  scene.add(mountainMesh);
+
+  // Pedestal base
+  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0c130d, roughness: 1 });
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(58, 58, 4, 48), baseMat);
+  base.position.y = -2;
+  scene.add(base);
+
+  // Valley Mist
+  const mistCanvas = document.createElement("canvas");
+  mistCanvas.width = mistCanvas.height = 128;
+  const mCtx = mistCanvas.getContext("2d");
+  const mGrad = mCtx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  mGrad.addColorStop(0, "rgba(243,239,230,0.5)");
+  mGrad.addColorStop(0.5, "rgba(243,239,230,0.18)");
+  mGrad.addColorStop(1, "rgba(243,239,230,0)");
+  mCtx.fillStyle = mGrad;
+  mCtx.fillRect(0, 0, 128, 128);
+  const mistTex = new THREE.CanvasTexture(mistCanvas);
+  const mistSprites = [];
+  const mistPositions = [
+    { x: -18, z: 6, s: 32 }, { x: 14, z: -8, s: 36 },
+    { x: -6, z: -16, s: 28 }, { x: 22, z: 12, s: 26 }, { x: -25, z: -4, s: 24 }
+  ];
+  mistPositions.forEach((p, idx) => {
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: mistTex, transparent: true, opacity: 0.28, depthWrite: false }));
+    sp.scale.set(p.s, p.s * 0.5, 1);
+    sp.position.set(p.x, 2.5 + (idx % 2), p.z);
+    sp.userData = { baseY: sp.position.y, phase: idx * 1.3, speed: 0.15 + Math.random() * 0.1 };
+    scene.add(sp);
+    mistSprites.push(sp);
+  });
+
+  // Billboard Trees
+  const treeCanvas = document.createElement("canvas");
+  treeCanvas.width = 64; treeCanvas.height = 64;
+  const tCtx = treeCanvas.getContext("2d");
+  const foliage = [
+    { x: 32, y: 20, r: 15, c: "#203623" }, { x: 22, y: 26, r: 12, c: "#2c452f" },
+    { x: 42, y: 26, r: 12, c: "#26402a" }, { x: 32, y: 32, r: 14, c: "#335237" }
+  ];
+  foliage.forEach(b => {
+    const g = tCtx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
+    g.addColorStop(0, b.c);
+    g.addColorStop(1, "rgba(0,0,0,0)");
+    tCtx.fillStyle = g;
+    tCtx.beginPath(); tCtx.arc(b.x, b.y, b.r, 0, Math.PI * 2); tCtx.fill();
+  });
+  tCtx.fillStyle = "rgba(40,32,20,0.85)";
+  tCtx.fillRect(30, 40, 4, 16);
+  const treeTex = new THREE.CanvasTexture(treeCanvas);
+  const treeMat = new THREE.SpriteMaterial({ map: treeTex, transparent: true, depthWrite: true });
+
+  for (let tIdx = 0; tIdx < 60; tIdx++) {
+    const u = (Math.random() - 0.5) * 1.4;
+    const v = (Math.random() - 0.5) * 1.4;
+    const gridI = Math.floor(((u / 2) + 0.5) * (gridResolution - 1));
+    const gridJ = Math.floor(((v / 2) + 0.5) * (gridResolution - 1));
+    const vertIdx = gridJ * gridResolution + gridI;
+    const y = pos.getY(vertIdx);
+    if (y > 1.2 && y < 7.5) {
+      const sp = new THREE.Sprite(treeMat);
+      const s = 2.2 + Math.random() * 1.6;
+      sp.scale.set(s, s, 1);
+      sp.position.set(pos.getX(vertIdx), y + s * 0.45, pos.getZ(vertIdx));
+      scene.add(sp);
+    }
+  }
+
+  // Update Status Pill
+  if (status) {
+    status.classList.remove("error");
+    status.classList.add("ready");
+    if (spinner) spinner.style.display = "none";
+    if (statusText) statusText.textContent = "Real 3D Mountain Terrain · Drag to explore";
+    if (retry) retry.hidden = true;
+  }
+
+  // Resize handler
+  window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // Animation Update Function
+  function update(now, progress) {
+    theta += (targetTheta - theta) * 0.08;
+    phi += (targetPhi - phi) * 0.08;
+    radius += (targetRadius - radius) * 0.08;
+
+    if (!isDragging) {
+      targetTheta += 0.0007;
+    }
+
+    updateCamera();
+
+    clouds.forEach(c => {
+      c.position.x += Math.sin(now * 0.0003 + c.userData.phase) * c.userData.speed;
+    });
+
+    mistSprites.forEach(m => {
+      m.position.y = m.userData.baseY + Math.sin(now * 0.001 * m.userData.speed + m.userData.phase) * 0.6;
+    });
+
+    renderer.render(scene, camera);
   }
 
   return { update };
@@ -1227,8 +2371,20 @@ async function selectDestination(name, { scroll = false, wikiTitle = null } = {}
       ${summary.extract ? `<p style="margin-top:8px;color:var(--ink)">${summary.extract}</p>` : ""}
       <p style="margin-top:8px"><a href="${summary.pageUrl}" target="_blank" rel="noopener noreferrer">Read more on Wikipedia ↗</a></p>
       <p style="margin-top:8px;font-size:10px">${creditLine(attribution)}</p>
-      <p style="margin-top:8px;font-size:10px">Destination selected for this preview. Shared trips, invitations, and voting are not connected yet.</p>
+      <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <button type="button" class="button" style="min-height:38px;padding:9px 16px;font-size:11px;" id="btn-start-dest-trip">
+          Create Group Trip for ${summary.title} ↗
+        </button>
+        <a href="#itinerary-section" class="tool-btn" style="text-decoration:none;">View Active Board ↓</a>
+      </div>
     `;
+    setTimeout(() => {
+      document.getElementById("btn-start-dest-trip")?.addEventListener("click", () => {
+        if (window.openCreateTripWithDestination) {
+          window.openCreateTripWithDestination(summary.title);
+        }
+      });
+    }, 50);
   } catch (error) {
     if (requestId !== selectDestination.requestId) return;
     $("#confirmation-title").textContent = `Couldn't verify "${name}."`;
@@ -1624,13 +2780,17 @@ function animate(now) {
       `center ${50 + progress * 12}%`;
   }
 
-  const ctaBounds = $("#closing").getBoundingClientRect();
-  if (!reduced && ctaBounds.top < innerHeight && ctaBounds.bottom > 0) {
-    const ctaProgress = clamp(
-      (innerHeight - ctaBounds.top) / (innerHeight + ctaBounds.height),
-      0, 1
-    );
-    $("#cta-image").style.transform = `scale(${1 + ctaProgress * .09})`;
+  const closingEl = $("#closing");
+  if (closingEl) {
+    const ctaBounds = closingEl.getBoundingClientRect();
+    if (!reduced && ctaBounds.top < innerHeight && ctaBounds.bottom > 0) {
+      const ctaProgress = clamp(
+        (innerHeight - ctaBounds.top) / (innerHeight + ctaBounds.height),
+        0, 1
+      );
+      const ctaImg = $("#cta-image");
+      if (ctaImg) ctaImg.style.transform = `scale(${1 + ctaProgress * .09})`;
+    }
   }
 
   const bounds = deck.getBoundingClientRect();
@@ -1649,6 +2809,1050 @@ function animate(now) {
 }
 
 requestAnimationFrame(animate);
+
+/* =========================================================================
+   WANDERMATCH HACKATHON PS-11: DAY-BY-DAY ITINERARY BOARD & TRIP ROLES
+   ========================================================================= */
+
+const WanderItinerary = (() => {
+  const STORAGE_KEY = "wandermatch:itinerary:v2";
+  let currentLang = "en";
+
+  const I18N = {
+    en: {
+      eyebrow: "Shared Itinerary Board · Screen 1",
+      title: 'One live plan.<br><span class="accent serif">No endless debates.</span>',
+      subtitle: "Everyone sees the same day-by-day itinerary updated live. Roles govern who edits directly versus who proposes, with optimistic-concurrency conflict handling.",
+      langBtn: 'Language: <strong class="active-lang">EN</strong> / HI',
+      membersOnline: "members online",
+      verInSync: "● in sync",
+      personaLabel: "Testing as member:",
+      newTrip: "New Group Trip",
+      manageMembers: "Members & Roles",
+      addActivity: "Add Activity",
+      simRohan: "Simulate Rohan's Live Add",
+      testConflict: "Test Conflict Check",
+      resetDemo: "Reset Demo",
+      costPerson: "Est. Cost / Person",
+      totalActivities: "Total Activities",
+      pace: "Pacing",
+      dayFocus: "Day Focus:",
+      emptyDay: "No activities scheduled for this day yet. Be the first to add an experience!",
+      addBottom: "Add itinerary item to this day",
+      addedBy: "Added by",
+      btnEdit: "Edit",
+      btnDelete: "Delete",
+      btnPropose: "Propose Swap",
+      dayPrefix: "Day",
+      roleOwner: "Owner",
+      roleEditor: "Editor",
+      roleViewer: "Viewer",
+      itemUnits: "items",
+      free: "Free",
+      hints: {
+        "u-aisha": "👑 Aisha (Owner): Full administrative permissions. You can directly edit/delete items, invite members, reassign roles, and lock proposals.",
+        "u-rohan": "✏️ Rohan (Editor): You can directly add, edit, and remove activities. Changes immediately bump the itinerary version and broadcast live.",
+        "u-meera": "✏️ Meera (Editor): Collaborative editor. Optimistic locking keyed on version guarantees nobody's changes are silently overwritten.",
+        "u-kabir": "👁️ Kabir (Viewer): Read-only on direct itinerary modification. When you add or edit an item, it is submitted as a group proposal to vote on."
+      }
+    },
+    hi: {
+      eyebrow: "साझा यात्रा कार्यक्रम बोर्ड · स्क्रीन 1",
+      title: 'एक जीवंत योजना।<br><span class="accent serif">कोई अंतहीन बहस नहीं।</span>',
+      subtitle: "सभी सदस्य एक ही यात्रा कार्यक्रम को रीयल-टाइम अपडेट देखते हैं। भूमिकाएं तय करती हैं कि कौन सीधे संपादन कर सकता है और कौन प्रस्ताव दे सकता है।",
+      langBtn: 'भाषा: EN / <strong class="active-lang">हिन्दी</strong>',
+      membersOnline: "सदस्य ऑनलाइन",
+      verInSync: "● सिंक में",
+      personaLabel: "सक्रिय सदस्य के रूप में परीक्षण:",
+      newTrip: "नयी समूह यात्रा",
+      manageMembers: "सदस्य और भूमिकाएँ",
+      addActivity: "गतिविधि जोड़ें",
+      simRohan: "रोहन का लाइव जोड़ अनुकरण करें",
+      testConflict: "संस्करण संघर्ष जाँचें",
+      resetDemo: "डेमो रीसेट करें",
+      costPerson: "अनुमानित लागत / व्यक्ति",
+      totalActivities: "कुल गतिविधियां",
+      pace: "गति (Pacing)",
+      dayFocus: "दिन का मुख्य आकर्षण:",
+      emptyDay: "इस दिन के लिए अभी कोई गतिविधि तय नहीं है। पहला अनुभव जोड़ें!",
+      addBottom: "इस दिन के लिए गतिविधि जोड़ें",
+      addedBy: "द्वारा जोड़ा गया",
+      btnEdit: "संपादन",
+      btnDelete: "हटाएं",
+      btnPropose: "बदलाव प्रस्ताव दें",
+      dayPrefix: "दिन",
+      roleOwner: "स्वामी (Owner)",
+      roleEditor: "संपादक (Editor)",
+      roleViewer: "दर्शक (Viewer)",
+      itemUnits: "गतिविधियां",
+      free: "निःशुल्क",
+      hints: {
+        "u-aisha": "👑 आयशा (स्वामी): पूर्ण प्रशासनिक अधिकार। सीधे संपादन, सदस्य आमंत्रण, भूमिकाएं बदलना और अंतिम निर्णय।",
+        "u-rohan": "✏️ रोहन (संपादक): सीधे गतिविधियाँ जोड़ने और हटाने की अनुमति। संस्करण (version) तुरंत अपडेट होगा।",
+        "u-meera": "✏️ मीरा (संपादक): सहयोगी संपादक। आशावादी लॉक (optimistic lock) टकराव से रक्षा करता है।",
+        "u-kabir": "👁️ कबीर (दर्शक): केवल देखने की अनुमति। गतिविधि जोड़ने पर सीधे बोर्ड पर न जाकर मतदान हेतु प्रस्ताव बनेगा।"
+      }
+    }
+  };
+
+  const INITIAL_STATE = {
+    trip: {
+      id: "trip-varanasi-2026",
+      title: "Varanasi — Spiritual & Cultural Exploration",
+      destination: "Varanasi, Uttar Pradesh",
+      start_date: "2026-09-18",
+      end_date: "2026-09-21",
+      budget_band: "Moderate",
+      pace: "Balanced (2-3 hrs rest)",
+      is_group_trip: true,
+      open_for_matching: true
+    },
+    members: [
+      { id: "u-aisha", name: "Aisha", email: "aisha@example.com", role: "owner", avatar: "A", share_weight: 1.0, color: "#D9A566" },
+      { id: "u-rohan", name: "Rohan", email: "rohan@example.com", role: "editor", avatar: "R", share_weight: 1.0, color: "#5FA88C" },
+      { id: "u-meera", name: "Meera", email: "meera@example.com", role: "editor", avatar: "M", share_weight: 1.0, color: "#8E7CC3" },
+      { id: "u-kabir", name: "Kabir", email: "kabir@example.com", role: "viewer", avatar: "K", share_weight: 1.0, color: "#E06C60" }
+    ],
+    activeMemberId: "u-aisha",
+    activeDayIndex: 1,
+    itinerary: {
+      id: "itin-varanasi-v3",
+      version: 3,
+      updated_at: new Date().toISOString()
+    },
+    days: [
+      { day_index: 1, date_label: "18 Sep", theme: "Sacred Ghats & Dawn Boat Ride" },
+      { day_index: 2, date_label: "19 Sep", theme: "Heritage Fort & Buddhist Sarnath" },
+      { day_index: 3, date_label: "20 Sep", theme: "Banarasi Crafts, Weaving & Sunset Ragas" },
+      { day_index: 4, date_label: "21 Sep", theme: "Departure & Morning Ghat Stroll" }
+    ],
+    items: [
+      { id: "item-1", day: 1, time: "06:00", title: "Subah-e-Banaras Boat Ride & Sunrise", desc: "Rowboat glide from Assi Ghat to Manikarnika Ghat at dawn. Watch morning rituals and bells chime across the riverfront.", location: "Assi Ghat to Manikarnika", category: "Sunrise/Boat", cost: 450, addedBy: "u-aisha" },
+      { id: "item-2", day: 1, time: "09:30", title: "Kashi Vishwanath Temple Darshan", desc: "Enter via the new river corridor for morning darshan. Golden spires and holy sanctum visit.", location: "Godowlia Gate 4", category: "Spiritual", cost: 0, addedBy: "u-rohan" },
+      { id: "item-3", day: 1, time: "13:00", title: "Lunch & Thali at Kashi Chat Bhandar", desc: "Famous Tamatar Chaat, Palak Chaat, and Gulab Jamun served fresh in clay pots.", location: "Kachaudi Gali", category: "Culinary", cost: 300, addedBy: "u-meera" },
+      { id: "item-4", day: 1, time: "16:30", title: "Chhatri Complex & Historic Gallis Walk", desc: "Centuries-old stone cenotaphs, mughal architecture, and maze-like river alleyways.", location: "Manmandir Ghat area", category: "Heritage", cost: 150, addedBy: "u-rohan" },
+      { id: "item-5", day: 1, time: "19:30", title: "Ganga Aarti at Dashashwamedh Ghat", desc: "Grand brass lamp ritual by the priests with conch shells and incense. Reserved river steps.", location: "Dashashwamedh Ghat", category: "Spiritual", cost: 0, addedBy: "u-aisha" },
+
+      { id: "item-6", day: 2, time: "08:30", title: "Ramnagar Fort & Vintage Museum Tour", desc: "18th century sandstone fortress on the eastern bank of the Ganga, housing royal palanquins and antique armory.", location: "Ramnagar", category: "Heritage", cost: 200, addedBy: "u-meera" },
+      { id: "item-7", day: 2, time: "12:30", title: "Blue Lassi & Heritage Street Food Trail", desc: "Traditional pomegranate and saffron curd lassis poured in terracotta kulhads.", location: "Bangali Tola", category: "Culinary", cost: 250, addedBy: "u-rohan" },
+      { id: "item-8", day: 2, time: "15:30", title: "Sarnath Buddhist Stupa & Archaeological Museum", desc: "Where Buddha preached his first sermon after enlightenment. Ashoka Pillar capital and Dhamek Stupa.", location: "Sarnath (10km north)", category: "Culture", cost: 350, addedBy: "u-aisha" },
+      { id: "item-9", day: 2, time: "18:30", title: "Sunset Music Recital on Scindia Ghat", desc: "Acoustic sitar and tabla performance by local maestros at the quiet sunken Shiva temple.", location: "Scindia Ghat", category: "Culture", cost: 400, addedBy: "u-kabir" },
+
+      { id: "item-10", day: 3, time: "07:00", title: "Morning Yoga & Meditation by the River", desc: "Guided 60-minute Hatha yoga session on the open stone steps as the city awakes.", location: "Panchganga Ghat", category: "Spiritual", cost: 200, addedBy: "u-meera" },
+      { id: "item-11", day: 3, time: "10:30", title: "Banarasi Silk Weaving Workshop in Madanpura", desc: "Visit master weavers creating handloom sarees with real zari gold and silver threads.", location: "Madanpura Weavers Quarter", category: "Shopping", cost: 0, addedBy: "u-aisha" },
+      { id: "item-12", day: 3, time: "16:00", title: "Boat Ride at Dusk to Rajghat", desc: "Peaceful northern stretch of the river with sweeping sunset panoramic views.", location: "Rajghat Bridge", category: "Sunrise/Boat", cost: 500, addedBy: "u-rohan" }
+    ]
+  };
+
+  let state = loadState();
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {
+      console.warn("Storage load error, falling back to initial", e);
+    }
+    return JSON.parse(JSON.stringify(INITIAL_STATE));
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+      console.warn("Failed to persist itinerary state", e);
+    }
+  }
+
+  function getActiveMember() {
+    return state.members.find(m => m.id === state.activeMemberId) || state.members[0];
+  }
+
+  function canDirectEdit() {
+    const role = getActiveMember().role;
+    return role === "owner" || role === "editor";
+  }
+
+  function canManageRoles() {
+    return getActiveMember().role === "owner";
+  }
+
+  function bumpVersion(reason) {
+    state.itinerary.version += 1;
+    state.itinerary.updated_at = new Date().toISOString();
+    saveState();
+
+    const pill = document.getElementById("version-pill");
+    const counter = document.getElementById("version-counter");
+    if (counter) counter.textContent = "v" + state.itinerary.version;
+    if (pill) {
+      pill.classList.remove("bumped");
+      void pill.offsetWidth;
+      pill.classList.add("bumped");
+    }
+    showToast("⚡ Version Bumped to v" + state.itinerary.version, reason, "teal", "✓");
+  }
+
+  function showToast(title, desc, type = "gold", icon = "ℹ️") {
+    const container = document.getElementById("wm-toast-container");
+    if (!container) return;
+
+    const toast = document.createElement("div");
+    toast.className = `wm-toast ${type === "teal" ? "toast-teal" : type === "warning" ? "toast-warning" : ""}`;
+    toast.innerHTML = `
+      <div class="wm-toast-icon">${icon}</div>
+      <div class="wm-toast-body">
+        <div class="wm-toast-title">${title}</div>
+        <div class="wm-toast-desc">${desc}</div>
+      </div>
+    `;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.style.opacity = "0";
+      toast.style.transform = "translateY(10px)";
+      toast.style.transition = "all 0.3s ease";
+      setTimeout(() => toast.remove(), 320);
+    }, 4500);
+  }
+
+  /* Render functions */
+
+  function renderTripInfo() {
+    const t = I18N[currentLang];
+    const trip = state.trip;
+    const destBadge = document.getElementById("trip-dest-badge");
+    const datesBadge = document.getElementById("trip-dates-badge");
+    const typeBadge = document.getElementById("trip-type-badge");
+    const titleHeading = document.getElementById("trip-title-heading");
+
+    if (destBadge) destBadge.textContent = "📍 " + trip.destination;
+    if (datesBadge) datesBadge.textContent = `${trip.start_date} – ${trip.end_date} (${state.days.length} Days)`;
+    if (typeBadge) typeBadge.textContent = trip.is_group_trip ? "Group Trip · Open for Solo" : "Private Trip";
+    if (titleHeading) titleHeading.textContent = trip.title;
+
+    const versionCounter = document.getElementById("version-counter");
+    if (versionCounter) versionCounter.textContent = "v" + state.itinerary.version;
+
+    const presenceText = document.getElementById("presence-text");
+    if (presenceText) presenceText.textContent = `${state.members.length} ${t.membersOnline}`;
+
+    renderMembersStrip();
+    renderPersonaSwitcher();
+  }
+
+  function renderMembersStrip() {
+    const strip = document.getElementById("trip-members-strip");
+    if (!strip) return;
+    strip.innerHTML = state.members.map(m => {
+      const pip = m.role === "owner" ? "👑" : m.role === "editor" ? "✏️" : "👁️";
+      return `
+        <div class="member-avatar-pill" title="${m.name} (${m.role})" style="background:${m.color}22;border-color:${m.color};">
+          ${m.avatar}
+          <span class="role-pip">${pip}</span>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderPersonaSwitcher() {
+    const t = I18N[currentLang];
+    const chipsBox = document.getElementById("persona-chips");
+    const hintBox = document.getElementById("role-permission-hint");
+    if (!chipsBox) return;
+
+    chipsBox.innerHTML = state.members.map(m => {
+      const active = m.id === state.activeMemberId ? "active" : "";
+      const icon = m.role === "owner" ? "👑" : m.role === "editor" ? "✏️" : "👁️";
+      const roleLabel = m.role === "owner" ? t.roleOwner : m.role === "editor" ? t.roleEditor : t.roleViewer;
+      return `
+        <button type="button" class="persona-chip ${active}" data-member-id="${m.id}">
+          <span>${icon}</span>
+          <span>${m.name}</span>
+          <span class="role-tag">${roleLabel}</span>
+        </button>
+      `;
+    }).join("");
+
+    chipsBox.querySelectorAll(".persona-chip").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-member-id");
+        setActivePersona(id);
+      });
+    });
+
+    if (hintBox) {
+      hintBox.textContent = t.hints[state.activeMemberId] || "";
+    }
+  }
+
+  function setActivePersona(memberId) {
+    state.activeMemberId = memberId;
+    saveState();
+    renderPersonaSwitcher();
+    renderTimeline();
+    const active = getActiveMember();
+    showToast(
+      `Persona Switched: ${active.name}`,
+      `Acting with role "${active.role.toUpperCase()}". UI permissions and action capabilities refreshed.`,
+      "gold",
+      active.role === "owner" ? "👑" : active.role === "editor" ? "✏️" : "👁️"
+    );
+  }
+
+  function renderDayTabs() {
+    const t = I18N[currentLang];
+    const container = document.getElementById("itinerary-days-container");
+    if (!container) return;
+
+    let html = state.days.map(d => {
+      const active = d.day_index === state.activeDayIndex ? "active" : "";
+      const count = state.items.filter(it => it.day === d.day_index).length;
+      return `
+        <button type="button" class="day-tab-btn ${active}" data-day="${d.day_index}" role="tab" aria-selected="${active ? "true" : "false"}">
+          <span>${t.dayPrefix} ${d.day_index} · ${d.date_label}</span>
+          <span class="day-tab-badge">${count} ${t.itemUnits}</span>
+        </button>
+      `;
+    }).join("");
+
+    html += `
+      <button type="button" class="day-add-tab-btn" id="btn-add-day">
+        <span>+ Add Day ${state.days.length + 1}</span>
+      </button>
+    `;
+
+    container.innerHTML = html;
+
+    container.querySelectorAll(".day-tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.activeDayIndex = parseInt(btn.getAttribute("data-day"), 10);
+        saveState();
+        renderDayTabs();
+        renderDaySummary();
+        renderTimeline();
+      });
+    });
+
+    document.getElementById("btn-add-day")?.addEventListener("click", () => {
+      addNewDay();
+    });
+  }
+
+  function addNewDay() {
+    const nextIndex = state.days.length + 1;
+    const baseDate = new Date(state.trip.start_date || "2026-09-18");
+    baseDate.setDate(baseDate.getDate() + nextIndex - 1);
+    const dateLabel = baseDate.toLocaleDateString("en-US", { day: "numeric", month: "short" });
+
+    state.days.push({
+      day_index: nextIndex,
+      date_label: dateLabel,
+      theme: "Exploration & Local Hidden Gems"
+    });
+    state.activeDayIndex = nextIndex;
+    bumpVersion(`Added Day ${nextIndex} to itinerary`);
+    renderDayTabs();
+    renderDaySummary();
+    renderTimeline();
+  }
+
+  function renderDaySummary() {
+    const t = I18N[currentLang];
+    const dayItems = state.items.filter(it => it.day === state.activeDayIndex);
+    const currentDay = state.days.find(d => d.day_index === state.activeDayIndex) || state.days[0];
+
+    const totalCost = dayItems.reduce((acc, curr) => acc + (Number(curr.cost) || 0), 0);
+    const statCost = document.getElementById("stat-day-cost");
+    const statActivities = document.getElementById("stat-day-activities");
+    const statPace = document.getElementById("stat-day-pace");
+    const statTheme = document.getElementById("stat-day-theme");
+
+    if (statCost) statCost.textContent = `₹${totalCost.toLocaleString("en-IN")}`;
+    if (statActivities) statActivities.textContent = `${dayItems.length} ${t.itemUnits}`;
+    if (statPace) {
+      const paceText = dayItems.length <= 2 ? "Relaxed (Pacing gentle)" : dayItems.length <= 4 ? "Balanced (2-3 hrs rest)" : "Fast-Paced (High activity)";
+      statPace.textContent = paceText;
+    }
+    if (statTheme) statTheme.textContent = currentDay?.theme || "Custom Day Plan";
+  }
+
+  function renderTimeline() {
+    const t = I18N[currentLang];
+    const container = document.getElementById("itinerary-timeline");
+    const emptyNotice = document.getElementById("empty-day-state");
+    if (!container) return;
+
+    const dayItems = state.items
+      .filter(it => it.day === state.activeDayIndex)
+      .sort((a, b) => a.time.localeCompare(b.time));
+
+    if (dayItems.length === 0) {
+      container.innerHTML = "";
+      if (emptyNotice) emptyNotice.hidden = false;
+      return;
+    }
+
+    if (emptyNotice) emptyNotice.hidden = true;
+
+    const memberLookup = {};
+    state.members.forEach(m => { memberLookup[m.id] = m; });
+    const isDirectEditor = canDirectEdit();
+
+    container.innerHTML = dayItems.map(item => {
+      const author = memberLookup[item.addedBy] || { name: "Group Member", avatar: "WM", role: "member", color: "#D9A566" };
+      const categoryIcon = getCategoryIcon(item.category);
+      const costStr = Number(item.cost) > 0 ? `₹${Number(item.cost).toLocaleString("en-IN")}` : t.free;
+
+      let actionButtons = "";
+      if (isDirectEditor) {
+        actionButtons = `
+          <button type="button" class="action-chip-btn btn-edit" data-item-id="${item.id}" style="padding:7px 12px;font-size:10px;">
+            <span>✏️</span> <span>${t.btnEdit}</span>
+          </button>
+          <button type="button" class="action-chip-btn btn-delete" data-item-id="${item.id}" style="padding:7px 12px;font-size:10px;border-color:rgba(224,108,96,0.3);color:#e06c60;">
+            <span>✕</span> <span>${t.btnDelete}</span>
+          </button>
+        `;
+      } else {
+        actionButtons = `
+          <button type="button" class="action-chip-btn action-chip-sim btn-propose" data-item-id="${item.id}" style="padding:7px 12px;font-size:10px;">
+            <span>💡</span> <span>${t.btnPropose}</span>
+          </button>
+        `;
+      }
+
+      return `
+        <article class="itinerary-item-card" id="timeline-${item.id}">
+          <div class="stage">
+            <span class="stage-label" style="color:var(--gold);">
+              <span style="font-size:13px;">${categoryIcon}</span>
+              <span>${item.time} · ${item.category}</span>
+              ${item.location ? `<span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:normal;margin-left:8px;">📍 ${escapeHtml(item.location)}</span>` : ""}
+            </span>
+            <span class="metric-value accent" style="font-size:18px;">${costStr}</span>
+          </div>
+
+          <h3>${escapeHtml(item.title)}</h3>
+          ${item.desc ? `<p class="muted" style="font-size:13px;line-height:1.8;margin-bottom:20px;">${escapeHtml(item.desc)}</p>` : ""}
+
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding-top:16px;border-top:1px solid var(--line);">
+            <div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);">
+              <span class="member-avatar-pill" style="width:24px;height:24px;font-size:9px;background:${author.color || '#D9A566'}22;border-color:${author.color || '#D9A566'};cursor:default;">${author.avatar}</span>
+              <span>${t.addedBy} <strong style="color:var(--ink);">${author.name}</strong> (${author.role})</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              ${actionButtons}
+            </div>
+          </div>
+        </article>
+      `;
+    }).join("");
+
+    // Wire action buttons
+    container.querySelectorAll(".btn-edit").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-item-id");
+        openEditItemModal(id);
+      });
+    });
+
+    container.querySelectorAll(".btn-delete").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-item-id");
+        deleteItem(id);
+      });
+    });
+
+    container.querySelectorAll(".btn-propose").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-item-id");
+        openProposalModal(id);
+      });
+    });
+  }
+
+  function getCategoryIcon(cat) {
+    switch (cat) {
+      case "Sunrise/Boat": return "🌅";
+      case "Spiritual": return "🕯️";
+      case "Culinary": return "🍛";
+      case "Heritage": return "🏛️";
+      case "Culture": return "🎭";
+      case "Shopping": return "🛍️";
+      case "Walk": return "🚶";
+      default: return "📍";
+    }
+  }
+
+  function escapeHtml(str) {
+    if (!str) return "";
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  /* Modals: Item Add / Edit */
+
+  function openAddItemModal(prefillDay = null) {
+    const isDirectEditor = canDirectEdit();
+    const active = getActiveMember();
+    const daySelect = document.getElementById("item-day-select");
+    const editIdInput = document.getElementById("item-edit-id");
+    const titleInput = document.getElementById("item-title");
+    const timeInput = document.getElementById("item-time");
+    const costInput = document.getElementById("item-cost");
+    const locInput = document.getElementById("item-location");
+    const descInput = document.getElementById("item-desc");
+    const permNote = document.getElementById("item-permission-note");
+    const submitBtn = document.getElementById("item-form-submit");
+
+    if (!isDirectEditor) {
+      openProposalModal(null);
+      return;
+    }
+
+    if (editIdInput) editIdInput.value = "";
+    if (titleInput) titleInput.value = "";
+    if (timeInput) timeInput.value = "10:00";
+    if (costInput) costInput.value = "0";
+    if (locInput) locInput.value = "";
+    if (descInput) descInput.value = "";
+
+    document.getElementById("item-modal-title").textContent = "Add Itinerary Activity";
+    document.getElementById("item-modal-sub").textContent = `Adding as ${active.name} (${active.role}). This will bump the itinerary version.`;
+    if (submitBtn) submitBtn.textContent = "Save Activity & Bump Version ↗";
+    if (permNote) permNote.hidden = true;
+
+    if (daySelect) {
+      daySelect.innerHTML = state.days.map(d => {
+        const selected = (prefillDay || state.activeDayIndex) === d.day_index ? "selected" : "";
+        return `<option value="${d.day_index}" ${selected}>Day ${d.day_index} (${d.date_label})</option>`;
+      }).join("");
+    }
+
+    showModal("item-modal", "item-modal-backdrop");
+  }
+
+  function openEditItemModal(itemId) {
+    const item = state.items.find(i => i.id === itemId);
+    if (!item) return;
+
+    if (!canDirectEdit()) {
+      openProposalModal(itemId);
+      return;
+    }
+
+    const editIdInput = document.getElementById("item-edit-id");
+    const titleInput = document.getElementById("item-title");
+    const timeInput = document.getElementById("item-time");
+    const costInput = document.getElementById("item-cost");
+    const locInput = document.getElementById("item-location");
+    const descInput = document.getElementById("item-desc");
+    const catSelect = document.getElementById("item-category");
+    const daySelect = document.getElementById("item-day-select");
+
+    if (editIdInput) editIdInput.value = item.id;
+    if (titleInput) titleInput.value = item.title;
+    if (timeInput) timeInput.value = item.time;
+    if (costInput) costInput.value = item.cost;
+    if (locInput) locInput.value = item.location || "";
+    if (descInput) descInput.value = item.desc || "";
+    if (catSelect) catSelect.value = item.category || "Heritage";
+
+    if (daySelect) {
+      daySelect.innerHTML = state.days.map(d => {
+        const selected = item.day === d.day_index ? "selected" : "";
+        return `<option value="${d.day_index}" ${selected}>Day ${d.day_index} (${d.date_label})</option>`;
+      }).join("");
+    }
+
+    document.getElementById("item-modal-title").textContent = "Edit Itinerary Activity";
+    document.getElementById("item-modal-sub").textContent = "Updating this item will update the plan and bump the optimistic version counter.";
+    document.getElementById("item-form-submit").textContent = "Update Activity & Bump Version ↗";
+
+    showModal("item-modal", "item-modal-backdrop");
+  }
+
+  function saveItemFromForm(e) {
+    e.preventDefault();
+    const editId = document.getElementById("item-edit-id").value;
+    const title = document.getElementById("item-title").value.trim();
+    const day = parseInt(document.getElementById("item-day-select").value, 10);
+    const time = document.getElementById("item-time").value;
+    const category = document.getElementById("item-category").value;
+    const cost = parseFloat(document.getElementById("item-cost").value) || 0;
+    const location = document.getElementById("item-location").value.trim();
+    const desc = document.getElementById("item-desc").value.trim();
+
+    if (!title) return;
+
+    if (editId) {
+      const idx = state.items.findIndex(i => i.id === editId);
+      if (idx !== -1) {
+        state.items[idx] = {
+          ...state.items[idx],
+          title, day, time, category, cost, location, desc
+        };
+        bumpVersion(`Edited activity: "${title}"`);
+      }
+    } else {
+      const newItem = {
+        id: "item-" + Date.now(),
+        day, time, title, desc, location, category, cost,
+        addedBy: state.activeMemberId
+      };
+      state.items.push(newItem);
+      state.activeDayIndex = day;
+      bumpVersion(`Added activity: "${title}"`);
+    }
+
+    hideModal("item-modal", "item-modal-backdrop");
+    renderDayTabs();
+    renderDaySummary();
+    renderTimeline();
+
+    // Scroll to item
+    setTimeout(() => {
+      const el = document.getElementById(editId ? `timeline-${editId}` : `timeline-${state.items[state.items.length - 1].id}`);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 100);
+  }
+
+  function deleteItem(itemId) {
+    const item = state.items.find(i => i.id === itemId);
+    if (!item) return;
+
+    if (!confirm(`Are you sure you want to remove "${item.title}"? This will bump the itinerary version.`)) {
+      return;
+    }
+
+    state.items = state.items.filter(i => i.id !== itemId);
+    bumpVersion(`Removed activity: "${item.title}"`);
+    renderDayTabs();
+    renderDaySummary();
+    renderTimeline();
+  }
+
+  /* Viewer Proposal flow */
+  function openProposalModal(targetItemId = null) {
+    const target = targetItemId ? state.items.find(i => i.id === targetItemId) : null;
+    const inputTarget = document.getElementById("proposal-target-id");
+    const sub = document.getElementById("proposal-modal-sub");
+    const active = getActiveMember();
+
+    if (inputTarget) inputTarget.value = targetItemId || "";
+    if (sub) {
+      if (target) {
+        sub.innerHTML = `As a <strong>${active.role}</strong>, propose a change for <em>"${escapeHtml(target.title)}"</em>. Group members will vote Yes / No / Abstain.`;
+      } else {
+        sub.innerHTML = `As a <strong>${active.role}</strong>, you can propose a new experience for the group to vote on.`;
+      }
+    }
+
+    showModal("proposal-modal", "proposal-modal-backdrop");
+  }
+
+  function submitProposal(e) {
+    e.preventDefault();
+    const type = document.getElementById("proposal-action-type").value;
+    const reason = document.getElementById("proposal-reason").value.trim();
+    const active = getActiveMember();
+
+    hideModal("proposal-modal", "proposal-modal-backdrop");
+    document.getElementById("proposal-reason").value = "";
+
+    showToast(
+      `💡 Proposal Submitted by ${active.name}`,
+      `Action: [${type.toUpperCase()}] "${reason.slice(0, 70)}...". Open for voting (Yes / No / Abstain) across all 4 connected members.`,
+      "teal",
+      "🗳️"
+    );
+  }
+
+  /* Trip Creation Modal */
+  function openTripModal(prefillDest = "") {
+    const destInput = document.getElementById("new-trip-dest");
+    const titleInput = document.getElementById("new-trip-title");
+    const startInput = document.getElementById("new-trip-start");
+    const endInput = document.getElementById("new-trip-end");
+
+    if (prefillDest && destInput) {
+      destInput.value = prefillDest;
+      if (titleInput) titleInput.value = `${prefillDest} Group Expedition 2026`;
+    } else {
+      if (destInput) destInput.value = "Munnar, Kerala";
+      if (titleInput) titleInput.value = "Munnar Tea Hills & Wilderness Trek";
+    }
+
+    const today = new Date();
+    today.setDate(today.getDate() + 14);
+    const end = new Date(today);
+    end.setDate(end.getDate() + 3);
+
+    if (startInput) startInput.value = today.toISOString().split("T")[0];
+    if (endInput) endInput.value = end.toISOString().split("T")[0];
+
+    showModal("trip-modal", "trip-modal-backdrop");
+  }
+
+  function handleCreateTripSubmit(e) {
+    e.preventDefault();
+    const title = document.getElementById("new-trip-title").value.trim();
+    const dest = document.getElementById("new-trip-dest").value.trim();
+    const start = document.getElementById("new-trip-start").value;
+    const end = document.getElementById("new-trip-end").value;
+    const budget = document.getElementById("new-trip-budget").value;
+    const pace = document.getElementById("new-trip-pace").value;
+    const solo = document.getElementById("new-trip-solo-open").checked;
+
+    if (!title || !dest) return;
+
+    // Calculate days count
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const diffTime = Math.abs(endDate - startDate);
+    const diffDays = Math.max(2, Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1);
+
+    state.trip = {
+      id: "trip-" + Date.now(),
+      title,
+      destination: dest,
+      start_date: start,
+      end_date: end,
+      budget_band: budget,
+      pace: pace,
+      is_group_trip: true,
+      open_for_matching: solo
+    };
+
+    state.days = [];
+    for (let i = 1; i <= diffDays; i++) {
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + i - 1);
+      state.days.push({
+        day_index: i,
+        date_label: d.toLocaleDateString("en-US", { day: "numeric", month: "short" }),
+        theme: i === 1 ? `Arrival & Sunset at ${dest}` : `Highlights & Exploration Day ${i}`
+      });
+    }
+
+    // Default sample item for Day 1
+    state.items = [
+      {
+        id: "item-new-1",
+        day: 1,
+        time: "10:30",
+        title: `Welcome & Walking Tour of ${dest}`,
+        desc: "Meet up with the group, check into accommodations, and take an orientation stroll through the area.",
+        location: `${dest} Center`,
+        category: "Walk",
+        cost: 0,
+        addedBy: state.activeMemberId
+      }
+    ];
+
+    state.activeDayIndex = 1;
+    state.itinerary.version = 1;
+    state.itinerary.updated_at = new Date().toISOString();
+
+    saveState();
+    hideModal("trip-modal", "trip-modal-backdrop");
+    renderTripInfo();
+    renderDayTabs();
+    renderDaySummary();
+    renderTimeline();
+
+    showToast("🎉 New Group Trip Created!", `"${title}" is live on the shared board. You are assigned as Owner.`, "gold", "👑");
+
+    document.getElementById("itinerary-section")?.scrollIntoView({ behavior: "smooth" });
+  }
+
+  /* Member Management Modal */
+  function openMembersModal() {
+    const list = document.getElementById("modal-members-list");
+    if (!list) return;
+
+    const isOwner = canManageRoles();
+    const sub = document.getElementById("members-modal-sub");
+    if (sub) {
+      sub.innerHTML = isOwner
+        ? "As <strong>Trip Owner</strong>, you can reassign roles (Owner, Editor, Viewer), invite new members, or remove participants."
+        : "Only the <strong>Trip Owner (Aisha)</strong> can modify member roles. You can view membership and invite colleagues.";
+    }
+
+    list.innerHTML = state.members.map(m => {
+      return `
+        <div class="member-row-item">
+          <div class="member-row-info">
+            <div class="member-row-avatar" style="background:${m.color}22;color:${m.color};border:1px solid ${m.color};">
+              ${m.avatar}
+            </div>
+            <div>
+              <div class="member-row-name">${m.name} ${m.role === "owner" ? "👑" : ""}</div>
+              <div class="member-row-email">${m.email} · Share Weight: ${m.share_weight.toFixed(1)}</div>
+            </div>
+          </div>
+          <div>
+            <select class="member-role-select" data-member-id="${m.id}" ${(!isOwner || m.id === state.activeMemberId) ? "disabled" : ""}>
+              <option value="owner" ${m.role === "owner" ? "selected" : ""}>Owner</option>
+              <option value="editor" ${m.role === "editor" ? "selected" : ""}>Editor</option>
+              <option value="viewer" ${m.role === "viewer" ? "selected" : ""}>Viewer</option>
+            </select>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    list.querySelectorAll(".member-role-select").forEach(sel => {
+      sel.addEventListener("change", e => {
+        const id = sel.getAttribute("data-member-id");
+        const newRole = e.target.value;
+        const targetMember = state.members.find(m => m.id === id);
+        if (targetMember) {
+          targetMember.role = newRole;
+          saveState();
+          renderMembersStrip();
+          renderPersonaSwitcher();
+          renderTimeline();
+          showToast(`Role Updated: ${targetMember.name}`, `Assigned new role: ${newRole.toUpperCase()}`, "teal", "👥");
+        }
+      });
+    });
+
+    showModal("members-modal", "members-modal-backdrop");
+  }
+
+  function handleInviteMemberSubmit(e) {
+    e.preventDefault();
+    const name = document.getElementById("invite-name").value.trim();
+    const email = document.getElementById("invite-email").value.trim();
+    const role = document.getElementById("invite-role").value;
+
+    if (!name || !email) return;
+
+    const initials = name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() || "M";
+    const colors = ["#E06C60", "#4EBE89", "#D9A566", "#9E7CC3", "#5FA88C"];
+    const randomColor = colors[state.members.length % colors.length];
+
+    const newMember = {
+      id: "u-" + Date.now(),
+      name,
+      email,
+      role,
+      avatar: initials,
+      share_weight: 1.0,
+      color: randomColor
+    };
+
+    state.members.push(newMember);
+    saveState();
+
+    document.getElementById("invite-name").value = "";
+    document.getElementById("invite-email").value = "";
+
+    openMembersModal();
+    renderMembersStrip();
+    renderPersonaSwitcher();
+    renderTripInfo();
+
+    showToast("👥 Invitation Sent!", `${name} added to trip_members with role "${role.toUpperCase()}".`, "gold", "✉️");
+  }
+
+  /* Live Realtime / WebSocket Simulation */
+  function simulateRohanLiveAdd() {
+    // Rohan adds a night activity to Day 1
+    const rohan = state.members.find(m => m.name.toLowerCase().includes("rohan")) || state.members[1];
+    const exists = state.items.find(i => i.title.includes("Night Street Food Bazaar"));
+
+    if (exists) {
+      showToast("⚡ Realtime Broadcast", "Rohan already added 'Night Street Food Bazaar'. Try adding other items or reset demo!", "gold", "⚡");
+      return;
+    }
+
+    const newItem = {
+      id: "item-rohan-live-" + Date.now(),
+      day: 1,
+      time: "21:15",
+      title: "Night Street Food Bazaar & Rabri at Godowlia",
+      desc: "Late-evening hot malaiyo, rabri jalebi, and spiced kulhad chai near the illuminated market chowk.",
+      location: "Godowlia Crossing",
+      category: "Culinary",
+      cost: 200,
+      addedBy: rohan.id
+    };
+
+    state.items.push(newItem);
+    state.activeDayIndex = 1;
+    bumpVersion(`⚡ WebSocket broadcast: Rohan added "${newItem.title}"`);
+
+    renderDayTabs();
+    renderDaySummary();
+    renderTimeline();
+
+    setTimeout(() => {
+      const card = document.getElementById(`timeline-${newItem.id}`);
+      if (card) {
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
+        const art = card.querySelector(".itinerary-card");
+        if (art) {
+          art.classList.add("highlight-broadcast");
+          setTimeout(() => art.classList.remove("highlight-broadcast"), 3000);
+        }
+      }
+    }, 150);
+  }
+
+  /* Concurrency Conflict Simulation */
+  function simulateConcurrencyConflict() {
+    const banner = document.getElementById("conflict-alert-box");
+    if (banner) {
+      banner.hidden = false;
+      banner.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    showToast(
+      "⚠️ Concurrency Conflict (Section 3)",
+      "Remote version mismatch detected: Server version is v5, while your local buffer was based on v3. Conflict cleanly resolved without clobbering.",
+      "warning",
+      "⚠️"
+    );
+  }
+
+  function resolveConflict() {
+    const banner = document.getElementById("conflict-alert-box");
+    if (banner) banner.hidden = true;
+    state.itinerary.version = Math.max(state.itinerary.version + 1, 5);
+    saveState();
+    renderTripInfo();
+    showToast("✓ Buffer Synchronized", "Reloaded latest changes. Board is now up to date with version " + state.itinerary.version, "teal", "✓");
+  }
+
+  /* Reset Demo */
+  function resetDemoData() {
+    if (!confirm("Reset itinerary board to initial Hackathon PS-11 seed data?")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    state = JSON.parse(JSON.stringify(INITIAL_STATE));
+    saveState();
+    renderTripInfo();
+    renderDayTabs();
+    renderDaySummary();
+    renderTimeline();
+    showToast("↺ Demo Reset", "Restored initial Varanasi trip, members (Aisha, Rohan, Meera, Kabir) and version v3.", "gold", "↺");
+  }
+
+  /* Language Switcher */
+  function toggleLanguage() {
+    currentLang = currentLang === "en" ? "hi" : "en";
+    const t = I18N[currentLang];
+
+    const langBtn = document.getElementById("lang-toggle-btn");
+    const eyebrow = document.getElementById("itinerary-eyebrow");
+    const title = document.getElementById("itinerary-title");
+    const subtitle = document.getElementById("itinerary-subtitle");
+    const personaLabel = document.getElementById("persona-label");
+    const btnCreateText = document.getElementById("btn-create-trip-text");
+    const btnManageText = document.getElementById("btn-manage-members-text");
+    const btnAddText = document.getElementById("btn-add-activity-text");
+    const btnSimText = document.getElementById("btn-sim-text");
+    const btnConflictText = document.getElementById("btn-conflict-text");
+    const btnResetText = document.getElementById("btn-reset-text");
+    const labelCost = document.getElementById("label-day-cost");
+    const labelActs = document.getElementById("label-day-activities");
+    const labelPace = document.getElementById("label-day-pace");
+    const labelTheme = document.getElementById("label-day-theme");
+    const emptyText = document.getElementById("empty-day-text");
+    const btnBottomText = document.getElementById("btn-add-bottom-text");
+
+    if (langBtn) langBtn.innerHTML = `<span aria-hidden="true">🌐</span> <span>${t.langBtn}</span>`;
+    if (eyebrow) eyebrow.textContent = t.eyebrow;
+    if (title) title.innerHTML = t.title;
+    if (subtitle) subtitle.textContent = t.subtitle;
+    if (personaLabel) personaLabel.textContent = t.personaLabel;
+    if (btnCreateText) btnCreateText.textContent = t.newTrip;
+    if (btnManageText) btnManageText.textContent = t.manageMembers;
+    if (btnAddText) btnAddText.textContent = t.addActivity;
+    if (btnSimText) btnSimText.textContent = t.simRohan;
+    if (btnConflictText) btnConflictText.textContent = t.testConflict;
+    if (btnResetText) btnResetText.textContent = t.resetDemo;
+    if (labelCost) labelCost.textContent = t.costPerson;
+    if (labelActs) labelActs.textContent = t.totalActivities;
+    if (labelPace) labelPace.textContent = t.pace;
+    if (labelTheme) labelTheme.textContent = t.dayFocus;
+    if (emptyText) emptyText.textContent = t.emptyDay;
+    if (btnBottomText) btnBottomText.textContent = t.addBottom;
+
+    renderTripInfo();
+    renderDayTabs();
+    renderDaySummary();
+    renderTimeline();
+
+    showToast("🌐 Language Switched", currentLang === "hi" ? "हिन्दी भाषा सक्रिय की गई।" : "Switched to English.", "teal", "🌐");
+  }
+
+  /* Modal Helpers */
+  function showModal(modalId, backdropId) {
+    const m = document.getElementById(modalId);
+    const b = document.getElementById(backdropId);
+    if (m) m.hidden = false;
+    if (b) b.hidden = false;
+    document.body.style.overflow = "hidden";
+  }
+
+  function hideModal(modalId, backdropId) {
+    const m = document.getElementById(modalId);
+    const b = document.getElementById(backdropId);
+    if (m) m.hidden = true;
+    if (b) b.hidden = true;
+    document.body.style.overflow = "";
+  }
+
+  /* Public API & Initialization */
+  function init() {
+    renderTripInfo();
+    renderDayTabs();
+    renderDaySummary();
+    renderTimeline();
+
+    // Event bindings
+    document.getElementById("lang-toggle-btn")?.addEventListener("click", toggleLanguage);
+    document.getElementById("btn-create-trip")?.addEventListener("click", () => openTripModal());
+    document.getElementById("btn-manage-members")?.addEventListener("click", openMembersModal);
+    document.getElementById("btn-add-activity-top")?.addEventListener("click", () => openAddItemModal());
+    document.getElementById("btn-add-activity-bottom")?.addEventListener("click", () => openAddItemModal());
+    document.getElementById("btn-sim-rohan")?.addEventListener("click", simulateRohanLiveAdd);
+    document.getElementById("btn-sim-conflict")?.addEventListener("click", simulateConcurrencyConflict);
+    document.getElementById("conflict-resolve-btn")?.addEventListener("click", resolveConflict);
+    document.getElementById("btn-reset-demo")?.addEventListener("click", resetDemoData);
+
+    // Form submits
+    document.getElementById("trip-create-form")?.addEventListener("submit", handleCreateTripSubmit);
+    document.getElementById("invite-member-form")?.addEventListener("submit", handleInviteMemberSubmit);
+    document.getElementById("item-form")?.addEventListener("submit", saveItemFromForm);
+    document.getElementById("proposal-form")?.addEventListener("submit", submitProposal);
+
+    // Modal closes
+    document.getElementById("trip-modal-close")?.addEventListener("click", () => hideModal("trip-modal", "trip-modal-backdrop"));
+    document.getElementById("trip-modal-backdrop")?.addEventListener("click", () => hideModal("trip-modal", "trip-modal-backdrop"));
+    document.getElementById("members-modal-close")?.addEventListener("click", () => hideModal("members-modal", "members-modal-backdrop"));
+    document.getElementById("members-modal-backdrop")?.addEventListener("click", () => hideModal("members-modal", "members-modal-backdrop"));
+    document.getElementById("item-modal-close")?.addEventListener("click", () => hideModal("item-modal", "item-modal-backdrop"));
+    document.getElementById("item-modal-backdrop")?.addEventListener("click", () => hideModal("item-modal", "item-modal-backdrop"));
+    document.getElementById("proposal-modal-close")?.addEventListener("click", () => hideModal("proposal-modal", "proposal-modal-backdrop"));
+    document.getElementById("proposal-modal-backdrop")?.addEventListener("click", () => hideModal("proposal-modal", "proposal-modal-backdrop"));
+
+    // Global hook for destination search integration
+    window.openCreateTripWithDestination = function(destName) {
+      openTripModal(destName);
+    };
+  }
+
+  return { init, openTripModal };
+})();
+
+// Initialize when DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", WanderItinerary.init);
+} else {
+  WanderItinerary.init();
+}
 </script>
 </body>
 </html>
