@@ -1,0 +1,3 @@
+Place the hackathon's provided schema.sql here as `schema.sql`.
+docker-compose mounts this directory into Postgres init, so the provided
+schema is applied before any migration in db/migrations/.

@@ -289,6 +289,80 @@
       font-weight: 600
     }
 
+    .nav-backend-status {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-left: 10px;
+      padding: 7px 13px;
+      border: 1px solid rgba(243, 239, 230, .25);
+      border-radius: 30px;
+      background: rgba(28, 33, 28, .85);
+      color: var(--ink);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all .2s ease;
+    }
+
+    .nav-backend-status:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(36, 43, 36, .95);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: inline-block;
+    }
+
+    .status-dot.status-online {
+      background: #5FA88C;
+      box-shadow: 0 0 8px rgba(95, 168, 140, 0.85);
+    }
+
+    .status-dot.status-offline {
+      background: #D9A566;
+      box-shadow: 0 0 6px rgba(217, 165, 102, 0.5);
+    }
+
+    .status-dot.status-error {
+      background: #E57373;
+      box-shadow: 0 0 6px rgba(229, 115, 115, 0.6);
+    }
+
+    .api-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 51;
+      width: 90vw;
+      max-width: 440px;
+      background: #1C211C;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 32px 28px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, .6);
+    }
+
+    .api-diag-box {
+      font-size: 12px;
+      padding: 12px 14px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      margin: 14px 0;
+      line-height: 1.7;
+    }
+
+    .api-diag-box div {
+      display: flex;
+      justify-content: space-between;
+    }
+
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -2720,6 +2794,11 @@
       <button type="button" class="locale-button" data-locale="hi" aria-pressed="false">हिं</button>
     </div>
 
+    <button class="nav-backend-status" id="nav-backend-status" type="button" title="WanderMatch Backend Status (Click to configure)">
+      <span class="status-dot status-offline" id="backend-status-dot"></span>
+      <span class="status-text" id="backend-status-text">Backend</span>
+    </button>
+
     <button class="nav-account" id="nav-account" type="button">
       <span id="nav-account-label">Log in</span>
     </button>
@@ -2779,8 +2858,26 @@
     </form>
 
     <p class="auth-error" id="auth-error" role="alert" hidden></p>
-    <p class="auth-note muted">Demo auth only: passwords are hashed and stored in this browser's local storage, not a
-      real server.</p>
+    <p class="auth-note muted" id="auth-note">Connected to WanderMatch API (/api/v1, Argon2id auth). Password min 10 characters.</p>
+  </div>
+
+  <div class="api-modal" id="api-modal" role="dialog" aria-modal="true" aria-labelledby="api-title" hidden>
+    <button class="modal-close" id="api-close" type="button" aria-label="Close">✕</button>
+    <h2 class="auth-title" id="api-title">Backend Connection</h2>
+    <p class="auth-sub muted">Connects with WanderMatch Fastify API (/api/v1) and Socket.io.</p>
+    <div style="margin: 16px 0;">
+      <label style="display:block; font-size:12px; margin-bottom:6px; color:var(--muted)">API Base URL</label>
+      <input type="url" id="api-origin-input" style="width:100%; box-sizing:border-box; margin-bottom:12px; padding:9px 12px; background:rgba(0,0,0,0.4); border:1px solid var(--line); border-radius:4px; color:var(--ink);" value="http://localhost:8080">
+      <div class="api-diag-box">
+        <div><span>Status:</span><strong id="api-diag-status">Checking…</strong></div>
+        <div><span>Latency:</span><span id="api-diag-latency">—</span></div>
+        <div><span>Realtime (WS):</span><span id="api-diag-socket">—</span></div>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:14px;">
+        <button type="button" class="button" id="api-test-button" style="flex:1; background:transparent; border:1px solid var(--line); color:var(--ink);">Test Ping</button>
+        <button type="button" class="button" id="api-save-button" style="flex:1;">Save & Reconnect</button>
+      </div>
+    </div>
   </div>
 
   <main>
@@ -3126,6 +3223,8 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://appleid.cdn-apple.com/appleauth/one/appleid.auth.js" async defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+  <script src="https://cdn.socket.io/4.8.0/socket.io.min.js"></script>
+  <script src="wandermatch-client.js"></script>
 
   <script>
     "use strict";
@@ -3530,8 +3629,24 @@
       clearAuthError();
     }
 
+    function getCurrentUser() {
+      if (window.wm && wm.token) {
+        const stored = wm.getStoredUser();
+        if (stored) {
+          return {
+            id: stored.userId || stored.user_id,
+            name: stored.displayName || stored.display_name || stored.name || "You",
+            email: stored.email || "",
+            locale: stored.locale || "en",
+            avatar: stored.avatar || null
+          };
+        }
+      }
+      return AuthDB.currentUser();
+    }
+
     function renderAccountState() {
-      const user = AuthDB.currentUser();
+      const user = getCurrentUser();
       const label = $("#nav-account-label");
       const button = $("#nav-account");
 
@@ -3548,13 +3663,15 @@
           img.style.cssText = "width:100%;height:100%;border-radius:50%;object-fit:cover";
           avatar.append(img);
         } else {
-          avatar.textContent = (user.name || user.email)[0].toUpperCase();
+          avatar.textContent = (user.name || user.email || "U")[0].toUpperCase();
         }
 
         button.prepend(avatar);
         label.textContent = user.name?.split(" ")[0] || "Account";
+        button.title = `${user.name || user.email} (Click to log out)`;
       } else {
         label.textContent = "Log in";
+        button.title = "Log in / Sign up";
       }
     }
 
@@ -3562,21 +3679,36 @@
       closeAuthModal();
       renderAccountState();
       if (user.locale && typeof setLocale === "function") setLocale(user.locale);
+      updateBackendStatus();
     }
 
     $("#nav-account").addEventListener("click", () => {
-      if (AuthDB.currentUser()) {
-        AuthDB.logOut();
-        renderAccountState();
+      if (getCurrentUser()) {
+        if (confirm("Log out of WanderMatch?")) {
+          if (window.wm) wm.logout();
+          AuthDB.logOut();
+          renderAccountState();
+        }
       } else {
         openAuthModal("login");
       }
     });
 
     $("#auth-close").addEventListener("click", closeAuthModal);
-    $("#auth-backdrop").addEventListener("click", closeAuthModal);
+    $("#auth-backdrop").addEventListener("click", () => {
+      closeAuthModal();
+      const apiModal = $("#api-modal");
+      if (apiModal) apiModal.hidden = true;
+    });
     document.addEventListener("keydown", e => {
-      if (e.key === "Escape" && !$("#auth-modal").hidden) closeAuthModal();
+      if (e.key === "Escape") {
+        if (!$("#auth-modal").hidden) closeAuthModal();
+        const apiModal = $("#api-modal");
+        if (apiModal && !apiModal.hidden) {
+          apiModal.hidden = true;
+          $("#auth-backdrop").hidden = true;
+        }
+      }
     });
 
     $("#tab-login").addEventListener("click", () => setAuthMode("login"));
@@ -3590,16 +3722,127 @@
       const password = $("#auth-password").value;
       const name = $("#auth-name").value.trim();
 
+      const submitBtn = $("#auth-submit");
+      const prevText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Connecting…";
+
       try {
-        const user = authMode === "login"
-          ? await AuthDB.logIn({ email, password })
-          : await AuthDB.signUp({ name: name || email, email, password });
+        let user;
+        if (authMode === "login") {
+          try {
+            const res = await wm.login(email, password);
+            user = {
+              id: res.user.userId,
+              name: res.user.displayName,
+              email,
+              locale: res.user.locale
+            };
+          } catch (apiErr) {
+            if (apiErr.status === 401 || apiErr.status === 422 || apiErr.code === 'UNAUTHORIZED' || apiErr.code === 'VALIDATION_FAILED') {
+              throw apiErr;
+            }
+            // Fallback to local AuthDB if offline
+            user = await AuthDB.logIn({ email, password });
+          }
+        } else {
+          if (password.length < 10) {
+            throw new Error("Password must be at least 10 characters (backend requirement).");
+          }
+          try {
+            const res = await wm.signup(email, password, name || email.split("@")[0], currentLocale === "hi" ? "hi-IN" : "en-IN");
+            user = {
+              id: res.user.userId,
+              name: res.user.displayName,
+              email,
+              locale: res.user.locale
+            };
+          } catch (apiErr) {
+            if (apiErr.status === 422 || apiErr.status === 409 || apiErr.code === 'VALIDATION_FAILED' || apiErr.code === 'DUPLICATE') {
+              throw apiErr;
+            }
+            user = await AuthDB.signUp({ name: name || email, email, password });
+          }
+        }
 
         onAuthSuccess(user);
       } catch (error) {
         showAuthError(error.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = prevText;
       }
     });
+
+    /* Backend Connection Status Diagnostics */
+    async function updateBackendStatus() {
+      const dot = $("#backend-status-dot");
+      const text = $("#backend-status-text");
+      const diagStatus = $("#api-diag-status");
+      const diagLatency = $("#api-diag-latency");
+      const diagSocket = $("#api-diag-socket");
+      const originInput = $("#api-origin-input");
+
+      if (originInput && window.wm?.baseUrl) originInput.value = wm.baseUrl;
+
+      if (!window.wm) return;
+      const health = await wm.checkHealth();
+      if (health.ok) {
+        if (dot) dot.className = "status-dot status-online";
+        if (text) text.textContent = "API Live";
+        if (diagStatus) diagStatus.textContent = "Connected (Healthy)";
+        if (diagLatency) diagLatency.textContent = `${health.latencyMs}ms`;
+        if (diagSocket) diagSocket.textContent = window.io ? (wm.socket?.connected ? "Connected" : "Ready") : "Not loaded";
+      } else {
+        if (dot) dot.className = "status-dot status-offline";
+        if (text) text.textContent = "Offline Mode";
+        if (diagStatus) diagStatus.textContent = health.error ? `Offline (${health.error})` : `HTTP ${health.status || 'Unavailable'}`;
+        if (diagLatency) diagLatency.textContent = `${health.latencyMs}ms`;
+        if (diagSocket) diagSocket.textContent = "Disconnected";
+      }
+    }
+
+    $("#nav-backend-status")?.addEventListener("click", () => {
+      $("#auth-backdrop").hidden = false;
+      $("#api-modal").hidden = false;
+      updateBackendStatus();
+    });
+
+    $("#api-close")?.addEventListener("click", () => {
+      $("#api-modal").hidden = true;
+      $("#auth-backdrop").hidden = true;
+    });
+
+    $("#api-test-button")?.addEventListener("click", async () => {
+      const diagStatus = $("#api-diag-status");
+      if (diagStatus) diagStatus.textContent = "Testing ping…";
+      await updateBackendStatus();
+    });
+
+    $("#api-save-button")?.addEventListener("click", async () => {
+      const newUrl = $("#api-origin-input")?.value.trim();
+      if (newUrl && window.wm) {
+        wm.setBaseUrl(newUrl);
+        await updateBackendStatus();
+      }
+      $("#api-modal").hidden = true;
+      $("#auth-backdrop").hidden = true;
+    });
+
+    // Check backend health & existing session
+    updateBackendStatus();
+    if (window.wm && wm.token) {
+      wm.me().then(res => {
+        if (res?.user) {
+          renderAccountState();
+          if (res.user.locale && typeof setLocale === "function") {
+            setLocale(res.user.locale.startsWith("hi") ? "hi" : "en");
+          }
+        }
+      }).catch(() => {
+        renderAccountState();
+      });
+    }
 
     $("#google-button").addEventListener("click", () => {
       clearAuthError();
@@ -4012,10 +4255,22 @@
         value="${proposal.reasons[activeVoter] || ""}">
     `;
 
-        card.querySelector(".proposal-vote-button").addEventListener("click", () => {
-          if (proposal.votes.has(activeVoter)) proposal.votes.delete(activeVoter);
+        card.querySelector(".proposal-vote-button").addEventListener("click", async () => {
+          const currentlyVoted = proposal.votes.has(activeVoter);
+          if (currentlyVoted) proposal.votes.delete(activeVoter);
           else proposal.votes.add(activeVoter);
           renderProposals();
+
+          if (trip?.id && window.wm && wm.token && proposal.apiProposalId) {
+            try {
+              const voteRes = await wm.vote(trip.id, proposal.apiProposalId, currentlyVoted ? 'abstain' : 'yes', proposal.reasons[activeVoter] || null);
+              if (voteRes?.outcome === 'tied' && voteRes.consensus) {
+                window._serverConsensus = voteRes.consensus;
+              }
+            } catch (err) {
+              console.warn("[WanderMatch] Vote API fallback:", err.message);
+            }
+          }
         });
 
         const reasonInput = card.querySelector(".proposal-reason-input");
@@ -4060,6 +4315,24 @@
 
       const requestId = ++proposeRequestId;
 
+      let apiProposalId = null;
+      if (trip?.id && window.wm && wm.token) {
+        try {
+          const apiRes = await wm.propose(trip.id, {
+            action: 'add',
+            title: name,
+            rationale: `Proposed by ${crewDisplayName(activeVoter)}`,
+            costDelta: 0,
+            dayIndex: 0
+          });
+          if (apiRes?.proposal?.proposal_id) {
+            apiProposalId = apiRes.proposal.proposal_id;
+          }
+        } catch (err) {
+          console.warn("[WanderMatch] Propose API fallback:", err.message);
+        }
+      }
+
       try {
         let summary, creditHtml;
 
@@ -4084,6 +4357,7 @@
 
         proposals.push({
           id: crypto.randomUUID(),
+          apiProposalId,
           name: summary.title,
           summary,
           thumbnail: summary.thumbnail,
@@ -4345,6 +4619,45 @@ Rules, all mandatory:
   `;
       card.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
 
+      if (window._serverConsensus) {
+        const sc = window._serverConsensus;
+        const citesHtml = (sc.cites || []).length
+          ? `<div class="consensus-cites">${sc.cites.map(c => `<p><strong>${c.user_id || c.voter || "Member"}:</strong> "${c.reason}"</p>`).join("")}</div>`
+          : "";
+
+        const isUnverified = sc.groundingPassed === false || sc.isFallback === true;
+        const recText = sc.recommendation || (sc.strategy === 'synthesise'
+          ? t("consensus.synthesize", { primary: sc.primary || tiedProposals[0].name, secondary: sc.secondary || tiedProposals[1]?.name || "" })
+          : t("consensus.goWith", { name: tiedProposals[0].name }));
+
+        card.innerHTML = `
+      <h3>${t("consensus.tie")}</h3>
+      <p class="consensus-tie-list">${tiedProposals.map(p => `${p.name} (${p.votes.size})`).join(" vs. ")}</p>
+      <div class="consensus-result">
+        <div class="label">${isUnverified ? "⚠ Unverified Fallback" : t("consensus.recommends")}</div>
+        <p>${recText}</p>
+        <p style="margin-top:10px;color:var(--muted);font-size:11px">${sc.rationale || ""}</p>
+        ${citesHtml}
+      </div>
+      <div class="consensus-actions" id="consensus-accept-row">
+        <button type="button" class="accept-button" id="consensus-accept">${t("consensus.accept")}</button>
+      </div>
+      <p class="consensus-tally">${t("consensus.tally", { a: consensusTally.accepted, o: consensusTally.overridden })}</p>
+    `;
+
+        const winner = tiedProposals.find(p => p.name === (sc.recommended_proposal || sc.recommendation)) || tiedProposals[0];
+        $("#consensus-accept").addEventListener("click", async () => {
+          consensusTally.accepted++;
+          if (trip?.id && window.wm && sc.recommendationId) {
+            await wm.decideConsensus(trip.id, sc.recommendationId, 'accept').catch(() => {});
+          }
+          applyConfirmedProposal(winner, sc.rationale || "Resolved by group consensus.");
+        });
+
+        card.querySelector(".consensus-actions").append(renderConsensusOverrideChoices(tiedProposals));
+        return;
+      }
+
       if (!getStoredApiKey()) {
         renderConsensusFallback(tiedProposals);
         return;
@@ -4398,6 +4711,43 @@ Rules, all mandatory:
     }
     renderVoterChips();
     renderProposals();
+
+    if (window.wm) {
+      wm.on('proposal:created', payload => {
+        if (!payload?.proposal) return;
+        const exists = proposals.some(p => p.name.toLowerCase() === payload.proposal.title.toLowerCase() || p.apiProposalId === payload.proposal.proposal_id);
+        if (!exists) {
+          proposals.push({
+            id: crypto.randomUUID(),
+            apiProposalId: payload.proposal.proposal_id,
+            name: payload.proposal.title,
+            summary: { title: payload.proposal.title, extract: payload.proposal.rationale || "" },
+            thumbnail: null,
+            creditHtml: "",
+            proposedBy: payload.proposal.proposed_by_user_id || "alex",
+            votes: new Set([payload.proposal.proposed_by_user_id || "alex"]),
+            reasons: {}
+          });
+          renderProposals();
+        }
+      });
+
+      wm.on('vote:cast', payload => {
+        if (!payload?.proposalId) return;
+        const prop = proposals.find(p => p.apiProposalId === payload.proposalId);
+        if (prop) {
+          if (payload.value === 'yes') prop.votes.add(payload.userId || "alex");
+          else prop.votes.delete(payload.userId || "alex");
+          renderProposals();
+        }
+      });
+
+      wm.on('consensus:ready', payload => {
+        if (payload?.recommendation) {
+          window._serverConsensus = payload.recommendation;
+        }
+      });
+    }
 
     /*
       TRIP CREATION + DAY-BY-DAY ITINERARY BOARD.
@@ -4470,12 +4820,31 @@ Rules, all mandatory:
       $("#trip-setup").hidden = true;
       $("#trip-board").hidden = false;
       renderTripBoard();
+
+      if (trip.id && window.wm) {
+        wm.getItinerary(trip.id).then(data => {
+          if (data && data.days) {
+            trip.version = data.version;
+            trip.days = data.days.map(d => ({
+              items: (d.items || []).map(it => ({
+                id: it.item_id || it.id,
+                title: it.title,
+                cost: it.cost,
+                time: it.starts_at ? it.starts_at.slice(11, 16) : ""
+              }))
+            }));
+            renderTripBoard();
+          }
+        }).catch(() => {});
+
+        wm.connect(trip.id).catch(() => {});
+      }
     }
 
-    function createTrip() {
+    async function createTrip() {
       const name = $("#trip-name-input").value.trim() || confirmedProposal?.name || "Our trip";
-      const start = $("#trip-start-input").value;
-      const end = $("#trip-end-input").value;
+      const start = $("#trip-start-input").value || "2027-03-10";
+      const end = $("#trip-end-input").value || "2027-03-15";
       const dayCount = dayCountFromDates(start, end);
 
       const roles = { you: "owner" };
@@ -4483,13 +4852,37 @@ Rules, all mandatory:
         if (select.value !== "none") roles[select.dataset.member] = select.value;
       });
 
+      let backendTripId = null;
+      let backendVersion = 1;
+
+      if (window.wm && wm.token) {
+        try {
+          const res = await wm.createTrip({
+            title: name,
+            destinationCityId: "city_manali",
+            startDate: start,
+            endDate: end,
+            partySize: 4,
+            isGroupTrip: true
+          });
+          if (res?.trip?.trip_id) {
+            backendTripId = res.trip.trip_id;
+            const itin = await wm.getItinerary(backendTripId);
+            backendVersion = itin.version || 1;
+          }
+        } catch (err) {
+          console.warn("[WanderMatch] Backend createTrip failed, fallback to local:", err.message);
+        }
+      }
+
       activateTrip({
+        id: backendTripId,
         name,
         destination: confirmedProposal?.name || name,
         start,
         end,
         days: Array.from({ length: dayCount }, () => ({ items: [] })),
-        version: 1,
+        version: backendVersion,
         roles
       });
     }
@@ -4579,7 +4972,7 @@ Rules, all mandatory:
         </div>
       `;
 
-          row.querySelector(".save-edit").addEventListener("click", () => {
+          row.querySelector(".save-edit").addEventListener("click", async () => {
             clearItineraryError();
 
             if (editingBaseVersion !== trip.version) {
@@ -4589,10 +4982,33 @@ Rules, all mandatory:
               return;
             }
 
-            item.title = row.querySelector(".edit-title").value.trim() || item.title;
-            item.time = row.querySelector(".edit-time").value;
-            item.cost = row.querySelector(".edit-cost").value;
-            trip.version++;
+            const newTitle = row.querySelector(".edit-title").value.trim() || item.title;
+            const newTime = row.querySelector(".edit-time").value;
+            const newCost = row.querySelector(".edit-cost").value;
+
+            if (trip.id && window.wm && wm.token) {
+              try {
+                const res = await wm.updateItem(trip.id, item.id, {
+                  title: newTitle,
+                  cost: Number(newCost) || 0
+                });
+                trip.version = res.version || (trip.version + 1);
+              } catch (err) {
+                if (err.code === 'VERSION_CONFLICT') {
+                  showItineraryError(t("itin.conflict"));
+                  editingItemId = null;
+                  renderItineraryItems();
+                  return;
+                }
+                trip.version++;
+              }
+            } else {
+              trip.version++;
+            }
+
+            item.title = newTitle;
+            item.time = newTime;
+            item.cost = newCost;
             editingItemId = null;
             renderItineraryItems();
           });
@@ -4622,12 +5038,21 @@ Rules, all mandatory:
               renderItineraryItems();
             });
 
-            row.querySelector(".delete-item").addEventListener("click", () => {
+            row.querySelector(".delete-item").addEventListener("click", async () => {
               if (editingBaseVersion !== null && editingBaseVersion !== trip.version) {
                 showItineraryError(t("itin.conflict"));
               }
+              if (trip.id && window.wm && wm.token) {
+                try {
+                  const res = await wm.deleteItem(trip.id, item.id);
+                  trip.version = res.version || (trip.version + 1);
+                } catch (err) {
+                  trip.version++;
+                }
+              } else {
+                trip.version++;
+              }
               day.items = day.items.filter(i => i.id !== item.id);
-              trip.version++;
               editingItemId = null;
               renderItineraryItems();
             });
@@ -4657,20 +5082,46 @@ Rules, all mandatory:
 
     $("#create-trip-button").addEventListener("click", createTrip);
 
-    $("#item-form").addEventListener("submit", e => {
+    $("#item-form").addEventListener("submit", async e => {
       e.preventDefault();
       clearItineraryError();
 
       const title = $("#item-title-input").value.trim();
       if (!title) return;
+      const timeVal = $("#item-time-input").value;
+      const costVal = $("#item-cost-input").value;
+
+      let newItemId = crypto.randomUUID();
+
+      if (trip.id && window.wm && wm.token) {
+        try {
+          const res = await wm.addItem(trip.id, {
+            dayIndex: selectedDay,
+            title,
+            cost: Number(costVal) || 0,
+            currency: 'INR'
+          });
+          if (res?.item?.item_id) {
+            newItemId = res.item.item_id;
+          }
+          trip.version = res.version || (trip.version + 1);
+        } catch (err) {
+          if (err.code === 'VERSION_CONFLICT') {
+            showItineraryError(t("itin.conflict"));
+            return;
+          }
+          trip.version++;
+        }
+      } else {
+        trip.version++;
+      }
 
       trip.days[selectedDay].items.push({
-        id: crypto.randomUUID(),
+        id: newItemId,
         title,
-        time: $("#item-time-input").value,
-        cost: $("#item-cost-input").value
+        time: timeVal,
+        cost: costVal
       });
-      trip.version++;
 
       $("#item-form").reset();
       renderItineraryItems();
@@ -4678,6 +5129,7 @@ Rules, all mandatory:
 
     $("#simulate-conflict-button").addEventListener("click", () => {
       trip.version++;
+      if (window.wm) wm.itinerary.version = trip.version;
       showItineraryError(
         "Simulated: another crew member just changed the plan (version bumped to " + trip.version + "). Try saving your open edit now to see the conflict caught."
       );
@@ -4693,6 +5145,75 @@ Rules, all mandatory:
       $("#trip-end-input").value = "";
       renderRoleSetup();
     });
+
+    if (window.wm) {
+      wm.onConflict = () => {
+        showItineraryError(t("itin.conflict"));
+        if (trip?.id) {
+          wm.getItinerary(trip.id).then(itinData => {
+            if (itinData?.days) {
+              trip.version = itinData.version;
+              trip.days = itinData.days.map(d => ({
+                items: (d.items || []).map(it => ({
+                  id: it.item_id || it.id,
+                  title: it.title,
+                  cost: it.cost,
+                  time: it.starts_at ? it.starts_at.slice(11, 16) : ""
+                }))
+              }));
+              renderItineraryItems();
+            }
+          }).catch(() => {});
+        }
+      };
+
+      wm.on('item:created', payload => {
+        if (!trip || !payload?.item) return;
+        const dayIdx = payload.item.day_index ?? 0;
+        if (trip.days[dayIdx]) {
+          const exists = trip.days[dayIdx].items.some(i => i.id === payload.item.item_id);
+          if (!exists) {
+            trip.days[dayIdx].items.push({
+              id: payload.item.item_id,
+              title: payload.item.title,
+              cost: payload.item.cost,
+              time: payload.item.starts_at ? payload.item.starts_at.slice(11, 16) : ""
+            });
+            if (payload.version) trip.version = payload.version;
+            renderItineraryItems();
+          }
+        }
+      });
+
+      wm.on('item:updated', payload => {
+        if (!trip || !payload?.item) return;
+        for (const day of trip.days) {
+          const it = day.items.find(i => i.id === payload.item.item_id);
+          if (it) {
+            it.title = payload.item.title;
+            it.cost = payload.item.cost;
+            if (payload.version) trip.version = payload.version;
+            renderItineraryItems();
+            break;
+          }
+        }
+      });
+
+      wm.on('item:deleted', payload => {
+        if (!trip || !payload?.itemId) return;
+        for (const day of trip.days) {
+          day.items = day.items.filter(i => i.id !== payload.itemId);
+        }
+        if (payload.version) trip.version = payload.version;
+        renderItineraryItems();
+      });
+
+      wm.on('itinerary:version', payload => {
+        if (trip && payload?.version) {
+          trip.version = payload.version;
+        }
+      });
+    }
 
     /*
       SOLO-TO-GROUP MATCHING — heuristic, not a model, exactly as specced:
@@ -4787,15 +5308,24 @@ Rules, all mandatory:
   `).join("");
     }
 
-    function requestToJoin(candidate, button) {
+    async function requestToJoin(candidate, button) {
       button.disabled = true;
       button.textContent = t("match.requesting");
+
+      if (window.wm && wm.token && candidate.id) {
+        try {
+          await wm.requestToJoin(candidate.id, "Hi! I would love to join your trip.");
+        } catch (err) {
+          console.warn("[WanderMatch] Request to join API fallback:", err.message);
+        }
+      }
 
       setTimeout(() => {
         button.textContent = t("match.approved");
         setTimeout(() => {
           const dayCount = dayCountFromDates(candidate.start, candidate.end);
           activateTrip({
+            id: candidate.id || null,
             name: candidate.name,
             destination: candidate.destination,
             start: candidate.start,
@@ -4809,7 +5339,7 @@ Rules, all mandatory:
       }, 500);
     }
 
-    function findMatches() {
+    async function findMatches() {
       const destinationFilter = $("#solo-destination-input").value.trim().toLowerCase();
       const solo = {
         start: $("#solo-start-input").value,
@@ -4819,13 +5349,55 @@ Rules, all mandatory:
         budgetBand: $("#solo-budget-input").value
       };
 
-      const candidates = OPEN_GROUP_TRIPS.filter(groupTrip =>
-        !destinationFilter || groupTrip.destination.toLowerCase().includes(destinationFilter)
-      );
+      let ranked = [];
+      let usedBackend = false;
 
-      const ranked = candidates
-        .map(candidate => ({ candidate, score: scoreTrip(solo, candidate) }))
-        .sort((a, b) => b.score.total - a.score.total);
+      if (window.wm && wm.token) {
+        try {
+          const apiRes = await wm.findMatches({
+            destinationCityId: destinationFilter || undefined,
+            startDate: solo.start || undefined,
+            endDate: solo.end || undefined,
+            interests: solo.interests,
+            pace: solo.pace,
+            budgetBand: solo.budgetBand,
+            limit: 10
+          });
+          if (apiRes?.matches?.length) {
+            usedBackend = true;
+            ranked = apiRes.matches.map(m => ({
+              candidate: {
+                id: m.tripId,
+                name: m.title || "Group Trip",
+                destination: m.destinationCityId?.replace(/^city_/, '') || destinationFilter || "Destination",
+                start: m.startDate,
+                end: m.endDate,
+                pace: solo.pace,
+                budgetBand: solo.budgetBand,
+                seatsLeft: m.seatsLeft
+              },
+              score: {
+                total: m.score,
+                interestScore: m.components?.interestScore ?? 0,
+                dateScore: m.components?.dateScore ?? 0,
+                paceScore: m.components?.paceScore ?? 0,
+                budgetScore: m.components?.budgetScore ?? 0
+              }
+            }));
+          }
+        } catch (err) {
+          console.warn("[WanderMatch] Backend findMatches fallback to client heuristic:", err.message);
+        }
+      }
+
+      if (!usedBackend) {
+        const candidates = OPEN_GROUP_TRIPS.filter(groupTrip =>
+          !destinationFilter || groupTrip.destination.toLowerCase().includes(destinationFilter)
+        );
+        ranked = candidates
+          .map(candidate => ({ candidate, score: scoreTrip(solo, candidate) }))
+          .sort((a, b) => b.score.total - a.score.total);
+      }
 
       const results = $("#match-results");
       const empty = $("#match-empty");
@@ -4842,7 +5414,7 @@ Rules, all mandatory:
       <div class="match-top">
         <div>
           <div class="match-name">${candidate.name}</div>
-          <div class="match-meta">${dateLabel}${candidate.destination} · ${candidate.pace} pace · ${candidate.budgetBand} budget</div>
+          <div class="match-meta">${dateLabel}${candidate.destination} · ${candidate.pace} pace · ${candidate.budgetBand} budget ${candidate.seatsLeft ? `· ${candidate.seatsLeft} seats left` : ''}</div>
         </div>
         <div class="match-score">
           <div class="match-score-value">${Math.round(score.total * 100)}%</div>
@@ -4904,8 +5476,29 @@ Rules, all mandatory:
       box.innerHTML = '<div class="search-status">Searching Wikipedia…</div>';
 
       try {
-        const results = await wikiSearch(query.trim(), 6, controller.signal);
+        let results = await wikiSearch(query.trim(), 6, controller.signal).catch(() => []);
         if (controller.signal.aborted) return;
+
+        if (window.wm) {
+          try {
+            const refCities = await wm.searchCities(query.trim());
+            if (refCities?.cities?.length) {
+              const apiMatches = refCities.cities.slice(0, 3).map(c => ({
+                title: c.name,
+                description: `${c.state ? c.state + ', ' : ''}${c.country_code || 'India'} · Verified destination`,
+                thumbnail: null,
+                isVerifiedCity: true
+              }));
+              const existingTitles = new Set(results.map(r => r.title.toLowerCase()));
+              for (const am of apiMatches) {
+                if (!existingTitles.has(am.title.toLowerCase())) {
+                  results.unshift(am);
+                  existingTitles.add(am.title.toLowerCase());
+                }
+              }
+            }
+          } catch (_) {}
+        }
 
         if (!results.length) {
           box.innerHTML = '<div class="search-status">No matching places found.</div>';
@@ -4921,10 +5514,10 @@ Rules, all mandatory:
           item.innerHTML = `
         ${result.thumbnail
               ? `<img src="${result.thumbnail}" alt="" loading="lazy">`
-              : `<span class="search-result-noimg" aria-hidden="true">⌕</span>`}
+              : `<span class="search-result-noimg" aria-hidden="true">${result.isVerifiedCity ? '✓' : '⌕'}</span>`}
         <span class="search-result-text">
           <span class="search-result-title">${result.title}</span>
-          <span class="search-result-desc">${result.description || "Wikipedia entry"}</span>
+          <span class="search-result-desc">${result.description || "Destination"}</span>
         </span>`;
 
           item.addEventListener("click", () => {
@@ -5374,16 +5967,30 @@ Rules, all mandatory:
           card.querySelector(".face-label-input").addEventListener("input", e => {
             cluster.label = e.target.value;
           });
+          card.querySelector(".face-label-input").addEventListener("change", async e => {
+            cluster.label = e.target.value;
+            if (trip?.id && window.wm && wm.token && cluster.apiGroupId) {
+              await wm.labelFaceGroup(trip.id, cluster.apiGroupId, null, cluster.label).catch(() => {});
+            }
+          });
           board.append(card);
         });
     }
 
-    $("#face-consent").addEventListener("change", e => {
-      $("#photo-upload-zone").hidden = !e.target.checked;
-      if (!e.target.checked) {
+    $("#face-consent").addEventListener("change", async e => {
+      const granted = e.target.checked;
+      $("#photo-upload-zone").hidden = !granted;
+      if (!granted) {
         faceClusters = [];
         $("#photo-upload-status").textContent = "";
         renderFaceGroups();
+      }
+      if (trip?.id && window.wm && wm.token) {
+        try {
+          await wm.setFaceConsent(trip.id, granted);
+        } catch (err) {
+          console.warn("[WanderMatch] setFaceConsent error:", err.message);
+        }
       }
     });
 
@@ -5392,11 +5999,38 @@ Rules, all mandatory:
       if (!files.length) return;
 
       const status = $("#photo-upload-status");
-      status.textContent = "Loading the face-detection model (first time only)…";
 
+      // Presigned S3 upload if connected to backend
+      if (trip?.id && window.wm && wm.token) {
+        status.textContent = `Uploading ${files.length} photo(s) to secure storage…`;
+        wm.uploadPhotos(trip.id, files, {
+          onProgress: p => {
+            if (p.status === 'uploading') status.textContent = `Uploading ${p.file.name}…`;
+            else if (p.status === 'done') status.textContent = `Uploaded ${p.file.name} (queued for face analysis)`;
+          }
+        }).then(async () => {
+          const res = await wm.getFaceGroups(trip.id).catch(() => null);
+          if (res?.faceGroups?.length) {
+            faceClusters = res.faceGroups.map(fg => ({
+              id: fg.faceGroupId,
+              apiGroupId: fg.faceGroupId,
+              thumbnails: fg.photos?.map(p => p.url) || (fg.coverUrl ? [fg.coverUrl] : []),
+              label: fg.label || fg.memberName || ""
+            }));
+            renderFaceGroups();
+          }
+        }).catch(err => {
+          console.warn("[WanderMatch] Backend photo upload fallback to browser model:", err.message);
+        });
+      }
+
+      // Also run local face detection for instant browser preview
+      status.textContent = "Loading the face-detection model (first time only)…";
       const modelsOk = await ensureFaceModels();
       if (!modelsOk) {
-        status.textContent = "Couldn't load the face-detection model. Check your connection and try again.";
+        if (!trip?.id) {
+          status.textContent = "Couldn't load the face-detection model. Check your connection and try again.";
+        }
         e.target.value = "";
         return;
       }
@@ -5418,6 +6052,27 @@ Rules, all mandatory:
       renderFaceGroups();
       e.target.value = "";
     });
+
+    if (window.wm) {
+      wm.on('face_groups:updated', async () => {
+        if (trip?.id) {
+          const res = await wm.getFaceGroups(trip.id).catch(() => null);
+          if (res?.faceGroups?.length) {
+            faceClusters = res.faceGroups.map(fg => ({
+              id: fg.faceGroupId,
+              apiGroupId: fg.faceGroupId,
+              thumbnails: fg.photos?.map(p => p.url) || (fg.coverUrl ? [fg.coverUrl] : []),
+              label: fg.label || fg.memberName || ""
+            }));
+            renderFaceGroups();
+          }
+        }
+      });
+      wm.on('photo:processed', payload => {
+        const status = $("#photo-upload-status");
+        if (status) status.textContent = `Server processed photo (${payload?.facesDetected || 0} faces found)`;
+      });
+    }
 
     renderFaceGroups();
 

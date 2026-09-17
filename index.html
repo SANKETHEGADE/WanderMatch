@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WanderMatch — Plan trips together</title>
+<meta name="description" content="Search a destination, vote as a group, watch the itinerary build itself.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500&family=Inter:wght@300;400;500;600;700&display=swap");
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: "Inter", sans-serif;
+  background: #0F120F;
+  color: #F3EFE6;
+  overflow-x: hidden;
+}
+button { font-family: inherit; }
+.app { background: #0F120F; min-height: 100vh; }
+.intro, .gallery-section, .services, .pricing, .cta, footer { position: relative; z-index: 1; }
+
+:root {
+  --gold: #D9A566;
+  --teal: #5FA88C;
+  --ink-faint: rgba(243,239,230,0.4);
+  --line: rgba(243,239,230,0.12);
+  --serif: "Fraunces", Georgia, serif;
+}
+
+/* ================= NAVBAR ================= */
+.navbar {
+  position: fixed; top: 0; left: 0; width: 100%; height: 80px;
+  padding: 0 5vw;
+  display: flex; align-items: center; justify-content: space-between;
+  z-index: 1000;
+  transition: background 0.4s ease, backdrop-filter 0.4s ease;
+}
+.navbar.navbar-scrolled { background: rgba(15, 18, 15, 0.75); backdrop-filter: blur(18px); }
+.logo { font-size: 14px; font-weight: 600; letter-spacing: 4px; cursor: pointer; }
+.nav-links { position: absolute; left: 50%; transform: translateX(-50%); display: flex; gap: 38px; }
+.nav-links button {
+  border: none; background: transparent; color: rgba(243,239,230,0.6);
+  font-size: 11.5px; text-transform: uppercase; letter-spacing: 1px;
+  cursor: pointer; transition: color 0.3s ease;
+}
+.nav-links button:hover { color: var(--gold); }
+.menu-button { display: none; border: none; background: transparent; color: #F3EFE6; font-size: 22px; cursor: pointer; }
+
+/* ================= HERO — real elevation-data 3D terrain + real satellite imagery ================= */
+.hero {
+  position: relative; height: 100vh; min-height: 700px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent;
+  pointer-events: none; /* the fixed canvas beneath handles drag; content re-enables what it needs */
+}
+#terrain-canvas-wrap {
+  position: fixed; inset: 0; z-index: 0; cursor: grab;
+  transition: opacity 0.8s ease;
+}
+#terrain-canvas-wrap.dragging { cursor: grabbing; }
+#terrain-canvas-wrap canvas { display: block; }
+#terrain-loading {
+  position: fixed; inset: 0; z-index: 4; background: #0a0d0a;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  transition: opacity 0.6s ease;
+}
+#terrain-loading.hide { opacity: 0; pointer-events: none; }
+.terrain-spinner {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 2px solid rgba(217,165,102,0.2); border-top-color: var(--gold);
+  animation: terrain-spin 0.9s linear infinite;
+}
+@keyframes terrain-spin { to { transform: rotate(360deg); } }
+#terrain-loading .msg { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
+#terrain-loading .err { font-size: 11.5px; color: #c97064; max-width: 300px; text-align: center; line-height: 1.6; display: none; }
+
+.hero-vignette {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    radial-gradient(ellipse 100% 75% at 50% 58%, transparent 38%, rgba(8,10,8,0.5) 100%),
+    linear-gradient(180deg, rgba(8,10,8,0.35) 0%, transparent 26%, transparent 66%, rgba(8,10,8,0.75) 100%);
+}
+.hero-content { position: relative; z-index: 2; text-align: center; pointer-events: none; }
+.eyebrow { font-size: 11px; letter-spacing: 5px; margin-bottom: 26px; color: var(--gold); }
+.hero h1 {
+  font-family: var(--serif); font-weight: 500;
+  font-size: clamp(80px, 15vw, 230px);
+  line-height: 0.85; letter-spacing: -4px; color: #F3EFE6;
+  text-shadow: 0 4px 30px rgba(0,0,0,0.35);
+}
+.hero-description { margin-top: 40px; font-size: 13.5px; line-height: 1.8; color: rgba(243,239,230,0.75); }
+.hero-drag-hint { margin-top: 30px; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(243,239,230,0.4); }
+.scroll-indicator {
+  position: absolute; bottom: 6%; left: 50%; transform: translateX(-50%); z-index: 2;
+  display: flex; flex-direction: column; align-items: center; gap: 10px; pointer-events: none;
+}
+.scroll-circle {
+  width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(243,239,230,0.5);
+  position: relative; animation: pulse-ring 2.4s ease-in-out infinite;
+}
+.scroll-circle::before {
+  content: ""; position: absolute; top: 7px; left: 50%; width: 1px; height: 10px;
+  background: var(--gold); transform: translateX(-50%);
+  animation: dot-fall 1.8s ease-in-out infinite;
+}
+@keyframes pulse-ring { 0%,100%{ box-shadow:0 0 0 0 rgba(243,239,230,0.16); } 50%{ box-shadow:0 0 0 8px rgba(243,239,230,0); } }
+@keyframes dot-fall { 0%{ opacity:0; transform:translate(-50%,-4px);} 30%{ opacity:1; } 100%{ opacity:0; transform:translate(-50%,10px);} }
+.scroll-label { font-size: 9px; letter-spacing: 3px; color: rgba(243,239,230,0.6); }
+.hero-credit {
+  position: absolute; bottom: 16px; right: 20px; z-index: 2;
+  font-size: 9.5px; color: rgba(243,239,230,0.3); letter-spacing: 0.02em; text-align: right; line-height: 1.6;
+  pointer-events: none;
+}
+
+/* ================= INTRO ================= */
+.intro { padding: 170px 8vw 130px; max-width: 1200px; margin: auto; text-align: center; }
+.intro-small, .section-label { font-size: 10px; letter-spacing: 4px; color: var(--ink-faint); }
+.intro h2 {
+  margin-top: 32px; font-family: var(--serif); font-weight: 500;
+  font-size: clamp(42px, 5.5vw, 80px); line-height: 1.0; letter-spacing: -2px;
+}
+.intro h2 span, .services-heading span, .pricing h2 span { color: var(--gold); font-style: italic; }
+.intro > p {
+  max-width: 460px; margin: 40px auto 0; color: rgba(243,239,230,0.55);
+  font-size: 14px; line-height: 1.8;
+}
+
+/* ================= GALLERY — depth carousel ================= */
+.gallery-section { padding: 0 5vw 200px; display: flex; flex-direction: column; align-items: center; }
+.wm-depth-carousel{
+  position:relative; width:100%; max-width:1100px; height:460px;
+  display:flex; align-items:center; justify-content:center;
+  perspective:1400px; perspective-origin:50% 50%;
+  touch-action:pan-y; outline:none; user-select:none; -webkit-user-select:none;
+  cursor:grab; margin-top:20px;
+}
+.wm-depth-carousel:active{cursor:grabbing;}
+.wm-dc-stage{position:absolute; inset:0; transform-style:preserve-3d;}
+.wm-dc-card{
+  position:absolute; top:50%; left:50%;
+  width:300px; height:380px; border-radius:12px;
+  transform-origin:center center; overflow:hidden;
+  background:#0b0d12;
+  box-shadow:0 30px 60px -20px rgba(0,0,0,0.65), 0 8px 20px -10px rgba(0,0,0,0.5);
+  will-change:transform, opacity, filter;
+  cursor:pointer;
+  transform:translate(-50%,-50%);
+}
+.wm-dc-img{width:100%; height:100%; object-fit:cover; display:block; pointer-events:none; -webkit-user-drag:none;}
+.wm-dc-tint{position:absolute; inset:0; opacity:0; pointer-events:none; mix-blend-mode:multiply; background:#05060a;}
+.wm-dc-caption-fade{position:absolute; inset:0; background:linear-gradient(to bottom, transparent 45%, rgba(5,6,10,0.85)); pointer-events:none;}
+.wm-dc-caption{position:absolute; left:20px; right:20px; bottom:18px; z-index:2; pointer-events:none;}
+.wm-dc-caption .num{font-size:10px; letter-spacing:0.14em; color:var(--gold);}
+.wm-dc-caption h3{font-family:var(--serif); font-weight:500; font-size:20px; margin-top:6px; color:var(--ink);}
+.wm-dc-caption p{font-size:11px; color:rgba(243,239,230,0.65); margin-top:2px;}
+.wm-dc-select-hint{font-size:9.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--teal); margin-top:6px; opacity:0; transition:opacity 0.2s ease;}
+.wm-dc-card.is-focused .wm-dc-select-hint{opacity:1;}
+.real3d-badge {
+  position: absolute; z-index: 3; top: 14px; right: 14px; pointer-events:auto;
+  font-size: 9.5px; letter-spacing: 0.04em; font-weight: 600;
+  background: rgba(15,18,15,0.8); color: var(--gold);
+  border: 1px solid rgba(217,165,102,0.5); border-radius: 12px;
+  padding: 5px 10px; text-decoration: none; backdrop-filter: blur(6px);
+  transition: background 0.2s ease;
+}
+.real3d-badge:hover { background: var(--gold); color: #1a1508; }
+.wm-dc-arrow{
+  position:absolute; top:50%; transform:translateY(-50%); z-index:3000;
+  width:42px; height:42px; display:grid; place-items:center;
+  border:1px solid var(--line); border-radius:999px;
+  background:rgba(18,20,26,0.55); backdrop-filter:blur(8px);
+  color:var(--ink); cursor:pointer;
+  transition:background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+.wm-dc-arrow:hover{background:rgba(217,165,102,0.18); border-color:var(--gold);}
+.wm-dc-arrow:active{transform:translateY(-50%) scale(0.94);}
+.wm-dc-arrow--prev{left:0;}
+.wm-dc-arrow--next{right:0;}
+.wm-dc-dots{
+  position:absolute; bottom:10px; left:50%; transform:translateX(-50%); z-index:3000;
+  display:flex; gap:8px; padding:8px 12px; border-radius:999px;
+  background:rgba(14,16,22,0.4); backdrop-filter:blur(6px);
+}
+.wm-dc-dot{width:7px; height:7px; padding:0; border:none; border-radius:999px; background:rgba(243,239,230,0.32); cursor:pointer; transition:width 0.25s ease, background 0.25s ease;}
+.wm-dc-dot.is-active{width:20px; background:var(--gold);}
+.wm-dc-hint{margin-top:24px; font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-faint);}
+@media (max-width:640px){
+  .wm-depth-carousel{height:380px;}
+  .wm-dc-card{width:220px; height:290px;}
+}
+
+/* ================= HOW IT WORKS ================= */
+.services { padding: 170px 8vw; border-top: 1px solid var(--line); }
+.services-heading { margin-top: 44px; display: flex; justify-content: space-between; align-items: flex-end; gap: 60px; }
+.services-heading h2 {
+  font-family: var(--serif); font-weight: 500;
+  font-size: clamp(46px, 7vw, 100px); line-height: 0.92; letter-spacing: -3px;
+}
+.services-heading p { max-width: 320px; color: var(--ink-faint); line-height: 1.8; font-size: 13.5px; }
+.service-grid { margin-top: 110px; border-top: 1px solid var(--line); display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
+.service-card {
+  padding: 32px 28px; border-bottom: 1px solid var(--line); border-right: 1px solid var(--line);
+  transition: background 0.3s ease;
+}
+.service-card:last-child { border-right: none; }
+.service-card:hover { background: rgba(217,165,102,0.04); }
+.service-card.featured { background: rgba(95,168,140,0.06); }
+.service-card > span { color: var(--ink-faint); font-size: 11px; }
+.service-card h3 { margin-top: 14px; font-size: 12.5px; font-weight: 600; letter-spacing: 1.5px; color: var(--gold); }
+.service-card > div > p { margin-top: 10px; font-family: var(--serif); font-size: 19px; font-weight: 500; }
+.service-card ul { margin-top: 16px; padding-left: 16px; color: rgba(243,239,230,0.5); font-size: 12.5px; line-height: 2; }
+
+/* ================= START A TRIP (search) ================= */
+.pricing { padding: 170px 8vw; background: #0c0f0c; text-align: center; }
+.pricing h2 {
+  margin-top: 30px; font-family: var(--serif); font-weight: 500;
+  font-size: clamp(46px, 7vw, 100px); line-height: 0.92; letter-spacing: -3px;
+}
+.start-shell {
+  max-width: 560px; margin: 70px auto 0; display: flex; gap: 10px;
+  background: rgba(28,33,28,0.6); border: 1px solid var(--line); border-radius: 14px; padding: 8px 8px 8px 22px;
+}
+.start-shell input {
+  flex: 1; background: none; border: none; outline: none; color: #F3EFE6; font-size: 14.5px;
+}
+.start-shell input::placeholder { color: rgba(243,239,230,0.35); }
+.start-btn {
+  border: none; background: var(--gold); color: #1a1508; font-weight: 600;
+  font-size: 12.5px; padding: 14px 22px; border-radius: 10px; cursor: pointer; white-space: nowrap;
+}
+.chip-row { display: flex; gap: 10px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
+.chip {
+  border: 1px solid var(--line); background: transparent; color: rgba(243,239,230,0.6);
+  font-size: 12px; padding: 8px 16px; border-radius: 18px; cursor: pointer; transition: border-color 0.2s;
+}
+.chip:hover { border-color: var(--gold); color: var(--gold); }
+.start-confirm { margin-top: 26px; font-size: 13px; color: var(--teal); display: none; }
+.start-confirm.show { display: block; }
+
+/* ================= CTA ================= */
+.cta { position: relative; height: 760px; overflow: hidden; display: flex; align-items: center; justify-content: center; text-align: center; }
+.cta-image {
+  position: absolute; inset: -5%; background-size: cover; background-position: center; will-change: transform;
+  background-image: url('https://commons.wikimedia.org/wiki/Special:FilePath/Landscape_of_Manali,_India,_2016.jpg?width=2200');
+}
+.cta-overlay { position: absolute; inset: 0; background: rgba(8,10,8,0.6); }
+.cta-content { position: relative; z-index: 2; }
+.cta-content > p { font-size: 10px; letter-spacing: 4px; margin-bottom: 30px; color: rgba(243,239,230,0.7); }
+.cta h2 {
+  font-family: var(--serif); font-weight: 500;
+  font-size: clamp(70px, 13vw, 180px); line-height: 0.85; letter-spacing: -4px;
+}
+.cta-button {
+  margin-top: 55px; padding: 17px 28px; border: 1px solid rgba(243,239,230,0.5);
+  background: rgba(8,10,8,0.3); color: #F3EFE6; font-size: 10px; letter-spacing: 2px;
+  cursor: pointer; backdrop-filter: blur(10px); transition: background 0.3s ease, color 0.3s ease;
+}
+.cta-button span { margin-left: 18px; font-size: 16px; }
+.cta-button:hover { background: var(--gold); color: #1a1508; border-color: var(--gold); }
+
+/* ================= FOOTER ================= */
+footer { padding: 90px 8vw 32px; background: #0F120F; }
+.footer-logo { font-size: 16px; letter-spacing: 5px; font-weight: 600; }
+footer > p { margin-top: 22px; font-size: 13px; color: var(--ink-faint); }
+.footer-bottom {
+  margin-top: 90px; padding-top: 20px; border-top: 1px solid var(--line);
+  display: flex; justify-content: space-between; font-size: 9px; letter-spacing: 1.5px; color: rgba(243,239,230,0.3);
+}
+
+/* ================= MOBILE ================= */
+@media (max-width: 900px) {
+  .nav-links {
+    display: none; position: absolute; top: 80px; left: 0; width: 100%; transform: none;
+    padding: 26px; background: rgba(15,18,15,0.96); flex-direction: column; gap: 22px; text-align: center;
+  }
+  .nav-links.mobile-open { display: flex; }
+  .menu-button { display: block; }
+  .services-heading { flex-direction: column; align-items: flex-start; }
+  .service-grid { grid-template-columns: 1fr; }
+  .service-card { border-right: none; }
+  .start-shell { flex-direction: column; padding: 16px; }
+}
+@media (max-width: 600px) {
+  .navbar { height: 68px; padding: 0 6vw; }
+  .hero h1 { font-size: 20vw; letter-spacing: -2px; }
+  .intro h2 { font-size: 40px; }
+  .services, .pricing { padding: 110px 7vw; }
+  .services-heading h2, .pricing h2 { font-size: 52px; }
+  .cta h2 { font-size: 22vw; letter-spacing: -2px; }
+  .footer-bottom { flex-direction: column; gap: 14px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ================= NAVBAR ================= -->
+  <nav class="navbar" id="navbar">
+    <div class="logo" onclick="scrollToSection('home')">WANDERMATCH</div>
+    <div class="nav-links" id="navLinks">
+      <button onclick="scrollToSection('home')">Home</button>
+      <button onclick="scrollToSection('gallery')">Destinations</button>
+      <button onclick="scrollToSection('how')">How it works</button>
+      <button onclick="scrollToSection('start')">Start a trip</button>
+    </div>
+    <button class="menu-button" id="menuBtn" onclick="toggleMenu()">☰</button>
+  </nav>
+
+  <!-- ================= HERO — real elevation 3D terrain + real satellite imagery ================= -->
+  <div id="terrain-canvas-wrap"></div>
+  <div id="terrain-loading">
+    <div class="terrain-spinner"></div>
+    <div class="msg" id="terrainMsg">Fetching real elevation data…</div>
+    <div class="err" id="terrainErr">Terrain or imagery tiles didn't load — this can happen if your network blocks third-party map tile hosts. Try a different network and reload.</div>
+  </div>
+
+  <section class="hero" id="home">
+    <div class="hero-vignette"></div>
+
+    <div class="hero-content" id="heroContent">
+      <p class="eyebrow">REAL TERRAIN · MUNNAR, KERALA</p>
+      <h1>TOGETHER.</h1>
+      <p class="hero-description">Search a place. The group votes.<br>The itinerary builds itself.</p>
+      <p class="hero-drag-hint">Drag to explore the hills · scroll to continue</p>
+    </div>
+
+    <div class="scroll-indicator"><div class="scroll-circle"></div><div class="scroll-label">Scroll</div></div>
+    <div class="hero-credit">Elevation: Mapzen / AWS Terrain Tiles (SRTM/ASTER, public domain)<br>Imagery: Esri World Imagery — real satellite/aerial photography</div>
+  </section>
+
+  <!-- ================= INTRO ================= -->
+  <section class="intro">
+    <div class="intro-small">BUILT FOR GROUPS, NOT SOLO TRIPS</div>
+    <h2>One search.<br><span>Everyone's in.</span></h2>
+    <p>No more forty-message threads deciding on a beach town. Propose a place, the group votes, the plan locks in — and everyone sees the same itinerary, updated live.</p>
+  </section>
+
+  <!-- ================= GALLERY — depth carousel ================= -->
+  <section class="gallery-section" id="gallery">
+    <div class="wm-depth-carousel" id="wmCarousel" tabindex="0"></div>
+    <div class="wm-dc-hint">Drag to browse · scroll · click a card to select</div>
+  </section>
+
+  <!-- ================= HOW IT WORKS ================= -->
+  <section class="services" id="how">
+    <div class="section-label">HOW IT WORKS</div>
+    <div class="services-heading">
+      <h2>From idea<br><span>to itinerary.</span></h2>
+      <p>Three stages, no group chat archaeology required.</p>
+    </div>
+    <div class="service-grid" id="serviceGrid"></div>
+  </section>
+
+  <!-- ================= START A TRIP ================= -->
+  <section class="pricing" id="start">
+    <div class="section-label">START HERE</div>
+    <h2>Where's the<br><span>group headed?</span></h2>
+    <div class="start-shell">
+      <input id="ctaInput" type="text" placeholder="Search a destination — try Gokarna">
+      <button class="start-btn">Start planning →</button>
+    </div>
+    <div class="chip-row" id="chipRow"></div>
+    <p class="start-confirm" id="startConfirm"></p>
+  </section>
+
+  <!-- ================= CTA ================= -->
+  <section class="cta">
+    <div class="cta-image" id="ctaBg"></div>
+    <div class="cta-overlay"></div>
+    <div class="cta-content">
+      <p>YOUR GROUP IS WAITING</p>
+      <h2>WANDER<br>TOGETHER.</h2>
+      <button class="cta-button" onclick="scrollToSection('start')">START PLANNING<span>→</span></button>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer>
+    <div class="footer-logo">WANDERMATCH</div>
+    <p>Built for groups who can't agree on WhatsApp.</p>
+    <div class="footer-bottom"><span>© 2026 WANDERMATCH</span><span>PS-11 · KOGNIVERA HACKATHON</span></div>
+  </footer>
+
+</div>
+
+<script>
+const destinations = [
+  { key:"gokarna", num:"01", name:"Gokarna", tag:"Coastal · Winter", img:"https://commons.wikimedia.org/wiki/Special:FilePath/Kudle_beach.jpg?width=1000" },
+  { key:"hampi", num:"02", name:"Hampi", tag:"Heritage · Winter", img:"https://commons.wikimedia.org/wiki/Special:FilePath/Hampi,_India.jpg?width=1000", real3d:"wandermatch-hampi-chariot.html" },
+  { key:"manali", num:"03", name:"Manali", tag:"Mountain · Summer", img:"https://commons.wikimedia.org/wiki/Special:FilePath/Landscape_of_Manali,_India,_2016.jpg?width=1000" },
+  { key:"jaisalmer", num:"04", name:"Jaisalmer", tag:"Desert · Winter", img:"https://commons.wikimedia.org/wiki/Special:FilePath/Sand_dunes_of_thar_desert.jpg?width=1000" }
+];
+
+const stages = [
+  { type:"PROPOSED", title:"01", heading:"Someone suggests it", lines:["Add a place, a day, an activity","Visible to the whole group instantly"] },
+  { type:"VOTING", title:"02", heading:"Everyone weighs in", lines:["Yes / no, no tiebreak silence","Closes on a timer, not a vibe"] },
+  { type:"CONFIRMED", title:"03", heading:"It locks into the plan", lines:["Majority carries automatically","Itinerary updates for everyone"], featured:true }
+];
+
+/* ============ Vanilla-JS depth carousel (ported from the DepthCarousel
+   component, GSAP-driven) — replaces the old flat parallax grid. Clicking
+   a side card brings it to focus; clicking the already-focused card
+   commits to it, same as choosing it from search. */
+function createDepthCarousel(root, items, opts = {}){
+  const cfg = Object.assign({
+    cardWidth: 300, cardHeight: 380, depth: 210, spread: 80, tilt: 20,
+    tiltDirection: 'right', visibleCards: 4, falloff: 0.2, blur: 5,
+    duration: 650, ease: 'power3.out', autoplay: true, autoplayDelay: 3600,
+    loop: true, showControls: true, showIndicators: true
+  }, opts);
+
+  const n = items.length;
+  let pos = 0, focus = 0, scale = 1, tween = null;
+  let dragging = null, wheelTimer = null, autoTimer = null;
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  root.innerHTML = '';
+  const stage = document.createElement('div');
+  stage.className = 'wm-dc-stage';
+  root.appendChild(stage);
+
+  const cards = [], tints = [];
+  items.forEach((item,i) => {
+    const card = document.createElement('div');
+    card.className = 'wm-dc-card';
+    card.style.width = cfg.cardWidth+'px';
+    card.style.height = cfg.cardHeight+'px';
+    card.innerHTML = `
+      <img class="wm-dc-img" src="${item.img}" alt="${item.name}" draggable="false">
+      <span class="wm-dc-tint"></span>
+      <div class="wm-dc-caption-fade"></div>
+      ${item.real3d ? `<a class="real3d-badge" href="${item.real3d}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Real 3D model →</a>` : ''}
+      <div class="wm-dc-caption">
+        <div class="num">${item.num}</div>
+        <h3>${item.name}</h3>
+        <p>${item.tag}</p>
+        <div class="wm-dc-select-hint">Click to select →</div>
+      </div>`;
+    card.addEventListener('click', () => {
+      if(dragging && dragging.moved) return;
+      if(focus === i) pickDestination(item.key);
+      else setFocus(i, true);
+    });
+    stage.appendChild(card);
+    cards.push(card);
+    tints.push(card.querySelector('.wm-dc-tint'));
+  });
+
+  function layout(p){
+    const dir = cfg.tiltDirection === 'left' ? -1 : 1;
+    for(let i=0;i<n;i++){
+      let d = i - p;
+      if(cfg.loop && n>1){ d = ((d % n)+n)%n; if(d > n/2) d -= n; }
+      const back = Math.max(0, d);
+      const az = Math.abs(d);
+      const shown = az <= cfg.visibleCards + 0.5;
+      const tz = -cfg.depth * d;
+      const tx = dir * cfg.spread * d;
+      const ry = dir * cfg.tilt * Math.min(Math.max(d,0),1);
+      let opacity = d < 0 ? Math.max(0, 1+d) : 1;
+      if(!shown) opacity = 0;
+      const brightness = Math.max(0.15, 1 - back*cfg.falloff);
+      const blurPx = cfg.blur > 0 ? Math.min(cfg.blur, (back/Math.max(1,cfg.visibleCards))*cfg.blur) : 0;
+      const zi = Math.round(2000 - d*20);
+      const el = cards[i];
+      el.style.transform = `translate(-50%,-50%) scale(${scale}) translateX(${tx.toFixed(2)}px) translateZ(${tz.toFixed(2)}px) rotateY(${ry.toFixed(3)}deg)`;
+      el.style.opacity = opacity.toFixed(3);
+      el.style.filter = `brightness(${brightness.toFixed(3)}) blur(${blurPx.toFixed(2)}px)`;
+      el.style.zIndex = zi;
+      el.style.pointerEvents = (shown && opacity > 0.05) ? 'auto' : 'none';
+      el.classList.toggle('is-focused', Math.abs(d) < 0.05);
+      tints[i].style.opacity = Math.min(Math.max(back*cfg.falloff*1.25,0),0.86).toFixed(3);
+    }
+    dots.forEach((dot,i) => dot.classList.toggle('is-active', i === (((focus % n)+n)%n)));
+  }
+
+  function tweenTo(target, animate){
+    if(tween) tween.kill();
+    const proxy = { p: pos };
+    const dur = (animate && !reduced) ? cfg.duration/1000 : 0;
+    tween = gsap.to(proxy, {
+      p: target, duration: dur, ease: cfg.ease,
+      onUpdate: () => { pos = proxy.p; layout(pos); },
+      onComplete: () => { if(n>0) pos = ((pos % n)+n)%n; layout(pos); }
+    });
+  }
+
+  function setFocus(rawIndex, animate){
+    const idx = cfg.loop ? ((rawIndex % n)+n)%n : Math.min(Math.max(rawIndex,0),n-1);
+    let delta = idx - pos;
+    if(cfg.loop && n>1){ delta = ((delta % n)+n)%n; if(delta > n/2) delta -= n; }
+    tweenTo(pos + delta, animate);
+    if(idx !== focus){ focus = idx; }
+    layout(pos);
+  }
+  function navigateBy(step){ setFocus(focus + step, true); }
+
+  const ro = new ResizeObserver(entries => {
+    const w = entries[0].contentRect.width;
+    const needed = cfg.cardWidth + Math.abs(cfg.spread)*2 + 120;
+    scale = Math.min(Math.max(w/needed, 0.5), 1);
+    layout(pos);
+  });
+  ro.observe(root);
+
+  root.addEventListener('wheel', e => {
+    if(n<2) return;
+    e.preventDefault();
+    if(tween) tween.kill();
+    const raw = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    const delta = e.deltaMode === 1 ? raw*24 : raw;
+    const step = Math.min(Math.max(delta/(cfg.cardWidth*0.9), -0.6), 0.6);
+    pos += step;
+    layout(pos);
+    clearTimeout(wheelTimer);
+    wheelTimer = setTimeout(() => setFocus(Math.round(pos), true), 130);
+  }, {passive:false});
+
+  root.addEventListener('pointerdown', e => {
+    if(n<2) return;
+    if(tween) tween.kill();
+    dragging = { x:e.clientX, startPos:pos, lastX:e.clientX, lastT:performance.now(), v:0, moved:false, id:e.pointerId };
+  });
+  window.addEventListener('pointermove', e => {
+    if(!dragging) return;
+    const stepPx = Math.max(cfg.cardWidth*0.55*scale, 40);
+    const dx = e.clientX - dragging.x;
+    if(!dragging.moved && Math.abs(dx) > 4){ dragging.moved = true; root.setPointerCapture(dragging.id); }
+    if(!dragging.moved) return;
+    const now = performance.now();
+    const dt = Math.max(now - dragging.lastT, 1);
+    dragging.v = (e.clientX - dragging.lastX)/dt;
+    dragging.lastX = e.clientX; dragging.lastT = now;
+    pos = dragging.startPos - dx/stepPx;
+    layout(pos);
+  });
+  window.addEventListener('pointerup', () => {
+    if(!dragging) return;
+    const wasMoved = dragging.moved;
+    const stepPx = Math.max(cfg.cardWidth*0.55*scale, 40);
+    const projected = pos - (dragging.v*180)/stepPx;
+    dragging = wasMoved ? {moved:true} : null;
+    if(wasMoved) setFocus(Math.round(projected), true);
+    setTimeout(() => { dragging = null; }, 0);
+  });
+
+  root.addEventListener('keydown', e => {
+    if(e.key === 'ArrowLeft'){ e.preventDefault(); navigateBy(-1); }
+    else if(e.key === 'ArrowRight'){ e.preventDefault(); navigateBy(1); }
+    else if(e.key === 'Enter'){ pickDestination(items[((focus%n)+n)%n].key); }
+  });
+
+  if(cfg.showControls && n > 1){
+    const prev = document.createElement('button');
+    prev.className = 'wm-dc-arrow wm-dc-arrow--prev';
+    prev.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    prev.addEventListener('click', () => navigateBy(-1));
+    const next = document.createElement('button');
+    next.className = 'wm-dc-arrow wm-dc-arrow--next';
+    next.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    next.addEventListener('click', () => navigateBy(1));
+    root.appendChild(prev); root.appendChild(next);
+  }
+
+  const dots = [];
+  if(cfg.showIndicators && n > 1){
+    const dotsWrap = document.createElement('div');
+    dotsWrap.className = 'wm-dc-dots';
+    items.forEach((_,i) => {
+      const dot = document.createElement('button');
+      dot.className = 'wm-dc-dot' + (i===0 ? ' is-active' : '');
+      dot.addEventListener('click', () => setFocus(i, true));
+      dotsWrap.appendChild(dot);
+      dots.push(dot);
+    });
+    root.appendChild(dotsWrap);
+  }
+
+  if(cfg.autoplay && !reduced && n > 1){
+    let hovered = false, focused = false;
+    const stop = () => { if(autoTimer) clearInterval(autoTimer); autoTimer = null; };
+    const start = () => { stop(); autoTimer = setInterval(() => { if(!hovered && !focused) navigateBy(1); }, Math.max(cfg.autoplayDelay,600)); };
+    root.addEventListener('mouseenter', () => hovered = true);
+    root.addEventListener('mouseleave', () => hovered = false);
+    root.addEventListener('focusin', () => focused = true);
+    root.addEventListener('focusout', () => focused = false);
+    start();
+  }
+
+  layout(pos);
+  return { setFocus, navigateBy };
+}
+
+function renderGallery(){
+  createDepthCarousel(document.getElementById('wmCarousel'), destinations, {
+    tiltDirection: 'right', depth: 210, spread: 80, tilt: 20, visibleCards: 4,
+    autoplay: true, autoplayDelay: 3600
+  });
+}
+
+function renderServices(){
+  document.getElementById('serviceGrid').innerHTML = stages.map(s=>`
+    <div class="service-card ${s.featured?'featured':''}">
+      <span>${s.title}</span>
+      <div>
+        <h3>${s.type}</h3>
+        <p>${s.heading}</p>
+        <ul>${s.lines.map(l=>`<li>${l}</li>`).join('')}</ul>
+      </div>
+    </div>`).join('');
+}
+
+function renderChips(){
+  document.getElementById('chipRow').innerHTML = destinations.map(d=>
+    `<button class="chip" onclick="pickDestination('${d.key}')">${d.name}</button>`).join('');
+}
+
+function pickDestination(key){
+  const d = destinations.find(x=>x.key===key);
+  if(!d) return;
+  document.getElementById('ctaInput').value = d.name;
+  scrollToSection('start');
+  const confirm = document.getElementById('startConfirm');
+  confirm.textContent = `Good pick — ${d.name} has ${d.tag.toLowerCase()} to plan around.`;
+  confirm.classList.add('show');
+  setTimeout(()=>document.getElementById('ctaInput').focus(), 500);
+}
+
+/* ============ REAL-TERRAIN HERO (Three.js) ============ */
+// Shape: Terrarium-encoded elevation tiles (Mapzen / AWS Open Data, no key required)
+// Surface: Esri World Imagery — real satellite/aerial photography, same tile grid
+// height(meters) = R*256 + G + B/256 - 32768
+const TERRAIN_ZOOM = 12;
+const TERRAIN_CX = 2924, TERRAIN_CY = 1932; // Munnar, Kerala — tea-garden forest hills
+const TERRAIN_GRID = 3;
+const TILE_PX = 256;
+const SAMPLE_STEP = 3;
+
+function elevTileURL(z,x,y){ return `https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${z}/${x}/${y}.png`; }
+function satTileURL(z,x,y){ return `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`; }
+function loadTileImage(url){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = ()=>resolve(img);
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+async function fetchTileGrid(urlFn){
+  const full = TILE_PX * TERRAIN_GRID;
+  const canvas = document.createElement('canvas');
+  canvas.width = full; canvas.height = full;
+  const ctx = canvas.getContext('2d');
+  const tiles = [];
+  for(let gy=0; gy<TERRAIN_GRID; gy++) for(let gx=0; gx<TERRAIN_GRID; gx++){
+    tiles.push({gx, gy, url: urlFn(TERRAIN_ZOOM, TERRAIN_CX-1+gx, TERRAIN_CY-1+gy)});
+  }
+  const images = await Promise.all(tiles.map(t=>loadTileImage(t.url)));
+  images.forEach((img,i)=>{ const {gx,gy}=tiles[i]; ctx.drawImage(img, gx*TILE_PX, gy*TILE_PX); });
+  return canvas;
+}
+function heightsFromCanvas(canvas){
+  const full = canvas.width;
+  const ctx = canvas.getContext('2d');
+  const imgData = ctx.getImageData(0,0,full,full).data;
+  const size = Math.floor(full / SAMPLE_STEP);
+  const heights = new Float32Array(size*size);
+  let min=Infinity, max=-Infinity;
+  for(let j=0;j<size;j++) for(let i=0;i<size;i++){
+    const px=i*SAMPLE_STEP, py=j*SAMPLE_STEP, idx=(py*full+px)*4;
+    const h = (imgData[idx]*256 + imgData[idx+1] + imgData[idx+2]/256) - 32768;
+    heights[j*size+i]=h; if(h<min)min=h; if(h>max)max=h;
+  }
+  return {heights, size, min, max};
+}
+
+const terrainWrap = document.getElementById('terrain-canvas-wrap');
+const terrainScene = new THREE.Scene();
+terrainScene.fog = new THREE.Fog(0x11170f, 35, 125);
+const terrainCamera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 500);
+const terrainRenderer = new THREE.WebGLRenderer({antialias:true});
+terrainRenderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+terrainRenderer.setSize(window.innerWidth, window.innerHeight);
+terrainRenderer.setClearColor(0x11170f, 1);
+terrainWrap.appendChild(terrainRenderer.domElement);
+terrainScene.add(new THREE.AmbientLight(0xcfe0c8, 0.65));
+const terrainSun = new THREE.DirectionalLight(0xfff0d0, 1.05);
+terrainSun.position.set(-30,42,18);
+terrainScene.add(terrainSun);
+
+let tTheta=0.9, tPhi=1.05, tRadius=64, tTargetTheta=0.9, tTargetPhi=1.05;
+let tDragging=false, tLastX=0, tLastY=0;
+function updateTerrainCamera(){
+  terrainCamera.position.x = tRadius*Math.sin(tPhi)*Math.sin(tTheta);
+  terrainCamera.position.z = tRadius*Math.sin(tPhi)*Math.cos(tTheta);
+  terrainCamera.position.y = tRadius*Math.cos(tPhi) + 8;
+  terrainCamera.lookAt(0,4,0);
+}
+terrainWrap.addEventListener('pointerdown', e=>{ tDragging=true; tLastX=e.clientX; tLastY=e.clientY; terrainWrap.classList.add('dragging'); });
+window.addEventListener('pointerup', ()=>{ tDragging=false; terrainWrap.classList.remove('dragging'); });
+window.addEventListener('pointermove', e=>{
+  if(!tDragging) return;
+  const dx=e.clientX-tLastX, dy=e.clientY-tLastY;
+  tLastX=e.clientX; tLastY=e.clientY;
+  tTargetTheta -= dx*0.0045;
+  tTargetPhi = Math.min(1.5, Math.max(0.5, tTargetPhi - dy*0.003));
+});
+terrainWrap.addEventListener('wheel', e=>{ tRadius = Math.min(110, Math.max(28, tRadius + e.deltaY*0.03)); }, {passive:true});
+
+function elevationColor(t){
+  if(t<0.3) return new THREE.Color(0x2e5233);
+  if(t<0.55) return new THREE.Color(0x3f6b3f);
+  if(t<0.78) return new THREE.Color(0x5c7a4a);
+  return new THREE.Color(0x8a9270);
+}
+
+/* sky — the scene had no backdrop before, just the renderer's flat clear
+   color, which is a big part of why it read as a floating asset rather than
+   a real place. A soft gradient dome plus a couple of high drifting clouds
+   fixes that cheaply. */
+function buildSky(){
+  const c = document.createElement('canvas');
+  c.width = 4; c.height = 256;
+  const ctx = c.getContext('2d');
+  const g = ctx.createLinearGradient(0,0,0,256);
+  g.addColorStop(0, '#4a5f52');
+  g.addColorStop(0.35, '#7c9482');
+  g.addColorStop(0.7, '#c9d3bc');
+  g.addColorStop(1, '#e8e2c8');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,4,256);
+  const tex = new THREE.CanvasTexture(c);
+  const skyGeo = new THREE.SphereGeometry(280, 24, 16);
+  const skyMat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide, fog: false });
+  terrainScene.add(new THREE.Mesh(skyGeo, skyMat));
+
+  const cloudCanvas = document.createElement('canvas');
+  cloudCanvas.width = cloudCanvas.height = 128;
+  const cctx = cloudCanvas.getContext('2d');
+  const cg = cctx.createRadialGradient(64,64,0,64,64,64);
+  cg.addColorStop(0, 'rgba(255,255,255,0.7)');
+  cg.addColorStop(0.6, 'rgba(255,255,255,0.25)');
+  cg.addColorStop(1, 'rgba(255,255,255,0)');
+  cctx.fillStyle = cg;
+  cctx.fillRect(0,0,128,128);
+  const cloudTex = new THREE.CanvasTexture(cloudCanvas);
+  const highClouds = [];
+  for(let i=0;i<7;i++){
+    const mat = new THREE.SpriteMaterial({ map: cloudTex, transparent:true, opacity:0.32, depthWrite:false, fog:false });
+    const sprite = new THREE.Sprite(mat);
+    const s = 60 + Math.random()*60;
+    sprite.scale.set(s, s*0.5, 1);
+    sprite.position.set((Math.random()-0.5)*220, 55+Math.random()*30, (Math.random()-0.5)*220);
+    sprite.userData = { driftPhase: i*0.9, driftSpeed: 0.04+Math.random()*0.03 };
+    terrainScene.add(sprite);
+    highClouds.push(sprite);
+  }
+  return highClouds;
+}
+
+/* trees — billboard sprites placed directly on the terrain's own real
+   vertex positions (not an approximated surface), so they sit correctly on
+   the actual elevation. Kept out of the bare-rock/high band and out of the
+   lowest valley floor, matching where forest cover actually grows. */
+const treeSprites = [];
+function buildTrees(pos, size, heights, min, max){
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const ctx = c.getContext('2d');
+  const blobs = [
+    {x:32, y:22, r:16, c:'#2f4a30'}, {x:22, y:28, r:12, c:'#3a5a38'},
+    {x:42, y:28, r:12, c:'#355234'}, {x:32, y:34, r:14, c:'#41603f'}
+  ];
+  blobs.forEach(b=>{
+    const g = ctx.createRadialGradient(b.x,b.y,0,b.x,b.y,b.r);
+    g.addColorStop(0, b.c);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.fill();
+  });
+  ctx.fillStyle = 'rgba(40,32,20,0.8)';
+  ctx.fillRect(30, 40, 3, 16);
+  const tex = new THREE.CanvasTexture(c);
+
+  const count = pos.count;
+  let placed = 0;
+  for(let n=0; n<count && placed<170; n++){
+    const vi = Math.floor(Math.random()*count);
+    const t = (heights[vi]-min)/(max-min);
+    if(t < 0.12 || t > 0.72) continue; // skip valley floor / bare upper slopes
+    if(Math.random() > 0.55) continue; // thin out density
+    const wx = pos.getX(vi), wy = pos.getY(vi), wz = pos.getZ(vi);
+    const s = 1.4 + Math.random()*1.8;
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent:true, depthWrite:true });
+    const sprite = new THREE.Sprite(mat);
+    sprite.scale.set(s, s, 1);
+    sprite.position.set(wx, wy + s*0.42, wz);
+    sprite.userData = { swayPhase: Math.random()*Math.PI*2 };
+    terrainScene.add(sprite);
+    treeSprites.push(sprite);
+    placed++;
+  }
+}
+
+/* drifting mist — Munnar's tea gardens are known for morning fog sitting in
+   the valleys, so this is the one weather element worth faking: soft radial
+   sprites, low in the terrain's folds, drifting slowly and breathing in opacity */
+const mistSprites = [];
+function buildMist(){
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(64,64,0,64,64,64);
+  g.addColorStop(0, 'rgba(255,255,255,0.9)');
+  g.addColorStop(0.5, 'rgba(255,255,255,0.35)');
+  g.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,128,128);
+  const tex = new THREE.CanvasTexture(c);
+  const positions = [
+    {x:-22, z:8, s:34}, {x:16, z:-6, s:40}, {x:-6, z:-18, s:30},
+    {x:26, z:14, s:26}, {x:-30, z:-4, s:22}, {x:6, z:20, s:28}
+  ];
+  positions.forEach((p,i)=>{
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent:true, opacity:0.28, depthWrite:false });
+    const sprite = new THREE.Sprite(mat);
+    sprite.scale.set(p.s, p.s*0.55, 1);
+    sprite.position.set(p.x, 2 + (i%3), p.z);
+    sprite.userData = { baseY: sprite.position.y, driftPhase: i*1.3, driftSpeed: 0.15+Math.random()*0.15 };
+    terrainScene.add(sprite);
+    mistSprites.push(sprite);
+  });
+}
+
+async function buildTerrain(){
+  const msg = document.getElementById('terrainMsg');
+  try{
+    const elevCanvas = await fetchTileGrid(elevTileURL);
+    msg.textContent = 'Reading elevation…';
+    const {heights, size, min, max} = heightsFromCanvas(elevCanvas);
+
+    msg.textContent = 'Fetching satellite imagery…';
+    let satCanvas = null;
+    try{ satCanvas = await fetchTileGrid(satTileURL); }
+    catch(e){ console.warn('Satellite imagery failed, using elevation shading', e); }
+
+    msg.textContent = 'Shaping terrain…';
+    const worldSize = 100;
+    const geo = new THREE.PlaneGeometry(worldSize, worldSize, size-1, size-1);
+    geo.rotateX(-Math.PI/2);
+    const pos = geo.attributes.position;
+    const vScale = worldSize / (max-min) * 0.14;
+
+    let material;
+    if(satCanvas){
+      try{
+        satCanvas.getContext('2d').getImageData(0,0,1,1); // throws if CORS-tainted
+        const tex = new THREE.CanvasTexture(satCanvas);
+        tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+        material = new THREE.MeshStandardMaterial({ map: tex, roughness:0.95, metalness:0.02 });
+      }catch(e){
+        console.warn('Satellite canvas tainted (CORS), using elevation shading', e);
+        satCanvas = null;
+      }
+    }
+    if(!satCanvas){
+      const colors = new Float32Array(pos.count*3);
+      for(let j=0;j<size;j++) for(let i=0;i<size;i++){
+        const vi=j*size+i, c = elevationColor((heights[vi]-min)/(max-min));
+        colors[vi*3]=c.r; colors[vi*3+1]=c.g; colors[vi*3+2]=c.b;
+      }
+      geo.setAttribute('color', new THREE.BufferAttribute(colors,3));
+      material = new THREE.MeshStandardMaterial({ vertexColors:true, roughness:0.95, metalness:0.02 });
+    }
+
+    for(let j=0;j<size;j++) for(let i=0;i<size;i++){
+      const vi=j*size+i;
+      pos.setY(vi, (heights[vi]-min)*vScale);
+    }
+    geo.computeVertexNormals();
+
+    const mesh = new THREE.Mesh(geo, material);
+    terrainScene.add(mesh);
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(58,58,3,48), new THREE.MeshStandardMaterial({color:0x0c0f0c, roughness:1}));
+    base.position.y = -2;
+    terrainScene.add(base);
+
+    buildTrees(pos, size, heights, min, max);
+    buildMist();
+
+    document.getElementById('terrain-loading').classList.add('hide');
+    setTimeout(()=>{ document.getElementById('terrain-loading').style.display='none'; }, 700);
+  }catch(err){
+    document.getElementById('terrainMsg').style.display='none';
+    document.querySelector('.terrain-spinner').style.display='none';
+    document.getElementById('terrainErr').style.display='block';
+    console.error(err);
+  }
+}
+window.addEventListener('resize', ()=>{
+  terrainCamera.aspect = window.innerWidth/window.innerHeight;
+  terrainCamera.updateProjectionMatrix();
+  terrainRenderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+function scrollToSection(id){
+  document.getElementById(id)?.scrollIntoView({behavior:'smooth'});
+  document.getElementById('navLinks').classList.remove('mobile-open');
+  document.getElementById('menuBtn').textContent = '☰';
+}
+function toggleMenu(){
+  const links = document.getElementById('navLinks');
+  const btn = document.getElementById('menuBtn');
+  const open = links.classList.toggle('mobile-open');
+  btn.textContent = open ? '✕' : '☰';
+}
+
+const heroContent = document.getElementById('heroContent');
+const navbarEl = document.getElementById('navbar');
+const ctaBgEl = document.getElementById('ctaBg');
+
+let targetScroll = 0, currentScroll = 0, animT = 0;
+window.addEventListener('scroll', () => { targetScroll = window.scrollY; });
+
+function animate(){
+  requestAnimationFrame(animate);
+  currentScroll += (targetScroll - currentScroll) * 0.08;
+  animT += 0.006;
+
+  navbarEl.classList.toggle('navbar-scrolled', currentScroll > 80);
+
+  heroContent.style.opacity = Math.max(1 - currentScroll/500, 0);
+  heroContent.style.transform = `translateY(${-currentScroll*0.15}px)`;
+  const heroFade = Math.max(1 - currentScroll/700, 0);
+  terrainWrap.style.opacity = heroFade;
+  terrainWrap.style.pointerEvents = heroFade < 0.05 ? 'none' : 'auto';
+  tRadius = Math.min(110, Math.max(28, 64 - currentScroll*0.02));
+
+  if(ctaBgEl) ctaBgEl.style.transform = `scale(${1+currentScroll*0.00003})`;
+
+  if(!tDragging) tTargetTheta += 0.0006;
+  tTheta += (tTargetTheta-tTheta)*0.06;
+  tPhi += (tTargetPhi-tPhi)*0.06;
+  updateTerrainCamera();
+
+  mistSprites.forEach(s=>{
+    const d = s.userData;
+    s.position.x += Math.sin(animT*d.driftSpeed + d.driftPhase) * 0.02;
+    s.position.y = d.baseY + Math.sin(animT*0.4 + d.driftPhase) * 0.4;
+    s.material.opacity = 0.18 + Math.sin(animT*0.3 + d.driftPhase) * 0.1;
+  });
+
+  highClouds.forEach(c=>{
+    const d = c.userData;
+    c.position.x += d.driftSpeed;
+    if(c.position.x > 130) c.position.x = -130;
+    c.material.opacity = 0.24 + Math.sin(animT*0.2 + d.driftPhase) * 0.1;
+  });
+
+  treeSprites.forEach(s=>{
+    s.scale.x = s.scale.y * (0.94 + Math.sin(animT*1.3 + s.userData.swayPhase) * 0.05);
+  });
+
+  terrainRenderer.render(terrainScene, terrainCamera);
+}
+
+const highClouds = buildSky();
+buildTerrain();
+updateTerrainCamera();
+renderGallery();
+renderServices();
+renderChips();
+animate();
+</script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: wander
+      POSTGRES_PASSWORD: wander
+      POSTGRES_DB: wandermatch
+    ports: ["5432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # The provided schema runs once, on first init, before anything else.
+      - ./db/provided:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wander -d wandermatch"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    command: redis-server --save "" --appendonly no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports: ["9000:9000", "9001:9001"]
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      retries: 10
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio: { condition: service_healthy }
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 minioadmin minioadmin &&
+      mc mb --ignore-existing local/wandermatch-photos &&
+      echo bucket-ready"
+
+  # One-shot: applies db/migrations/*.sql then exits. `up` waits for it via
+  # service_completed_successfully, so the API never starts against an
+  # un-migrated database.
+  migrate:
+    build: ./services/api
+    command: ["node", "src/db/migrate.js"]
+    environment:
+      DATABASE_URL: postgres://wander:wander@postgres:5432/wandermatch
+      JWT_SECRET: build-time-unused
+    volumes:
+      - ./db:/db:ro
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: "no"
+
+  face:
+    build: ./services/face
+    environment:
+      S3_ENDPOINT: http://minio:9000
+      S3_PUBLIC_ENDPOINT: http://minio:9000
+      S3_BUCKET: wandermatch-photos
+      S3_ACCESS_KEY_ID: minioadmin
+      S3_SECRET_ACCESS_KEY: minioadmin
+      FACE_SERVICE_TOKEN: ${FACE_SERVICE_TOKEN:-dev-face-token}
+      LOG_LEVEL: INFO
+    ports: ["8001:8001"]
+    depends_on:
+      minio: { condition: service_healthy }
+
+  api:
+    build: ./services/api
+    env_file: ./services/api/.env
+    environment:
+      DATABASE_URL: postgres://wander:wander@postgres:5432/wandermatch
+      REDIS_URL: redis://redis:6379
+      S3_ENDPOINT: http://minio:9000
+      # Presigned URLs are opened by the BROWSER, so they must use the
+      # host-reachable address, not the compose-internal one.
+      S3_PUBLIC_ENDPOINT: http://localhost:9000
+      FACE_SERVICE_URL: http://face:8001
+    ports: ["8080:8080"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      minio: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+
+volumes:
+  pgdata:
+  miniodata:
