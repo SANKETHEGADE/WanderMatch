@@ -1,0 +1,11 @@
+{
+  "name": "wandermatch",
+  "version": "1.0.0",
+  "private": true,
+  "description": "WanderMatch — collaborative group trip planner with AI consensus voting",
+  "scripts": {
+    "dev": "node serve.js",
+    "start": "node serve.js",
+    "backend": "node dev-backend.js"
+  }
+}
