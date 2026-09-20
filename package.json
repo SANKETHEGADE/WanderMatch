@@ -1,11 +1,16 @@
 {
-  "name": "wandermatch",
+  "name": "wandermatch-server",
   "version": "1.0.0",
   "private": true,
-  "description": "WanderMatch — collaborative group trip planner with AI consensus voting",
+  "description": "WanderMatch backend: real accounts, shared trips/itinerary, group voting, server-side AI tie-break, and face-cluster storage.",
+  "main": "server.js",
   "scripts": {
-    "dev": "node serve.js",
-    "start": "node serve.js",
-    "backend": "node dev-backend.js"
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
   }
 }
