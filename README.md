@@ -16,7 +16,7 @@ wandermatch/
 ├── docker-compose.yml           Postgres + Redis + MinIO + API + face service
 ├── db/
 │   ├── provided/
-│   │   └── schema.sql           ← COPY the hackathon's schema.sql here
+│   │   └── schema.sql           ← COPY the hackathon's schema.sql here 
 │   ├── migrations/
 │   │   ├── 001_additive.sql     5 new tables (Rule R1: additive only)
 │   │   └── 002_auth.sql         credentials, kept out of `users`
