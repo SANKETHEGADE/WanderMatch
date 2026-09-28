@@ -524,6 +524,15 @@
       transition: opacity .5s;
     }
 
+    /* On mobile: terrain is purely decorative — no touch interception */
+    @media (pointer: coarse), (max-width: 768px) {
+      #terrain-wrap {
+        pointer-events: none;
+        touch-action: none;
+        cursor: default;
+      }
+    }
+
     #terrain-wrap.dragging {
       cursor: grabbing
     }
@@ -4057,6 +4066,20 @@
       terrain.style.backgroundSize = "cover";
       terrain.style.backgroundPosition = "center 30%";
       terrain.style.backgroundColor = "#0F120F";
+
+      // On mobile/touch devices: skip the SuperSplat iframe entirely.
+      // The iframe intercepts touch events and shows its own scene UI
+      // (labels, descriptions) when the user tries to scroll the page.
+      // The static mountain-preview.webp is a perfect replacement.
+      const isMobile = window.matchMedia("(pointer: coarse), (max-width: 768px)").matches;
+      if (isMobile) {
+        // Make terrain non-interactive so touch scroll passes through to the page
+        terrain.style.pointerEvents = "none";
+        terrain.style.touchAction = "none";
+        // Hide the loading status bar — no iframe to load
+        if (status) status.hidden = true;
+        return { update: () => {} };
+      }
 
       // Direct, lightweight SuperSplat bare viewer URL (bypasses heavy React router shell)
       const source = "https://superspl.at/s?noui=true&id=189d8fe0";
