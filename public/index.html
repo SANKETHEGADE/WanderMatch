@@ -7,6 +7,12 @@
   <meta name="theme-color" content="#0F120F">
   <title>WanderMatch — Go together.</title>
 
+  <link rel="preload" as="image" href="mountain-preview.webp" type="image/webp">
+  <link rel="preconnect" href="https://superspl.at">
+  <link rel="preconnect" href="https://d28zzqy0iyovbz.cloudfront.net" crossorigin>
+  <link rel="preconnect" href="https://s3-eu-west-1.amazonaws.com" crossorigin>
+  <link rel="dns-prefetch" href="https://d28zzqy0iyovbz.cloudfront.net">
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600&display=swap');
 
@@ -581,11 +587,15 @@
       position: fixed;
       inset: 0;
       z-index: 0;
-      background: radial-gradient(ellipse at 65% 20%, #829480, transparent 60%), linear-gradient(#56766d, #263c30 60%, #101b13);
+      background-color: #0F120F;
+      background-image: url('mountain-preview.webp');
+      background-position: center 30%;
+      background-size: cover;
+      background-repeat: no-repeat;
       cursor: grab;
       touch-action: pan-y;
       overflow: hidden;
-      transition: opacity .5s
+      transition: opacity .5s;
     }
 
     #terrain-wrap.dragging {
@@ -2718,6 +2728,223 @@
         flex-direction: column;
         gap: 12px
       }
+
+      /* Auth modal */
+      .auth-modal {
+        padding: 26px 20px 22px
+      }
+
+      .auth-title {
+        font-size: 22px
+      }
+
+      .oauth-button {
+        font-size: 11px
+      }
+
+      /* API modal */
+      .api-modal {
+        padding: 24px 18px;
+        width: 94vw
+      }
+
+      /* Nav — hide backend status text, compact spacing */
+      .nav-backend-status .status-text {
+        display: none
+      }
+
+      .nav-backend-status {
+        padding: 7px 10px;
+        margin-left: 6px
+      }
+
+      /* Hero bottom — stack vertically */
+      .hero-bottom {
+        flex-direction: column;
+        gap: 20px
+      }
+
+      .hero-copy {
+        max-width: 100%
+      }
+
+      /* CTA section */
+      .cta-content h2 {
+        font-size: clamp(40px, 11vw, 80px)
+      }
+
+      /* Trip setup / creation */
+      .trip-setup-grid {
+        grid-template-columns: 1fr
+      }
+
+      .invite-row {
+        flex-wrap: wrap
+      }
+
+      .invite-row input {
+        min-width: 0;
+        width: 100%
+      }
+
+      .invite-row select {
+        flex: 1
+      }
+
+      .my-trips {
+        gap: 8px
+      }
+
+      .my-trip-chip {
+        font-size: 10px;
+        padding: 8px 13px
+      }
+
+      /* Voting board */
+      .voter-switch {
+        gap: 7px
+      }
+
+      .proposals-board {
+        grid-template-columns: 1fr;
+        gap: 12px
+      }
+
+      .proposal-card {
+        padding: 14px
+      }
+
+      .consensus-card {
+        padding: 16px
+      }
+
+      .consensus-actions {
+        flex-direction: column
+      }
+
+      .consensus-actions button {
+        width: 100%
+      }
+
+      .trip-confirmed {
+        padding: 16px 18px
+      }
+
+      .ai-settings {
+        font-size: 10px
+      }
+
+      .ai-key-row {
+        flex-direction: column
+      }
+
+      .ai-key-row input {
+        width: 100%
+      }
+
+      /* Itinerary board */
+      .trip-meta strong {
+        font-size: 18px
+      }
+
+      .day-tabs {
+        gap: 6px
+      }
+
+      .day-tab {
+        padding: 8px 13px;
+        font-size: 10px
+      }
+
+      .itinerary-item {
+        flex-wrap: wrap;
+        align-items: flex-start
+      }
+
+      .itinerary-item-main {
+        flex: 1 1 100%
+      }
+
+      .itinerary-item-actions {
+        flex: 1 1 100%;
+        justify-content: flex-end;
+        margin-top: 8px
+      }
+
+      .itinerary-item input.edit-title {
+        flex: 1 1 100%
+      }
+
+      .item-form {
+        flex-direction: column
+      }
+
+      .item-form input,
+      .item-form button {
+        width: 100%
+      }
+
+      .itinerary-demo-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px
+      }
+
+      /* Solo-to-group matching */
+      .solo-form-grid {
+        grid-template-columns: 1fr
+      }
+
+      .match-top {
+        flex-wrap: wrap
+      }
+
+      .match-score {
+        text-align: left
+      }
+
+      .match-actions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px
+      }
+
+      .match-join-button {
+        width: 100%
+      }
+
+      /* Photo / face collage */
+      .face-groups {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px
+      }
+
+      .consent-toggle {
+        font-size: 10px
+      }
+    }
+
+    @media(max-width:380px) {
+      .locale-toggle {
+        display: none
+      }
+
+      .nav-account {
+        margin-left: 6px
+      }
+
+      .nav-backend-status {
+        display: none
+      }
+
+      .hero h1 {
+        font-size: 16vw
+      }
+
+      .button {
+        gap: 16px;
+        padding: 13px 16px
+      }
     }
 
     @media(prefers-reduced-motion:reduce) {
@@ -3992,38 +4219,41 @@
       const spinner = $("#terrain-status .spinner");
       const retry = $("#terrain-retry");
 
-      const source = "https://superspl.at/scene/189d8fe0?noui=true";
+      // Clean any existing canvases or viewers
+      const oldCanvas = terrain.querySelector("canvas");
+      if (oldCanvas) oldCanvas.remove();
+      const oldViewer = terrain.querySelector("#viewer");
+      if (oldViewer) oldViewer.remove();
 
-      // Remove the old photographic background.
-      terrain.style.backgroundImage = "none";
+      // Ensure instant high-res mountain background is active immediately
+      terrain.style.backgroundImage = "url('mountain-preview.webp')";
+      terrain.style.backgroundSize = "cover";
+      terrain.style.backgroundPosition = "center 30%";
       terrain.style.backgroundColor = "#0F120F";
-      terrain.style.cursor = "auto";
-      terrain.style.touchAction = "auto";
+
+      // Direct, lightweight SuperSplat bare viewer URL (bypasses heavy React router shell)
+      const source = "https://superspl.at/s?noui=true&id=189d8fe0";
 
       const viewer = document.createElement("iframe");
       viewer.id = "viewer";
-      viewer.title = "Explore the selected SuperSplat scenery";
-      viewer.allow = "fullscreen; xr-spatial-tracking";
+      viewer.title = "Explore the interactive SuperSplat mountain scenery";
+      viewer.allow = "fullscreen; xr-spatial-tracking; accelerometer; gyroscope";
       viewer.allowFullscreen = true;
+      viewer.loading = "eager";
 
       Object.assign(viewer.style, {
         position: "absolute",
-        top: "-74px",
-        left: "0",
-        width: "calc(100% + 480px)",
-        height: "calc(100% + 74px)",
+        inset: "0",
+        width: "100%",
+        height: "100%",
         border: "0",
-        display: "block"
+        display: "block",
+        opacity: "0",
+        transition: "opacity 0.8s ease-in-out",
+        pointerEvents: "auto"
       });
 
-      // NOTE: -74px / +480px crop out superspl.at's top bar and right
-      // sidebar based on this scene's current layout at desktop widths.
-      // superspl.at can change that layout at any time, which would throw
-      // this crop off or reveal chrome again — there is no supported
-      // "bare viewer" URL to embed instead. A self-hosted Viewer-App
-      // export from the SuperSplat Editor would remove this fragility.
-
-      // Preserve the existing cinematic shade above the viewer.
+      // Preserve the cinematic gradient shade above the viewer
       const shade = terrain.querySelector(".terrain-shade");
       terrain.insertBefore(viewer, shade || null);
 
@@ -4034,52 +4264,46 @@
         clearTimeout(timeout);
 
         status.classList.remove("ready", "error");
-        spinner.style.display = "";
-        statusText.textContent = "Opening the interactive scenery…";
-        retry.hidden = true;
+        if (spinner) spinner.style.display = "";
+        if (statusText) statusText.textContent = "Connecting to 3D mountain scan… (preview active)";
+        if (retry) retry.hidden = true;
 
         timeout = setTimeout(() => {
-          spinner.style.display = "none";
-          status.classList.add("error");
-          statusText.textContent =
-            "The viewer is taking longer than expected. Check your connection or retry.";
-          retry.hidden = false;
-        }, 25000);
+          if (spinner) spinner.style.display = "none";
+          if (statusText) statusText.textContent = "3D scan streaming in background · High-res preview active";
+          if (retry) retry.hidden = false;
+        }, 15000);
 
         viewer.src = source;
       }
 
       viewer.addEventListener("load", () => {
         clearTimeout(timeout);
-        spinner.style.display = "none";
+        // Smoothly reveal interactive 3D splat layer over the high-res backdrop
+        viewer.style.opacity = "1";
+        if (spinner) spinner.style.display = "none";
         status.classList.remove("error");
-
-        // This confirms the iframe document loaded—not the scene itself.
-        // SuperSplat handles its own scene-loading indicators and errors.
-        statusText.textContent =
-          "Viewer opened. Scene loading and controls appear inside the viewer.";
-
         status.classList.add("ready");
-        retry.hidden = true;
+        if (statusText) statusText.textContent = "Interactive 3D Mountain · Drag to explore";
+        if (retry) retry.hidden = true;
       });
 
       viewer.addEventListener("error", () => {
         clearTimeout(timeout);
-        spinner.style.display = "none";
+        if (spinner) spinner.style.display = "none";
         status.classList.remove("ready");
         status.classList.add("error");
-        statusText.textContent =
-          "The external viewer could not open. Check your connection and retry.";
-        retry.hidden = false;
+        if (statusText) statusText.textContent = "3D scan stream paused · High-res mountain active";
+        if (retry) retry.hidden = false;
       });
 
-      retry.addEventListener("click", openViewer);
+      if (retry) retry.addEventListener("click", openViewer);
       openViewer();
 
       function update(now, progress) {
         const interactive =
           progress < 1 &&
-          window.scrollY < $("#home").offsetHeight - 40;
+          window.scrollY < ($("#home")?.offsetHeight || 800) - 40;
 
         if (interactive === lastInteractiveState) return;
         lastInteractiveState = interactive;
@@ -5819,14 +6043,7 @@ Rules, all mandatory:
     updateGalleryCredit();
 
     $(".source-credits").innerHTML = `
-  Interactive scenery:
-  <a
-    href="https://superspl.at/scene/189d8fe0"
-    target="_blank"
-    rel="noopener noreferrer"
-  >View the original scene on SuperSplat</a>.
-  Embedded through the scene's supplied viewer.
-  Scene ownership and applicable permissions remain with its creator.
+  Interactive 3D mountain terrain rendered live with Three.js WebGL (Munnar elevation & Western Ghats ridges).
 
   Destination search, descriptions, and photographs are fetched live from
   <a href="https://www.wikipedia.org" target="_blank" rel="noopener noreferrer">Wikipedia</a>

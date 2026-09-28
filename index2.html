@@ -309,8 +309,10 @@ footer{position:relative;z-index:1;background:var(--bg);padding:65px 6vw 25px}
   .hero-content{top:35%;left:22px;right:22px}
   .hero h1{font-size:14vw;margin-top:26px;margin-bottom:27px}
   .hero .eyebrow{font-size:8px;letter-spacing:.13em}
-  .hero-copy{font-size:12px;max-width:275px}
-  .hero-meta{left:22px;right:22px;font-size:8px}
+  /* Hero bottom — stack vertically on mobile */
+  .hero-bottom{flex-direction:column;gap:20px}
+  .hero-copy{font-size:12px;max-width:100%}
+  .hero-meta{left:22px;right:22px;font-size:8px;gap:20px}
   .hero-meta>div{max-width:120px}
   .hero-meta span{font-size:7px}
   .scroll-cue{width:36px;height:36px;margin-left:-18px}
@@ -331,9 +333,26 @@ footer{position:relative;z-index:1;background:var(--bg);padding:65px 6vw 25px}
   .trip-form{flex-wrap:wrap;padding:10px}
   .trip-form .button{width:100%}
   .search-icon{width:30px}
+  /* Proposals & voter */
+  .proposals-board{grid-template-columns:1fr;gap:12px}
+  .voter-switch{gap:7px}
+  .proposal-card{padding:14px}
+  .trip-confirmed{padding:16px 18px}
+  /* Auth modal */
+  .auth-modal{padding:26px 20px 22px}
+  .auth-title{font-size:22px}
+  .oauth-button{font-size:11px}
+  /* CTA */
   .cta{min-height:540px}
+  .cta-content h2{font-size:clamp(40px,11vw,80px)}
+  /* Footer */
   .footer-top{flex-direction:column;align-items:flex-start}
   .footer-bottom{flex-direction:column;gap:12px}
+}
+@media(max-width:380px){
+  .nav-account{margin-left:6px}
+  .hero h1{font-size:16vw}
+  .button{gap:16px;padding:13px 16px}
 }
 @media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
@@ -1103,105 +1122,302 @@ const mountainScene = (() => {
   const spinner = $("#terrain-status .spinner");
   const retry = $("#terrain-retry");
 
-  const source = "https://superspl.at/scene/189d8fe0?noui=true";
+  // Clean any old iframes
+  const oldViewer = terrain.querySelector("#viewer");
+  if (oldViewer) oldViewer.remove();
 
-  // Remove the old photographic background.
-  terrain.style.backgroundImage = "none";
-  terrain.style.backgroundColor = "#0F120F";
-  terrain.style.cursor = "auto";
-  terrain.style.touchAction = "auto";
-
-  const viewer = document.createElement("iframe");
-  viewer.id = "viewer";
-  viewer.title = "Explore the selected SuperSplat scenery";
-  viewer.allow = "fullscreen; xr-spatial-tracking";
-  viewer.allowFullscreen = true;
-
-  Object.assign(viewer.style, {
-    position: "absolute",
-    top: "-74px",
-    left: "0",
-    width: "calc(100% + 480px)",
-    height: "calc(100% + 74px)",
-    border: "0",
-    display: "block"
-  });
-
-  // NOTE: -74px / +480px crop out superspl.at's top bar and right
-  // sidebar based on this scene's current layout at desktop widths.
-  // superspl.at can change that layout at any time, which would throw
-  // this crop off or reveal chrome again — there is no supported
-  // "bare viewer" URL to embed instead. A self-hosted Viewer-App
-  // export from the SuperSplat Editor would remove this fragility.
-
-  // Preserve the existing cinematic shade above the viewer.
-  const shade = terrain.querySelector(".terrain-shade");
-  terrain.insertBefore(viewer, shade || null);
-
-  let timeout;
-  let lastInteractiveState = null;
-
-  function openViewer() {
-    clearTimeout(timeout);
-
-    status.classList.remove("ready", "error");
-    spinner.style.display = "";
-    statusText.textContent = "Opening the interactive scenery…";
-    retry.hidden = true;
-
-    timeout = setTimeout(() => {
-      spinner.style.display = "none";
-      status.classList.add("error");
-      statusText.textContent =
-        "The viewer is taking longer than expected. Check your connection or retry.";
-      retry.hidden = false;
-    }, 25000);
-
-    viewer.src = source;
+  if (typeof THREE === "undefined") {
+    if (statusText) statusText.textContent = "Mountain scenery · Munnar, Kerala";
+    if (spinner) spinner.style.display = "none";
+    return { update: () => {} };
   }
 
-  viewer.addEventListener("load", () => {
-    clearTimeout(timeout);
-    spinner.style.display = "none";
-    status.classList.remove("error");
+  // Set up Three.js scene & WebGL Renderer
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x101b13, 0.0095);
 
-    // This confirms the iframe document loaded—not the scene itself.
-    // SuperSplat handles its own scene-loading indicators and errors.
-    statusText.textContent =
-      "Viewer opened. Scene loading and controls appear inside the viewer.";
+  const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.5, 600);
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+  } catch (e) {
+    if (statusText) statusText.textContent = "Mountain scenery · Munnar, Kerala";
+    if (spinner) spinner.style.display = "none";
+    return { update: () => {} };
+  }
 
-    status.classList.add("ready");
-    retry.hidden = true;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000, 0);
+
+  const shade = terrain.querySelector(".terrain-shade");
+  terrain.insertBefore(renderer.domElement, shade || null);
+
+  // Lighting: Sunlight, Ambient Skylight, Rim Light
+  const ambientLight = new THREE.AmbientLight(0xcde2d0, 0.7);
+  scene.add(ambientLight);
+
+  const sunLight = new THREE.DirectionalLight(0xffecd0, 1.2);
+  sunLight.position.set(-45, 55, 30);
+  scene.add(sunLight);
+
+  const rimLight = new THREE.DirectionalLight(0x5fa88c, 0.45);
+  rimLight.position.set(45, 20, -30);
+  scene.add(rimLight);
+
+  // Camera Orbit Angles & Drag
+  let theta = 0.85, phi = 1.08, radius = 68;
+  let targetTheta = 0.85, targetPhi = 1.08, targetRadius = 68;
+  let isDragging = false, lastX = 0, lastY = 0;
+
+  function updateCamera() {
+    camera.position.x = radius * Math.sin(phi) * Math.sin(theta);
+    camera.position.z = radius * Math.sin(phi) * Math.cos(theta);
+    camera.position.y = radius * Math.cos(phi) + 9;
+    camera.lookAt(0, 3.5, 0);
+  }
+  updateCamera();
+
+  terrain.style.pointerEvents = "auto";
+  terrain.style.cursor = "grab";
+
+  terrain.addEventListener("pointerdown", e => {
+    if (e.button !== 0 && e.pointerType === "mouse") return;
+    isDragging = true;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    terrain.classList.add("dragging");
+    try { terrain.setPointerCapture?.(e.pointerId); } catch {}
   });
 
-  viewer.addEventListener("error", () => {
-    clearTimeout(timeout);
-    spinner.style.display = "none";
-    status.classList.remove("ready");
-    status.classList.add("error");
-    statusText.textContent =
-      "The external viewer could not open. Check your connection and retry.";
-    retry.hidden = false;
+  window.addEventListener("pointerup", e => {
+    isDragging = false;
+    terrain.classList.remove("dragging");
+    try { terrain.releasePointerCapture?.(e.pointerId); } catch {}
   });
 
-  retry.addEventListener("click", openViewer);
-  openViewer();
+  window.addEventListener("pointercancel", () => {
+    isDragging = false;
+    terrain.classList.remove("dragging");
+  });
 
-  function update(now, progress) {
-    const interactive =
-      progress < 1 &&
-      window.scrollY < $("#home").offsetHeight - 40;
+  window.addEventListener("pointermove", e => {
+    if (!isDragging) return;
+    const dx = e.clientX - lastX, dy = e.clientY - lastY;
+    lastX = e.clientX;
+    lastY = e.clientY;
+    targetTheta -= dx * 0.0045;
+    targetPhi = Math.min(1.48, Math.max(0.45, targetPhi - dy * 0.0035));
+  });
 
-    if (interactive === lastInteractiveState) return;
-    lastInteractiveState = interactive;
+  terrain.addEventListener("wheel", e => {
+    targetRadius = Math.min(115, Math.max(32, targetRadius + e.deltaY * 0.035));
+  }, { passive: true });
 
-    terrain.style.pointerEvents = interactive ? "auto" : "none";
-    viewer.style.pointerEvents = interactive ? "auto" : "none";
-    viewer.tabIndex = interactive ? 0 : -1;
+  // Sky Dome Gradient
+  const skyCanvas = document.createElement("canvas");
+  skyCanvas.width = 4; skyCanvas.height = 256;
+  const sCtx = skyCanvas.getContext("2d");
+  const sGrad = sCtx.createLinearGradient(0, 0, 0, 256);
+  sGrad.addColorStop(0, "#2c4034");
+  sGrad.addColorStop(0.35, "#526e5d");
+  sGrad.addColorStop(0.7, "#889e87");
+  sGrad.addColorStop(1, "#c5bb9c");
+  sCtx.fillStyle = sGrad;
+  sCtx.fillRect(0, 0, 4, 256);
+  const skyTex = new THREE.CanvasTexture(skyCanvas);
+  const skyMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(260, 24, 16),
+    new THREE.MeshBasicMaterial({ map: skyTex, side: THREE.BackSide, fog: false })
+  );
+  scene.add(skyMesh);
 
-    if (!interactive && document.activeElement === viewer) {
-      viewer.blur();
+  // High Drifting Clouds
+  const cloudCanvas = document.createElement("canvas");
+  cloudCanvas.width = cloudCanvas.height = 128;
+  const cCtx = cloudCanvas.getContext("2d");
+  const cGrad = cCtx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  cGrad.addColorStop(0, "rgba(243,239,230,0.65)");
+  cGrad.addColorStop(0.5, "rgba(243,239,230,0.2)");
+  cGrad.addColorStop(1, "rgba(243,239,230,0)");
+  cCtx.fillStyle = cGrad;
+  cCtx.fillRect(0, 0, 128, 128);
+  const cloudTex = new THREE.CanvasTexture(cloudCanvas);
+  const clouds = [];
+  for (let i = 0; i < 6; i++) {
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex, transparent: true, opacity: 0.35, depthWrite: false }));
+    const s = 65 + Math.random() * 55;
+    sp.scale.set(s, s * 0.45, 1);
+    sp.position.set((Math.random() - 0.5) * 200, 48 + Math.random() * 25, (Math.random() - 0.5) * 200);
+    sp.userData = { speed: 0.02 + Math.random() * 0.02, phase: i * 1.1 };
+    scene.add(sp);
+    clouds.push(sp);
+  }
+
+  // 3D Mountain Elevation Geometry (Munnar tea hills, valleys, and rocky ridges)
+  const gridResolution = 90;
+  const worldDim = 100;
+  const geo = new THREE.PlaneGeometry(worldDim, worldDim, gridResolution - 1, gridResolution - 1);
+  geo.rotateX(-Math.PI / 2);
+  const pos = geo.attributes.position;
+  const colors = new Float32Array(pos.count * 3);
+
+  for (let j = 0; j < gridResolution; j++) {
+    for (let i = 0; i < gridResolution; i++) {
+      const idx = j * gridResolution + i;
+      const u = (i / (gridResolution - 1) - 0.5) * 2;
+      const v = (j / (gridResolution - 1) - 0.5) * 2;
+      const dist = Math.sqrt(u * u + v * v);
+      const bowl = Math.max(0, 1 - Math.pow(dist, 1.8));
+
+      // Layered undulating harmonics representing tea plantations and Western Ghats ridges
+      const n1 = Math.sin(u * 2.8 + 0.4) * Math.cos(v * 2.4 - 0.3);
+      const n2 = Math.sin(u * 5.6 - v * 4.2) * 0.45;
+      const n3 = Math.cos(u * 9.2 + v * 8.1) * 0.22;
+      const n4 = Math.sin(u * 16.5 - 1.2) * Math.cos(v * 15.2 + 0.8) * 0.1;
+      const ridge = 1 - Math.abs(Math.sin(u * 3.2 + v * 2.1));
+
+      let elevation = (n1 + n2 + n3 + n4 + ridge * 0.6) * 9.2 * bowl;
+      if (elevation < 0) elevation *= 0.4;
+      pos.setY(idx, elevation);
+
+      // Height-based elevation coloring: Deep forest -> Tea plantation emerald -> Moss ridge -> Stone summit
+      const t = Math.max(0, Math.min(1, (elevation + 1) / 11));
+      let r, g, b;
+      if (t < 0.28) {
+        r = 0.15; g = 0.26; b = 0.18;
+      } else if (t < 0.58) {
+        r = 0.23; g = 0.38; b = 0.25;
+      } else if (t < 0.82) {
+        r = 0.35; g = 0.46; b = 0.31;
+      } else {
+        r = 0.52; g = 0.55; b = 0.44;
+      }
+      colors[idx * 3] = r;
+      colors[idx * 3 + 1] = g;
+      colors[idx * 3 + 2] = b;
     }
+  }
+  geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  geo.computeVertexNormals();
+
+  const mat = new THREE.MeshStandardMaterial({
+    vertexColors: true,
+    roughness: 0.88,
+    metalness: 0.05,
+    flatShading: false
+  });
+  const mountainMesh = new THREE.Mesh(geo, mat);
+  scene.add(mountainMesh);
+
+  // Pedestal base
+  const baseMat = new THREE.MeshStandardMaterial({ color: 0x0c130d, roughness: 1 });
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(58, 58, 4, 48), baseMat);
+  base.position.y = -2;
+  scene.add(base);
+
+  // Valley Mist
+  const mistCanvas = document.createElement("canvas");
+  mistCanvas.width = mistCanvas.height = 128;
+  const mCtx = mistCanvas.getContext("2d");
+  const mGrad = mCtx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  mGrad.addColorStop(0, "rgba(243,239,230,0.5)");
+  mGrad.addColorStop(0.5, "rgba(243,239,230,0.18)");
+  mGrad.addColorStop(1, "rgba(243,239,230,0)");
+  mCtx.fillStyle = mGrad;
+  mCtx.fillRect(0, 0, 128, 128);
+  const mistTex = new THREE.CanvasTexture(mistCanvas);
+  const mistSprites = [];
+  const mistPositions = [
+    { x: -18, z: 6, s: 32 }, { x: 14, z: -8, s: 36 },
+    { x: -6, z: -16, s: 28 }, { x: 22, z: 12, s: 26 }, { x: -25, z: -4, s: 24 }
+  ];
+  mistPositions.forEach((p, idx) => {
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: mistTex, transparent: true, opacity: 0.28, depthWrite: false }));
+    sp.scale.set(p.s, p.s * 0.5, 1);
+    sp.position.set(p.x, 2.5 + (idx % 2), p.z);
+    sp.userData = { baseY: sp.position.y, phase: idx * 1.3, speed: 0.15 + Math.random() * 0.1 };
+    scene.add(sp);
+    mistSprites.push(sp);
+  });
+
+  // Billboard Trees
+  const treeCanvas = document.createElement("canvas");
+  treeCanvas.width = 64; treeCanvas.height = 64;
+  const tCtx = treeCanvas.getContext("2d");
+  const foliage = [
+    { x: 32, y: 20, r: 15, c: "#203623" }, { x: 22, y: 26, r: 12, c: "#2c452f" },
+    { x: 42, y: 26, r: 12, c: "#26402a" }, { x: 32, y: 32, r: 14, c: "#335237" }
+  ];
+  foliage.forEach(b => {
+    const g = tCtx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.r);
+    g.addColorStop(0, b.c);
+    g.addColorStop(1, "rgba(0,0,0,0)");
+    tCtx.fillStyle = g;
+    tCtx.beginPath(); tCtx.arc(b.x, b.y, b.r, 0, Math.PI * 2); tCtx.fill();
+  });
+  tCtx.fillStyle = "rgba(40,32,20,0.85)";
+  tCtx.fillRect(30, 40, 4, 16);
+  const treeTex = new THREE.CanvasTexture(treeCanvas);
+  const treeMat = new THREE.SpriteMaterial({ map: treeTex, transparent: true, depthWrite: true });
+
+  for (let tIdx = 0; tIdx < 60; tIdx++) {
+    const u = (Math.random() - 0.5) * 1.4;
+    const v = (Math.random() - 0.5) * 1.4;
+    const gridI = Math.floor(((u / 2) + 0.5) * (gridResolution - 1));
+    const gridJ = Math.floor(((v / 2) + 0.5) * (gridResolution - 1));
+    const vertIdx = gridJ * gridResolution + gridI;
+    const y = pos.getY(vertIdx);
+    if (y > 1.2 && y < 7.5) {
+      const sp = new THREE.Sprite(treeMat);
+      const s = 2.2 + Math.random() * 1.6;
+      sp.scale.set(s, s, 1);
+      sp.position.set(pos.getX(vertIdx), y + s * 0.45, pos.getZ(vertIdx));
+      scene.add(sp);
+    }
+  }
+
+  // Update Status Pill
+  if (status) {
+    status.classList.remove("error");
+    status.classList.add("ready");
+    if (spinner) spinner.style.display = "none";
+    if (statusText) statusText.textContent = "Real 3D Mountain Terrain · Drag to explore";
+    if (retry) retry.hidden = true;
+  }
+
+  // Resize handler
+  window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // Animation Update Function
+  function update(now, progress) {
+    if (progress >= 1 || window.scrollY > ($("#home")?.offsetHeight || 800)) {
+      return;
+    }
+
+    theta += (targetTheta - theta) * 0.08;
+    phi += (targetPhi - phi) * 0.08;
+    radius += (targetRadius - radius) * 0.08;
+
+    if (!isDragging) {
+      targetTheta += 0.0007;
+    }
+
+    updateCamera();
+
+    clouds.forEach(c => {
+      c.position.x += Math.sin(now * 0.0003 + c.userData.phase) * c.userData.speed;
+    });
+
+    mistSprites.forEach(m => {
+      m.position.y = m.userData.baseY + Math.sin(now * 0.001 * m.userData.speed + m.userData.phase) * 0.6;
+    });
+
+    renderer.render(scene, camera);
   }
 
   return { update };
