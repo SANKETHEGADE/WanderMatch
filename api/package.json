@@ -1,0 +1,7 @@
+{
+  "name": "wandermatch-api",
+  "version": "2.0.0",
+  "private": true,
+  "description": "WanderMatch Vercel serverless API with persistent KV storage",
+  "dependencies": {}
+}
