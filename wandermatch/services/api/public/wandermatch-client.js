@@ -26,19 +26,16 @@
     try {
       if (typeof window !== 'undefined' && window.localStorage) {
         const saved = window.localStorage.getItem('wm:apiUrl');
-        if (saved) return saved.replace(/\/$/, '');
+        if (saved && !saved.includes(':8080')) return saved.replace(/\/$/, '');
       }
       if (typeof window !== 'undefined' && window.WANDERMATCH_API) {
         return window.WANDERMATCH_API.replace(/\/$/, '');
       }
-      // Auto-detect: if deployed (not localhost), use same origin
-      if (typeof window !== 'undefined' && window.location &&
-          !window.location.hostname.includes('localhost') &&
-          !window.location.hostname.includes('127.0.0.1')) {
+      if (typeof window !== 'undefined' && window.location && window.location.origin) {
         return window.location.origin;
       }
     } catch (_) {}
-    return 'http://localhost:8080';
+    return 'http://localhost:3000';
   }
 
   class WanderMatchClient {

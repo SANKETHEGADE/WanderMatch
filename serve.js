@@ -1,6 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const apiHandler = require('./api/handler.js');
 
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
@@ -34,6 +35,12 @@ const server = http.createServer((req, res) => {
   }
 
   let reqPath = decodeURIComponent(req.url.split('?')[0]);
+
+  // Route API and health calls directly to the full WanderMatch backend
+  if (reqPath.startsWith('/api') || reqPath === '/health' || reqPath.startsWith('/destinations') || reqPath.startsWith('/reference') || reqPath.startsWith('/trips') || reqPath.startsWith('/proposals')) {
+    return apiHandler(req, res);
+  }
+
   if (reqPath === '/' || reqPath === '') {
     reqPath = '/index1.html';
   }
