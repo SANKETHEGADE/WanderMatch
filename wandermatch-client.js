@@ -224,6 +224,10 @@
       return this._fetch('/trips');
     }
 
+    listMyTrips() {
+      return this._fetch('/trips/mine');
+    }
+
     getTrip(tripId) {
       return this._fetch(`/trips/${tripId}`);
     }
@@ -302,6 +306,24 @@
     }
 
     /* ---------------- Proposals & Voting ---------------- */
+
+    listGlobalProposals() {
+      return this._fetch('/proposals');
+    }
+
+    proposeGlobal(proposal) {
+      return this._fetch('/proposals', {
+        method: 'POST',
+        body: proposal
+      });
+    }
+
+    voteGlobal(proposalId, value = 'yes', comment = null, voterName = 'you', remove = false) {
+      return this._fetch(`/proposals/${proposalId}/vote`, {
+        method: 'POST',
+        body: { value, comment, voterName, remove }
+      });
+    }
 
     propose(tripId, proposal) {
       return this._fetch(`/trips/${tripId}/proposals`, {

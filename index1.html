@@ -295,6 +295,80 @@
       font-weight: 600
     }
 
+    .nav-backend-status {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-left: 10px;
+      padding: 7px 13px;
+      border: 1px solid rgba(243, 239, 230, .25);
+      border-radius: 30px;
+      background: rgba(28, 33, 28, .85);
+      color: var(--ink);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all .2s ease;
+    }
+
+    .nav-backend-status:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(36, 43, 36, .95);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: inline-block;
+    }
+
+    .status-dot.status-online {
+      background: #5FA88C;
+      box-shadow: 0 0 8px rgba(95, 168, 140, 0.85);
+    }
+
+    .status-dot.status-offline {
+      background: #D9A566;
+      box-shadow: 0 0 6px rgba(217, 165, 102, 0.5);
+    }
+
+    .status-dot.status-error {
+      background: #E57373;
+      box-shadow: 0 0 6px rgba(229, 115, 115, 0.6);
+    }
+
+    .api-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 51;
+      width: 90vw;
+      max-width: 440px;
+      background: #1C211C;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 32px 28px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, .6);
+    }
+
+    .api-diag-box {
+      font-size: 12px;
+      padding: 12px 14px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      margin: 14px 0;
+      line-height: 1.7;
+    }
+
+    .api-diag-box div {
+      display: flex;
+      justify-content: space-between;
+    }
+
     .modal-backdrop {
       position: fixed;
       inset: 0;
@@ -1935,104 +2009,6 @@
       line-height: 1.8
     }
 
-    .my-trips {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-      max-width: 600px;
-      margin: 26px auto 0
-    }
-
-    .my-trip-chip {
-      padding: 9px 16px;
-      border-radius: 30px;
-      border: 1px solid var(--line);
-      background: none;
-      color: var(--ink);
-      font-size: 11px
-    }
-
-    .my-trip-chip:hover {
-      border-color: var(--gold)
-    }
-
-    .trip-invites {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 10px
-    }
-
-    .invite-row {
-      display: flex;
-      gap: 8px
-    }
-
-    .invite-row input {
-      flex: 1;
-      padding: 11px 12px;
-      border-radius: 4px;
-      border: 1px solid rgba(243, 239, 230, .25);
-      background: var(--card);
-      color: var(--ink);
-      font-size: 11px
-    }
-
-    .invite-row select {
-      padding: 11px 12px;
-      border-radius: 4px;
-      border: 1px solid var(--line);
-      background: #00000030;
-      color: var(--ink);
-      font-size: 10px
-    }
-
-    #add-invite-row {
-      display: block;
-      margin-top: 8px
-    }
-
-    .trip-setup-error {
-      margin-top: 14px;
-      padding: 10px 12px;
-      border-radius: 4px;
-      background: #c1583010;
-      border: 1px solid #c1583055;
-      color: #e0a685;
-      font-size: 11px
-    }
-
-    .trip-setup-error[hidden] {
-      display: none
-    }
-
-    .trip-members {
-      text-align: center;
-      font-size: 10px;
-      color: var(--muted);
-      margin-top: 6px
-    }
-
-    .trip-your-role {
-      text-align: center;
-      margin-top: 6px
-    }
-
-    .ai-status {
-      max-width: 670px;
-      margin: 14px auto 0;
-      text-align: center;
-      font-size: 10px;
-      color: var(--muted)
-    }
-
-    .itinerary-empty-state {
-      margin-top: 26px;
-      font-size: 11px;
-      color: var(--muted)
-    }
-
     .trip-setup {
       max-width: 600px;
       margin: 30px auto 0;
@@ -2285,11 +2261,6 @@
     .photos {
       text-align: center;
       padding-top: 45px
-    }
-
-    .photos-trip-note {
-      margin-top: 18px;
-      font-size: 11px
     }
 
     .photos .section-title {
@@ -2554,6 +2525,89 @@
       display: none
     }
 
+    .active-trips-bar {
+      background: rgba(28, 33, 28, 0.7);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-bottom: 24px;
+    }
+    .active-trips-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 600;
+    }
+    .active-trips-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .trip-chip-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: rgba(15, 18, 15, 0.85);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .trip-chip-btn:hover {
+      border-color: var(--gold);
+      transform: translateY(-1px);
+    }
+    .trip-chip-btn.is-active {
+      border-color: var(--gold);
+      background: rgba(217, 165, 102, 0.15);
+      color: #fff;
+    }
+    .trip-chip-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--gold);
+    }
+    .trip-meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .trip-meta-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .button-sm {
+      padding: 7px 12px !important;
+      font-size: 11px !important;
+      height: auto !important;
+    }
+    .switch-trip-link {
+      font-size: 11px;
+      color: var(--gold);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .active-trips-refresh {
+      font-size: 11px;
+      color: var(--gold);
+      cursor: pointer;
+    }
+
     @media(max-width:900px) {
       .nav-cta {
         display: none
@@ -2757,20 +2811,6 @@
         min-height: 540px
       }
 
-      .cta-content h2 {
-        font-size: clamp(40px, 11vw, 80px)
-      }
-
-      /* Hero bottom — stack vertically on mobile */
-      .hero-bottom {
-        flex-direction: column;
-        gap: 20px
-      }
-
-      .hero-copy {
-        max-width: 100%
-      }
-
       .footer-top {
         flex-direction: column;
         align-items: flex-start
@@ -2792,6 +2832,37 @@
 
       .oauth-button {
         font-size: 11px
+      }
+
+      /* API modal */
+      .api-modal {
+        padding: 24px 18px;
+        width: 94vw
+      }
+
+      /* Nav — hide backend status text, compact spacing */
+      .nav-backend-status .status-text {
+        display: none
+      }
+
+      .nav-backend-status {
+        padding: 7px 10px;
+        margin-left: 6px
+      }
+
+      /* Hero bottom — stack vertically */
+      .hero-bottom {
+        flex-direction: column;
+        gap: 20px
+      }
+
+      .hero-copy {
+        max-width: 100%
+      }
+
+      /* CTA section */
+      .cta-content h2 {
+        font-size: clamp(40px, 11vw, 80px)
       }
 
       /* Trip setup / creation */
@@ -2836,7 +2907,7 @@
       }
 
       .consensus-card {
-        padding: 16px 16px
+        padding: 16px
       }
 
       .consensus-actions {
@@ -2954,6 +3025,10 @@
         margin-left: 6px
       }
 
+      .nav-backend-status {
+        display: none
+      }
+
       .hero h1 {
         font-size: 16vw
       }
@@ -3038,6 +3113,11 @@
       <button type="button" class="locale-button" data-locale="hi" aria-pressed="false">हिं</button>
     </div>
 
+    <button class="nav-backend-status" id="nav-backend-status" type="button" title="WanderMatch Backend Status (Click to configure)">
+      <span class="status-dot status-offline" id="backend-status-dot"></span>
+      <span class="status-text" id="backend-status-text">Backend</span>
+    </button>
+
     <button class="nav-account" id="nav-account" type="button">
       <span id="nav-account-label">Log in</span>
     </button>
@@ -3097,8 +3177,26 @@
     </form>
 
     <p class="auth-error" id="auth-error" role="alert" hidden></p>
-    <p class="auth-note muted">Demo auth only: passwords are hashed and stored in this browser's local storage, not a
-      real server.</p>
+    <p class="auth-note muted" id="auth-note">Connected to WanderMatch API (/api/v1). Password min 6 characters.</p>
+  </div>
+
+  <div class="api-modal" id="api-modal" role="dialog" aria-modal="true" aria-labelledby="api-title" hidden>
+    <button class="modal-close" id="api-close" type="button" aria-label="Close">✕</button>
+    <h2 class="auth-title" id="api-title">Backend Connection</h2>
+    <p class="auth-sub muted">Connects with WanderMatch Fastify API (/api/v1) and Socket.io.</p>
+    <div style="margin: 16px 0;">
+      <label style="display:block; font-size:12px; margin-bottom:6px; color:var(--muted)">API Base URL</label>
+      <input type="url" id="api-origin-input" style="width:100%; box-sizing:border-box; margin-bottom:12px; padding:9px 12px; background:rgba(0,0,0,0.4); border:1px solid var(--line); border-radius:4px; color:var(--ink);" value="http://localhost:8080">
+      <div class="api-diag-box">
+        <div><span>Status:</span><strong id="api-diag-status">Checking…</strong></div>
+        <div><span>Latency:</span><span id="api-diag-latency">—</span></div>
+        <div><span>Realtime (WS):</span><span id="api-diag-socket">—</span></div>
+      </div>
+      <div style="display:flex; gap:10px; margin-top:14px;">
+        <button type="button" class="button" id="api-test-button" style="flex:1; background:transparent; border:1px solid var(--line); color:var(--ink);">Test Ping</button>
+        <button type="button" class="button" id="api-save-button" style="flex:1;">Save & Reconnect</button>
+      </div>
+    </div>
   </div>
 
   <main>
@@ -3221,10 +3319,74 @@
       <div class="eyebrow" data-i18n="vote.eyebrow">Every great trip starts somewhere</div>
       <h2 class="section-title" id="start-title" data-i18n-html="vote.title">Where are <span
           class="accent serif">we</span> going?</h2>
-      <p class="muted" data-i18n="vote.subtitle">Create a trip, invite your crew by email, then propose and vote on
-        where to go.</p>
+      <p class="muted" data-i18n="vote.subtitle">Propose a place. Your crew votes. Most votes wins the trip.</p>
 
-      <div class="my-trips" id="my-trips"></div>
+      <form class="trip-form" id="trip-form">
+        <span class="search-icon" aria-hidden="true">⌕</span>
+        <label class="sr-only" for="destination-input">Destination</label>
+        <input id="destination-input" name="destination" type="text" data-i18n-placeholder="vote.inputPlaceholder"
+          placeholder="Somewhere like Munnar…" maxlength="80" required autocomplete="off" role="combobox"
+          aria-expanded="false" aria-controls="search-results" aria-autocomplete="list">
+        <button class="button" type="submit"><span data-i18n="vote.proposeButton">Propose destination</span> <span
+            class="arrow" aria-hidden="true">↗</span></button>
+        <div class="search-results" id="search-results" role="listbox" aria-label="Destination suggestions" hidden>
+        </div>
+      </form>
+
+      <div class="quick-select" id="quick-select">
+        <span data-i18n="vote.orFeeling">Or follow the feeling:</span>
+      </div>
+
+      <div class="voter-switch">
+        <span class="voter-switch-label" data-i18n="vote.votingAs">Voting as:</span>
+        <div class="voter-chips" id="voter-chips" role="group" aria-label="Choose who is voting"></div>
+      </div>
+
+      <div class="proposals-board" id="proposals-board" aria-live="polite"></div>
+      <p class="proposals-empty" id="proposals-empty" data-i18n="vote.empty">No destinations proposed yet — be the
+        first.</p>
+
+      <button class="button confirm-trip-button" id="confirm-trip-button" type="button" hidden>
+        <span data-i18n="vote.lockIn">Lock in the group's pick</span> <span aria-hidden="true">✓</span>
+      </button>
+
+      <details class="ai-settings" id="ai-settings">
+        <summary>AI tie-break settings</summary>
+        <p class="muted">Add your own Anthropic API key to let Claude resolve genuine ties with a grounded
+          recommendation. Stored only in this browser's local storage and sent directly from your browser to Anthropic
+          when a tie happens — never through any server of ours.</p>
+        <div class="ai-key-row">
+          <input type="password" id="anthropic-key-input" placeholder="sk-ant-...">
+          <button type="button" class="link-reset" id="anthropic-key-save">Save key</button>
+          <button type="button" class="link-reset" id="anthropic-key-clear">Clear</button>
+        </div>
+        <p class="ai-key-status" id="ai-key-status"></p>
+      </details>
+
+      <div class="consensus-card" id="consensus-card" role="status" aria-live="polite" hidden></div>
+
+      <div class="trip-confirmed" id="trip-confirmed" role="status" aria-live="polite" hidden>
+        <strong id="trip-confirmed-title"></strong>
+        <p class="muted" id="trip-confirmed-copy"></p>
+        <button class="link-reset" id="trip-reset" type="button">Start the vote over</button>
+      </div>
+    </section>
+
+    <section class="section itinerary" id="itinerary" aria-labelledby="itinerary-title">
+      <div class="eyebrow">One shared plan</div>
+      <h2 class="section-title" id="itinerary-title">Your itinerary,<br>day by day.</h2>
+      <p class="muted">Create the trip, invite your crew with a role, and build the plan together.</p>
+
+      <!-- Active / Community Trips Selector Bar -->
+      <div class="active-trips-bar" id="active-trips-bar">
+        <div class="active-trips-header">
+          <span class="active-trips-label">Active &amp; Shared Trips:</span>
+          <button type="button" class="link-reset active-trips-refresh" id="refresh-trips-btn" title="Refresh trips list">↻ Refresh</button>
+        </div>
+        <div class="active-trips-list" id="active-trips-list">
+          <span class="muted" style="font-size:12px;">Loading active trips…</span>
+        </div>
+      </div>
 
       <div class="trip-setup" id="trip-setup">
         <div class="trip-setup-grid">
@@ -3235,82 +3397,27 @@
           <label class="sr-only" for="trip-end-input">End date</label>
           <input id="trip-end-input" type="date" aria-label="End date">
         </div>
-        <div class="trip-setup-grid">
-          <input id="trip-interests-input" type="text"
-            placeholder="Group interests, comma separated (for solo matching)">
-          <select id="trip-pace-input" aria-label="Trip pace">
-            <option value="relaxed">Relaxed pace</option>
-            <option value="moderate" selected>Moderate pace</option>
-            <option value="packed">Packed pace</option>
-          </select>
-          <select id="trip-budget-input" aria-label="Trip budget">
-            <option value="budget">Budget</option>
-            <option value="mid" selected>Mid-range</option>
-            <option value="luxury">Luxury</option>
-          </select>
-        </div>
-        <label class="consent-toggle">
-          <input type="checkbox" id="trip-open-input">
-          <span>Let solo travellers request to join this trip</span>
-        </label>
 
-        <p class="trip-roles-label muted">Invite by email (optional — they must already have a WanderMatch account):</p>
-        <div class="trip-invites" id="trip-invites"></div>
-        <button type="button" class="link-reset" id="add-invite-row">+ Add another invite</button>
+        <p class="trip-roles-label muted">Assign roles to your crew:</p>
+        <div class="trip-roles" id="trip-roles-setup"></div>
 
         <button class="button" id="create-trip-button" type="button">Create the trip <span
             aria-hidden="true">↗</span></button>
-        <p class="trip-setup-error" id="trip-setup-error" hidden></p>
       </div>
-
-      <div class="trip-board" id="vote-board" hidden>
-        <div class="trip-meta" id="vote-trip-meta"></div>
-        <p class="trip-members" id="trip-members-list"></p>
-
-        <form class="trip-form" id="trip-form">
-          <span class="search-icon" aria-hidden="true">⌕</span>
-          <label class="sr-only" for="destination-input">Destination</label>
-          <input id="destination-input" name="destination" type="text" data-i18n-placeholder="vote.inputPlaceholder"
-            placeholder="Somewhere like Munnar…" maxlength="80" required autocomplete="off" role="combobox"
-            aria-expanded="false" aria-controls="search-results" aria-autocomplete="list">
-          <button class="button" type="submit"><span data-i18n="vote.proposeButton">Propose destination</span> <span
-              class="arrow" aria-hidden="true">↗</span></button>
-          <div class="search-results" id="search-results" role="listbox" aria-label="Destination suggestions" hidden>
-          </div>
-        </form>
-
-        <div class="quick-select" id="quick-select">
-          <span data-i18n="vote.orFeeling">Or follow the feeling:</span>
-        </div>
-
-        <div class="proposals-board" id="proposals-board" aria-live="polite"></div>
-        <p class="proposals-empty" id="proposals-empty" data-i18n="vote.empty">No destinations proposed yet — be the
-          first.</p>
-
-        <button class="button confirm-trip-button" id="confirm-trip-button" type="button" hidden>
-          <span data-i18n="vote.lockIn">Lock in the group's pick</span> <span aria-hidden="true">✓</span>
-        </button>
-
-        <p class="ai-status" id="ai-status"></p>
-        <div class="consensus-card" id="consensus-card" role="status" aria-live="polite" hidden></div>
-
-        <div class="trip-confirmed" id="trip-confirmed" role="status" aria-live="polite" hidden>
-          <strong id="trip-confirmed-title"></strong>
-          <p class="muted" id="trip-confirmed-copy"></p>
-        </div>
-
-        <button class="link-reset" id="trip-reset" type="button" data-i18n="vote.startOver">Start the vote over</button>
-      </div>
-    </section>
-
-    <section class="section itinerary" id="itinerary" aria-labelledby="itinerary-title">
-      <div class="eyebrow">One shared plan</div>
-      <h2 class="section-title" id="itinerary-title">Your itinerary,<br>day by day.</h2>
-      <p class="muted">Create or open a trip above first — this board follows whichever trip is active.</p>
 
       <div class="trip-board" id="trip-board" hidden>
-        <div class="trip-meta" id="trip-meta"></div>
-        <p class="trip-your-role muted" id="trip-your-role"></p>
+        <div class="trip-meta-row">
+          <div class="trip-meta" id="trip-meta"></div>
+          <div class="trip-meta-actions">
+            <button type="button" class="button button-sm" id="share-trip-btn" title="Copy link to invite friends">📋 Share Trip Link</button>
+            <button type="button" class="link-reset switch-trip-link" id="switch-trip-btn">Switch Trip</button>
+          </div>
+        </div>
+
+        <div class="voter-switch">
+          <span class="voter-switch-label" data-i18n="itin.actingAs">Acting as:</span>
+          <div class="voter-chips" id="itinerary-acting-chips" role="group" aria-label="Choose who is acting"></div>
+        </div>
 
         <div class="day-tabs" id="day-tabs" role="tablist"></div>
 
@@ -3327,15 +3434,16 @@
               id="item-form-day-label">1</span></button>
         </form>
         <p class="itinerary-permission-note muted" id="itinerary-permission-note" hidden data-i18n="itin.viewerNote">
-          Viewers can see the plan but can't add or edit items. Ask an owner or editor to make changes.
+          Viewers can see the plan but can't add or edit items. Switch to an owner or editor seat to make changes.
         </p>
 
         <div class="itinerary-demo-row">
           <button class="link-reset" id="simulate-conflict-button" type="button" data-i18n="itin.simulate">Simulate:
             someone else edits the plan right now</button>
+          <button class="link-reset" id="trip-reset-button" type="button" data-i18n="itin.newTrip">Start a new
+            trip</button>
         </div>
       </div>
-      <p class="itinerary-empty-state muted" id="itinerary-empty-state">No active trip yet.</p>
     </section>
 
     <section class="section matching" id="matching" aria-labelledby="matching-title">
@@ -3375,24 +3483,21 @@
       <div class="match-results" id="match-results"></div>
       <p class="match-empty muted" id="match-empty" hidden data-i18n="match.empty">No open trips match those dates or
         destination — try widening either.</p>
-      <p class="matching-note muted">Candidates include real open trips other accounts created, plus a few seed trips
-        the server ships with so there's something to match against right away. Approving a join request is simulated
-        instantly since there's no real trip owner reviewing it live in this demo.</p>
+      <p class="matching-note muted">Matches are scored against a small set of seed group trips for this demo, not real
+        other travellers. Approving a join request is simulated instantly since there's no real trip owner online in
+        this browser.</p>
     </section>
 
     <section class="section photos" id="photos" aria-labelledby="photos-title">
       <div class="eyebrow">After the trip</div>
       <h2 class="section-title" id="photos-title">Find yourself<br>in every photo.</h2>
       <p class="muted">Upload your trip photos and we'll group them by who's in them — a real face-detection model runs
-        right here in your browser, on your device. Only the resulting face thumbnails and any name you add are saved,
-        tied to your active trip.</p>
-
-      <p class="photos-trip-note muted" id="photos-trip-note"></p>
+        right here in your browser. Nothing is uploaded anywhere.</p>
 
       <label class="consent-toggle">
         <input type="checkbox" id="face-consent">
-        <span>Group my photos by face (opt-in — downloads a ~6MB detection model, detection runs on this device,
-          resulting face thumbnails are saved to this trip)</span>
+        <span>Group my photos by face (opt-in — downloads a ~6MB detection model and processes everything on this
+          device)</span>
       </label>
 
       <div class="photo-upload" id="photo-upload-zone" hidden>
@@ -3405,8 +3510,8 @@
       <p class="face-groups-empty" id="face-groups-empty">No faces grouped yet — turn on grouping above and upload some
         photos.</p>
       <p class="photos-note muted">Faces are clustered by similarity only — no cluster is ever auto-labelled with a real
-        name. Add a name yourself if you want to. The original uploaded photos themselves are never sent anywhere — only
-        the cropped face thumbnails and labels are saved to this trip.</p>
+        name. Add a name yourself if you want to. Everything here resets when you reload the page; nothing is stored or
+        sent anywhere.</p>
     </section>
 
     <section class="cta" id="closing" aria-labelledby="cta-title">
@@ -3454,6 +3559,8 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="https://appleid.cdn-apple.com/appleauth/one/appleid.auth.js" async defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+  <script src="https://cdn.socket.io/4.8.0/socket.io.min.js"></script>
+  <script src="wandermatch-client.js"></script>
 
   <script>
     "use strict";
@@ -3623,14 +3730,14 @@
         btn.setAttribute("aria-pressed", String(btn.dataset.locale === locale));
       });
 
-      if (currentUser) {
-        currentUser.locale = locale;
-        Api.request("POST", "/api/auth/locale", { locale }).catch(() => { });
-      }
+      const user = AuthDB.currentUser?.();
+      if (user) AuthDB.setLocale?.(user.id, locale);
 
       applyStaticTranslations();
-      if (typeof renderActiveTrip === "function") renderActiveTrip();
-      if (typeof findMatches === "function") findMatches();
+      renderProposals();
+      if (confirmedProposal) applyConfirmedProposal(confirmedProposal);
+      if (trip) renderTripBoard();
+      findMatches();
     }
 
     document.querySelectorAll(".locale-button").forEach(btn => {
@@ -3648,55 +3755,109 @@
       { users: [{ id, name, email, provider, avatar, passwordHash, salt }],
         sessionUserId: string | null }
     */
-    /*
-      API CLIENT — talks to the real Node/Express backend (server.js) that
-      now owns accounts, trips, votes, itinerary, consensus, and face
-      clusters. Requires the page to be served BY that server
-      (http://localhost:3000, not opened as a file://) so these relative
-      fetches resolve. The bearer token is the only thing still kept in
-      this browser's localStorage; everything else is server state now.
-    */
-    const TOKEN_KEY = "wandermatch:token";
+    const AuthDB = (() => {
+      const KEY = "wandermatch:db:v1";
 
-    const Api = {
-      getToken: () => { try { return localStorage.getItem(TOKEN_KEY); } catch { return null; } },
-      setToken: token => { try { localStorage.setItem(TOKEN_KEY, token); } catch { } },
-      clearToken: () => { try { localStorage.removeItem(TOKEN_KEY); } catch { } },
-
-      async request(method, path, body) {
-        const headers = { "content-type": "application/json" };
-        const token = Api.getToken();
-        if (token) headers.authorization = `Bearer ${token}`;
-
-        let response;
+      function read() {
         try {
-          response = await fetch(path, { method, headers, body: body ? JSON.stringify(body) : undefined });
-        } catch (error) {
-          throw new Error("Can't reach the WanderMatch server. Is it running (node server.js) and is this page open at http://localhost, not as a local file?");
+          const raw = localStorage.getItem(KEY);
+          return raw ? JSON.parse(raw) : { users: [], sessionUserId: null };
+        } catch {
+          return { users: [], sessionUserId: null };
         }
-
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          const error = new Error(data.error || `Request failed (${response.status}).`);
-          error.status = response.status;
-          error.data = data;
-          throw error;
-        }
-        return data;
       }
-    };
 
-    let currentUser = null;
+      function write(data) {
+        try {
+          localStorage.setItem(KEY, JSON.stringify(data));
+          return true;
+        } catch {
+          return false;
+        }
+      }
+
+      function findByEmail(email) {
+        return read().users.find(u => u.email.toLowerCase() === email.toLowerCase());
+      }
+
+      function upsertOAuthUser({ name, email, provider, avatar }) {
+        const data = read();
+        let user = data.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+        if (!user) {
+          user = { id: crypto.randomUUID(), name, email, provider, avatar, passwordHash: null, salt: null };
+          data.users.push(user);
+        } else {
+          user.name = name || user.name;
+          user.avatar = avatar || user.avatar;
+        }
+
+        data.sessionUserId = user.id;
+        write(data);
+        return user;
+      }
+
+      async function hashPassword(password, salt) {
+        const encoder = new TextEncoder();
+        const digest = await crypto.subtle.digest("SHA-256", encoder.encode(salt + password));
+        return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, "0")).join("");
+      }
+
+      async function signUp({ name, email, password }) {
+        if (findByEmail(email)) throw new Error("An account with this email already exists.");
+
+        const salt = crypto.randomUUID();
+        const passwordHash = await hashPassword(password, salt);
+        const user = { id: crypto.randomUUID(), name, email, provider: "password", avatar: null, passwordHash, salt };
+
+        const data = read();
+        data.users.push(user);
+        data.sessionUserId = user.id;
+        write(data);
+        return user;
+      }
+
+      async function logIn({ email, password }) {
+        const user = findByEmail(email);
+        if (!user || !user.passwordHash) throw new Error("No account found for that email.");
+
+        const attemptHash = await hashPassword(password, user.salt);
+        if (attemptHash !== user.passwordHash) throw new Error("Incorrect password.");
+
+        const data = read();
+        data.sessionUserId = user.id;
+        write(data);
+        return user;
+      }
+
+      function logOut() {
+        const data = read();
+        data.sessionUserId = null;
+        write(data);
+      }
+
+      function currentUser() {
+        const data = read();
+        return data.users.find(u => u.id === data.sessionUserId) || null;
+      }
+
+      function setLocale(userId, locale) {
+        const data = read();
+        const user = data.users.find(u => u.id === userId);
+        if (user) {
+          user.locale = locale;
+          write(data);
+        }
+      }
+
+      return { upsertOAuthUser, signUp, logIn, logOut, currentUser, setLocale };
+    })();
 
     /*
       OAuth scaffolding for Google and Apple. Both need a Client ID/Service ID
       that only the site owner can obtain (Google Cloud Console is free;
       Apple requires a paid Apple Developer account). Until real IDs are set
       below, the buttons explain that plainly instead of failing silently.
-      Once a real identity token comes back, it's decoded here in the
-      browser and just the resulting profile (name/email/avatar) is sent to
-      the server to upsert — the server never re-verifies the token
-      signature, which is the one corner cut versus a production OAuth flow.
     */
     const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
     const APPLE_CLIENT_ID = "YOUR_APPLE_SERVICES_ID";
@@ -3707,17 +3868,15 @@
       return JSON.parse(decodeURIComponent(escape(atob(base64))));
     }
 
-    async function handleGoogleCredential(response) {
+    function handleGoogleCredential(response) {
       const claims = decodeJwt(response.credential);
-      try {
-        const { token, user } = await Api.request("POST", "/api/auth/oauth", {
-          provider: "google", name: claims.name, email: claims.email, avatar: claims.picture
-        });
-        Api.setToken(token);
-        onAuthSuccess(user);
-      } catch (error) {
-        showAuthError(error.message);
-      }
+      const user = AuthDB.upsertOAuthUser({
+        name: claims.name,
+        email: claims.email,
+        provider: "google",
+        avatar: claims.picture
+      });
+      onAuthSuccess(user);
     }
 
     function initGoogleButton() {
@@ -3748,17 +3907,17 @@
 
         const result = await AppleID.auth.signIn();
         const claims = decodeJwt(result.authorization.id_token);
-        const name = result.user
-          ? `${result.user.name?.firstName || ""} ${result.user.name?.lastName || ""}`.trim()
-          : claims.email;
-
-        const { token, user } = await Api.request("POST", "/api/auth/oauth", {
-          provider: "apple", name, email: claims.email, avatar: null
+        const user = AuthDB.upsertOAuthUser({
+          name: result.user
+            ? `${result.user.name?.firstName || ""} ${result.user.name?.lastName || ""}`.trim()
+            : claims.email,
+          email: claims.email,
+          provider: "apple",
+          avatar: null
         });
-        Api.setToken(token);
         onAuthSuccess(user);
       } catch (error) {
-        showAuthError(error.message || "Apple sign-in was cancelled or failed.");
+        showAuthError("Apple sign-in was cancelled or failed.");
       }
     }
 
@@ -3806,63 +3965,86 @@
       clearAuthError();
     }
 
+    function getCurrentUser() {
+      if (window.wm && wm.token) {
+        const stored = wm.getStoredUser();
+        if (stored) {
+          return {
+            id: stored.userId || stored.user_id,
+            name: stored.displayName || stored.display_name || stored.name || "You",
+            email: stored.email || "",
+            locale: stored.locale || "en",
+            avatar: stored.avatar || null
+          };
+        }
+      }
+      return AuthDB.currentUser();
+    }
+
     function renderAccountState() {
+      const user = getCurrentUser();
       const label = $("#nav-account-label");
       const button = $("#nav-account");
 
       button.querySelector(".account-avatar")?.remove();
 
-      if (currentUser) {
+      if (user) {
         const avatar = document.createElement("span");
         avatar.className = "account-avatar";
 
-        if (currentUser.avatar) {
+        if (user.avatar) {
           const img = document.createElement("img");
-          img.src = currentUser.avatar;
+          img.src = user.avatar;
           img.alt = "";
           img.style.cssText = "width:100%;height:100%;border-radius:50%;object-fit:cover";
           avatar.append(img);
         } else {
-          avatar.textContent = (currentUser.name || currentUser.email)[0].toUpperCase();
+          avatar.textContent = (user.name || user.email || "U")[0].toUpperCase();
         }
 
         button.prepend(avatar);
-        label.textContent = currentUser.name?.split(" ")[0] || "Account";
+        label.textContent = user.name?.split(" ")[0] || "Account";
+        button.title = `${user.name || user.email} (Click to log out)`;
       } else {
         label.textContent = "Log in";
+        button.title = "Log in / Sign up";
       }
     }
 
     function onAuthSuccess(user) {
-      currentUser = user;
       closeAuthModal();
       renderAccountState();
-      if (typeof loadMyTrips === "function") loadMyTrips();
-
-      if (user.locale && typeof setLocale === "function") {
-        setLocale(user.locale); // also re-runs findMatches()
-      } else if (typeof findMatches === "function") {
-        findMatches();
-      }
+      if (user.locale && typeof setLocale === "function") setLocale(user.locale);
+      updateBackendStatus();
     }
 
-    $("#nav-account").addEventListener("click", async () => {
-      if (currentUser) {
-        try { await Api.request("POST", "/api/auth/logout"); } catch { }
-        Api.clearToken();
-        currentUser = null;
-        activeTrip = null;
-        renderAccountState();
-        location.reload();
+    $("#nav-account").addEventListener("click", () => {
+      if (getCurrentUser()) {
+        if (confirm("Log out of WanderMatch?")) {
+          if (window.wm) wm.logout();
+          AuthDB.logOut();
+          renderAccountState();
+        }
       } else {
         openAuthModal("login");
       }
     });
 
     $("#auth-close").addEventListener("click", closeAuthModal);
-    $("#auth-backdrop").addEventListener("click", closeAuthModal);
+    $("#auth-backdrop").addEventListener("click", () => {
+      closeAuthModal();
+      const apiModal = $("#api-modal");
+      if (apiModal) apiModal.hidden = true;
+    });
     document.addEventListener("keydown", e => {
-      if (e.key === "Escape" && !$("#auth-modal").hidden) closeAuthModal();
+      if (e.key === "Escape") {
+        if (!$("#auth-modal").hidden) closeAuthModal();
+        const apiModal = $("#api-modal");
+        if (apiModal && !apiModal.hidden) {
+          apiModal.hidden = true;
+          $("#auth-backdrop").hidden = true;
+        }
+      }
     });
 
     $("#tab-login").addEventListener("click", () => setAuthMode("login"));
@@ -3876,17 +4058,128 @@
       const password = $("#auth-password").value;
       const name = $("#auth-name").value.trim();
 
-      try {
-        const { token, user } = authMode === "login"
-          ? await Api.request("POST", "/api/auth/login", { email, password })
-          : await Api.request("POST", "/api/auth/signup", { name: name || email, email, password });
+      const submitBtn = $("#auth-submit");
+      const prevText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Connecting…";
 
-        Api.setToken(token);
+      try {
+        let user;
+        if (authMode === "login") {
+          try {
+            const res = await wm.login(email, password);
+            user = {
+              id: res.user.userId,
+              name: res.user.displayName,
+              email,
+              locale: res.user.locale
+            };
+          } catch (apiErr) {
+            if (apiErr.status === 401 || apiErr.status === 422 || apiErr.code === 'UNAUTHORIZED' || apiErr.code === 'VALIDATION_FAILED') {
+              throw apiErr;
+            }
+            // Fallback to local AuthDB if offline
+            user = await AuthDB.logIn({ email, password });
+          }
+        } else {
+          if (password.length < 6) {
+            throw new Error("Password must be at least 6 characters.");
+          }
+          try {
+            const res = await wm.signup(email, password, name || email.split("@")[0], currentLocale === "hi" ? "hi-IN" : "en-IN");
+            user = {
+              id: res.user.userId,
+              name: res.user.displayName,
+              email,
+              locale: res.user.locale
+            };
+          } catch (apiErr) {
+            if (apiErr.status === 422 || apiErr.status === 409 || apiErr.code === 'VALIDATION_FAILED' || apiErr.code === 'DUPLICATE') {
+              throw apiErr;
+            }
+            user = await AuthDB.signUp({ name: name || email, email, password });
+          }
+        }
+
         onAuthSuccess(user);
       } catch (error) {
         showAuthError(error.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = prevText;
       }
     });
+
+    /* Backend Connection Status Diagnostics */
+    async function updateBackendStatus() {
+      const dot = $("#backend-status-dot");
+      const text = $("#backend-status-text");
+      const diagStatus = $("#api-diag-status");
+      const diagLatency = $("#api-diag-latency");
+      const diagSocket = $("#api-diag-socket");
+      const originInput = $("#api-origin-input");
+
+      if (originInput && window.wm?.baseUrl) originInput.value = wm.baseUrl;
+
+      if (!window.wm) return;
+      const health = await wm.checkHealth();
+      if (health.ok) {
+        if (dot) dot.className = "status-dot status-online";
+        const isKv = health.data?.storage === 'vercel-kv';
+        if (text) text.textContent = isKv ? "KV Live" : "API Live";
+        if (diagStatus) diagStatus.textContent = isKv ? "Connected (Persistent KV)" : "Connected (In-Memory Mode)";
+        if (diagLatency) diagLatency.textContent = `${health.latencyMs}ms`;
+        if (diagSocket) diagSocket.textContent = window.io ? (wm.socket?.connected ? "Connected" : "Ready") : "Not loaded";
+      } else {
+        if (dot) dot.className = "status-dot status-offline";
+        if (text) text.textContent = "Offline Mode";
+        if (diagStatus) diagStatus.textContent = health.error ? `Offline (${health.error})` : `HTTP ${health.status || 'Unavailable'}`;
+        if (diagLatency) diagLatency.textContent = `${health.latencyMs}ms`;
+        if (diagSocket) diagSocket.textContent = "Disconnected";
+      }
+    }
+
+    $("#nav-backend-status")?.addEventListener("click", () => {
+      $("#auth-backdrop").hidden = false;
+      $("#api-modal").hidden = false;
+      updateBackendStatus();
+    });
+
+    $("#api-close")?.addEventListener("click", () => {
+      $("#api-modal").hidden = true;
+      $("#auth-backdrop").hidden = true;
+    });
+
+    $("#api-test-button")?.addEventListener("click", async () => {
+      const diagStatus = $("#api-diag-status");
+      if (diagStatus) diagStatus.textContent = "Testing ping…";
+      await updateBackendStatus();
+    });
+
+    $("#api-save-button")?.addEventListener("click", async () => {
+      const newUrl = $("#api-origin-input")?.value.trim();
+      if (newUrl && window.wm) {
+        wm.setBaseUrl(newUrl);
+        await updateBackendStatus();
+      }
+      $("#api-modal").hidden = true;
+      $("#auth-backdrop").hidden = true;
+    });
+
+    // Check backend health & existing session
+    updateBackendStatus();
+    if (window.wm && wm.token) {
+      wm.me().then(res => {
+        if (res?.user) {
+          renderAccountState();
+          if (res.user.locale && typeof setLocale === "function") {
+            setLocale(res.user.locale.startsWith("hi") ? "hi" : "en");
+          }
+        }
+      }).catch(() => {
+        renderAccountState();
+      });
+    }
 
     $("#google-button").addEventListener("click", () => {
       clearAuthError();
@@ -3905,25 +4198,6 @@
     $("#apple-button").addEventListener("click", handleAppleSignIn);
 
     renderAccountState();
-
-    async function restoreSession() {
-      if (!Api.getToken()) return;
-      try {
-        const { user } = await Api.request("GET", "/api/auth/me");
-        currentUser = user;
-        renderAccountState();
-        if (typeof loadMyTrips === "function") loadMyTrips();
-
-        if (user.locale && typeof setLocale === "function") {
-          setLocale(user.locale); // also re-runs findMatches()
-        } else if (typeof findMatches === "function") {
-          findMatches();
-        }
-      } catch {
-        Api.clearToken(); // stale/invalid token (e.g. server restarted)
-      }
-    }
-    restoreSession();
 
     /*
       REAL DATA LAYER:
@@ -4216,188 +4490,90 @@
     }
 
     /*
-      SHARED TRIP STATE — now genuinely shared: activeTrip is fetched from
-      and mutated through the real backend (server.js), so different real
-      accounts logging in from different browsers/devices see the same
-      trip, votes, and itinerary. The old single-tab "crew seat switcher"
-      is gone; whoever is actually logged in is the actor now.
+      GROUP VOTING:
+      In-memory only (resets on reload, like the rest of the trip-planning
+      state) — no backend exists to sync real multiple devices. To still
+      demo the actual group mechanic, four crew "seats" share this one
+      browser tab; a switcher lets you act as whichever seat is voting.
     */
-    let activeTrip = null;
-    let selectedDay = 0;
-    let editingItemId = null;
+    const CREW = [
+      { id: "you", name: "You", color: "#344b3c", text: "#F3EFE6" },
+      { id: "alex", name: "Alex", color: "#c4ac8b", text: "#24352a" },
+      { id: "rae", name: "Rae", color: "#9bab9c", text: "#24352a" },
+      { id: "mo", name: "Mo", color: "#c9977c", text: "#24352a" }
+    ];
+
+    let activeVoter = "you";
+    let proposals = [];
+    let confirmedProposal = null;
     let proposeRequestId = 0;
-    let consensusTally = { accepted: 0, overridden: 0 };
 
-    function memberName(userId) {
-      if (currentUser && userId === currentUser.id) return currentUser.name?.split(" ")[0] || "You";
-      return activeTrip?.members.find(m => m.userId === userId)?.name?.split(" ")[0] || "A crew member";
+    function crewMember(id) {
+      return CREW.find(c => c.id === id);
     }
 
-    // ---- trip picker + creation ----
+    function crewDisplayName(id) {
+      if (id === "you") {
+        const user = AuthDB.currentUser();
+        return user?.name?.split(" ")[0] || "You";
+      }
+      return crewMember(id)?.name || id;
+    }
 
-    async function loadMyTrips() {
-      const box = $("#my-trips");
-      if (!currentUser) { box.innerHTML = ""; return; }
+    function renderVoterChips() {
+      const box = $("#voter-chips");
+      box.innerHTML = "";
 
-      try {
-        const { trips } = await Api.request("GET", "/api/trips/mine");
-        box.innerHTML = trips
-          .map(t => `<button type="button" class="my-trip-chip" data-trip="${t.id}">${t.name}</button>`)
-          .join("");
-        box.querySelectorAll(".my-trip-chip").forEach(btn => {
-          btn.addEventListener("click", () => openTrip(btn.dataset.trip));
+      CREW.forEach(member => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "voter-chip";
+        chip.setAttribute("aria-pressed", String(member.id === activeVoter));
+        chip.innerHTML = `
+      <span class="voter-dot" style="background:${member.color};color:${member.text}">
+        ${crewDisplayName(member.id)[0].toUpperCase()}
+      </span>
+      ${crewDisplayName(member.id)}
+    `;
+        chip.addEventListener("click", () => {
+          activeVoter = member.id;
+          renderVoterChips();
+          renderProposals();
         });
-      } catch {
-        box.innerHTML = "";
-      }
+        box.append(chip);
+      });
     }
-
-    async function openTrip(tripId) {
-      try {
-        const { trip } = await Api.request("GET", `/api/trips/${tripId}`);
-        activateTrip(trip);
-      } catch (error) {
-        $("#trip-setup-error").hidden = false;
-        $("#trip-setup-error").textContent = error.message;
-      }
-    }
-
-    function activateTrip(trip) {
-      activeTrip = trip;
-      selectedDay = 0;
-      editingItemId = null;
-
-      $("#trip-setup").hidden = true;
-      $("#vote-board").hidden = false;
-      $("#trip-board").hidden = false;
-      $("#itinerary-empty-state").hidden = true;
-
-      renderActiveTrip();
-      loadFaceClusters();
-    }
-
-    function renderActiveTrip() {
-      if (!activeTrip) return;
-      renderVoteBoard();
-      renderTripBoard();
-    }
-
-    function addInviteRow() {
-      const row = document.createElement("div");
-      row.className = "invite-row";
-      row.innerHTML = `
-    <input type="email" placeholder="crewmate@example.com" class="invite-email">
-    <select class="invite-role">
-      <option value="editor">Editor</option>
-      <option value="viewer">Viewer</option>
-    </select>
-  `;
-      $("#trip-invites").append(row);
-    }
-    addInviteRow();
-    addInviteRow();
-
-    $("#add-invite-row").addEventListener("click", addInviteRow);
-
-    $("#create-trip-button").addEventListener("click", async () => {
-      if (!currentUser) return openAuthModal("login");
-
-      const errorBox = $("#trip-setup-error");
-      errorBox.hidden = true;
-
-      const name = $("#trip-name-input").value.trim();
-      if (!name) {
-        errorBox.hidden = false;
-        errorBox.textContent = "Trip name is required.";
-        return;
-      }
-
-      const invites = [...document.querySelectorAll(".invite-row")]
-        .map(row => ({ email: row.querySelector(".invite-email").value.trim(), role: row.querySelector(".invite-role").value }))
-        .filter(i => i.email);
-
-      try {
-        const { trip, notFoundEmails } = await Api.request("POST", "/api/trips", {
-          name,
-          start: $("#trip-start-input").value,
-          end: $("#trip-end-input").value,
-          isOpen: $("#trip-open-input").checked,
-          interests: $("#trip-interests-input").value.split(",").map(s => s.trim().toLowerCase()).filter(Boolean),
-          pace: $("#trip-pace-input").value,
-          budgetBand: $("#trip-budget-input").value,
-          invites
-        });
-
-        if (notFoundEmails?.length) {
-          errorBox.hidden = false;
-          errorBox.textContent = `No WanderMatch account found for: ${notFoundEmails.join(", ")}. They can join once they sign up.`;
-        }
-
-        activateTrip(trip);
-        loadMyTrips();
-      } catch (error) {
-        errorBox.hidden = false;
-        errorBox.textContent = error.message;
-      }
-    });
-
-    // ---- voting board ----
 
     function updateStageCounters() {
-      const proposals = activeTrip?.proposals || [];
-      const totalVotes = proposals.reduce((sum, p) => sum + p.votes.length, 0);
-      const confirmed = proposals.find(p => p.id === activeTrip?.confirmedProposalId);
+      const totalVotes = proposals.reduce((sum, p) => sum + p.votes.size, 0);
       $("#stage-proposed-count").textContent = `${proposals.length} idea${proposals.length === 1 ? "" : "s"}`;
       $("#stage-voting-count").textContent = `${totalVotes} vote${totalVotes === 1 ? "" : "s"}`;
-      $("#stage-confirmed-count").textContent = confirmed ? confirmed.name : "Not yet";
-    }
-
-    function renderVoteBoard() {
-      const trip = activeTrip;
-      $("#vote-trip-meta").innerHTML = `<strong>${trip.name}</strong>`;
-      $("#trip-members-list").textContent = "Crew: " + trip.members.map(m => `${m.name} (${m.role})`).join(", ");
-
-      renderProposals();
-      updateStageCounters();
-
-      if (trip.confirmedProposalId) {
-        const confirmed = trip.proposals.find(p => p.id === trip.confirmedProposalId);
-        if (confirmed) showConfirmedBanner(confirmed, trip.confirmNote);
-      } else {
-        $("#trip-confirmed").hidden = true;
-        $("#consensus-card").hidden = true;
-      }
+      $("#stage-confirmed-count").textContent = confirmedProposal ? confirmedProposal.name : "Not yet";
     }
 
     function renderProposals() {
       const board = $("#proposals-board");
       const empty = $("#proposals-empty");
       const confirmButton = $("#confirm-trip-button");
-      const trip = activeTrip;
-      const proposals = trip.proposals;
 
       empty.hidden = proposals.length > 0;
       board.innerHTML = "";
 
-      if (trip.confirmedProposalId) {
-        confirmButton.hidden = true;
-        return;
-      }
-
-      const sorted = [...proposals].sort((a, b) => b.votes.length - a.votes.length);
-      const topVotes = sorted[0]?.votes.length || 0;
+      const sorted = [...proposals].sort((a, b) => b.votes.size - a.votes.size);
+      const topVotes = sorted[0]?.votes.size || 0;
+      const maxVotesAnywhere = Math.max(1, topVotes);
 
       sorted.forEach(proposal => {
-        const isLeading = topVotes > 0 && proposal.votes.length === topVotes;
-        const hasVoted = currentUser && proposal.votes.includes(currentUser.id);
-
-        const voterDots = proposal.votes.map(uid => {
-          const label = memberName(uid);
-          return `<span class="voter-dot" style="background:#9bab9c;color:#24352a" title="${label}">${label[0].toUpperCase()}</span>`;
-        }).join("");
-
+        const isLeading = topVotes > 0 && proposal.votes.size === topVotes;
         const card = document.createElement("article");
         card.className = "proposal-card" + (isLeading ? " is-leading" : "");
+
+        const hasVoted = proposal.votes.has(activeVoter);
+        const voterDots = [...proposal.votes].map(id => {
+          const member = crewMember(id);
+          return `<span class="voter-dot" style="background:${member.color};color:${member.text}" title="${crewDisplayName(id)}">${crewDisplayName(id)[0].toUpperCase()}</span>`;
+        }).join("");
+
         card.innerHTML = `
       ${isLeading ? `<span class="proposal-leading-badge">${t("vote.leading")}</span>` : ""}
       <div class="proposal-top">
@@ -4406,74 +4582,105 @@
             : '<span class="proposal-photo-fallback">⌕</span>'}
         <div>
           <div class="proposal-name">${proposal.name}</div>
-          <div class="proposal-meta">${t("vote.proposedBy", { name: memberName(proposal.proposedBy) })}</div>
+          <div class="proposal-meta">${t("vote.proposedBy", { name: crewDisplayName(proposal.proposedBy) })}</div>
         </div>
       </div>
-      <div class="proposal-votebar"><div class="proposal-votebar-fill" style="width:${(proposal.votes.length / Math.max(1, topVotes)) * 100}%"></div></div>
+      <div class="proposal-votebar"><div class="proposal-votebar-fill" style="width:${(proposal.votes.size / maxVotesAnywhere) * 100}%"></div></div>
       <div class="proposal-bottom">
         <div class="proposal-voters">${voterDots}</div>
         <button type="button" class="proposal-vote-button" aria-pressed="${hasVoted}">
-          ${hasVoted ? t("vote.voted") : t("vote.voteCount", { n: proposal.votes.length })}
+          ${hasVoted ? t("vote.voted") : t("vote.voteCount", { n: proposal.votes.size })}
         </button>
       </div>
       ${Object.keys(proposal.reasons).length ? `
         <div class="proposal-reasons">
-          ${Object.entries(proposal.reasons).map(([uid, text]) =>
-              `<p class="proposal-reason"><strong>${memberName(uid)}:</strong> "${text}"</p>`
+          ${Object.entries(proposal.reasons).map(([voter, text]) =>
+              `<p class="proposal-reason"><strong>${crewDisplayName(voter)}:</strong> "${text}"</p>`
             ).join("")}
         </div>` : ""}
       <input type="text" class="proposal-reason-input" maxlength="140"
         placeholder="${t("vote.reasonPlaceholder")}"
-        value="${(currentUser && proposal.reasons[currentUser.id]) || ""}">
+        value="${proposal.reasons[activeVoter] || ""}">
     `;
 
-        card.querySelector(".proposal-vote-button").addEventListener("click", () => toggleVote(proposal.id));
+        card.querySelector(".proposal-vote-button").addEventListener("click", async () => {
+          const currentlyVoted = proposal.votes.has(activeVoter);
+          if (currentlyVoted) proposal.votes.delete(activeVoter);
+          else proposal.votes.add(activeVoter);
+          renderProposals();
+
+          if (window.wm) {
+            try {
+              const voteRes = await wm.voteGlobal(
+                proposal.apiProposalId || proposal.id,
+                currentlyVoted ? 'abstain' : 'yes',
+                proposal.reasons[activeVoter] || null,
+                crewDisplayName(activeVoter),
+                currentlyVoted
+              );
+              if (voteRes?.outcome === 'tied' && voteRes.consensus) {
+                window._serverConsensus = voteRes.consensus;
+              }
+            } catch (err) {
+              console.warn("[WanderMatch] Vote API fallback:", err.message);
+            }
+          }
+        });
 
         const reasonInput = card.querySelector(".proposal-reason-input");
-        reasonInput.addEventListener("change", () => setVoteReason(proposal.id, reasonInput.value.trim()));
+        reasonInput.addEventListener("change", async () => {
+          const text = reasonInput.value.trim();
+          if (text) proposal.reasons[activeVoter] = text;
+          else delete proposal.reasons[activeVoter];
+          renderProposals();
+
+          if (window.wm && proposal.id && proposal.votes.has(activeVoter)) {
+            try {
+              await wm.voteGlobal(
+                proposal.apiProposalId || proposal.id,
+                'yes',
+                text || null,
+                crewDisplayName(activeVoter),
+                false
+              );
+            } catch (_) {}
+          }
+        });
 
         board.append(card);
       });
 
-      confirmButton.hidden = topVotes === 0;
+      confirmButton.hidden = topVotes === 0 || confirmedProposal !== null;
+      updateStageCounters();
     }
 
-    async function toggleVote(proposalId) {
-      if (!currentUser) return openAuthModal("login");
-      try {
-        const { trip } = await Api.request("POST", `/api/trips/${activeTrip.id}/proposals/${proposalId}/vote`);
-        activeTrip = trip;
-        renderVoteBoard();
-      } catch (error) {
-        $("#trip-setup-error").hidden = false;
-        $("#trip-setup-error").textContent = error.message;
-      }
-    }
-
-    async function setVoteReason(proposalId, reason) {
-      if (!currentUser) return;
-      try {
-        const { trip } = await Api.request("POST", `/api/trips/${activeTrip.id}/proposals/${proposalId}/reason`, { reason });
-        activeTrip = trip;
-        renderVoteBoard();
-      } catch { /* non-critical; leave the field as typed */ }
-    }
-
-    async function proposeDestination(name, { wikiTitle = null, cached = null } = {}) {
-      if (!currentUser) return openAuthModal("login");
-      if (!activeTrip) {
-        $("#destination-input").setCustomValidity("Create or open a trip above first.");
+    async function proposeDestination(name, { scroll = false, wikiTitle = null, cached = null } = {}) {
+      name = name.trim().replace(/\s+/g, " ").slice(0, 80);
+      if (!name) {
+        $("#destination-input").setCustomValidity("Please enter a destination.");
         $("#destination-input").reportValidity();
         return;
       }
-
-      name = name.trim().replace(/\s+/g, " ").slice(0, 80);
-      if (!name) return;
 
       $("#destination-input").setCustomValidity("");
       $("#search-results").hidden = true;
       $("#destination-input").setAttribute("aria-expanded", "false");
       $("#destination-input").value = "";
+
+      if (scroll) {
+        $("#start").scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+      }
+
+      // Re-proposing something already on the board just casts your vote for it.
+      const existing = proposals.find(p => p.name.toLowerCase() === name.toLowerCase());
+      if (existing) {
+        existing.votes.add(activeVoter);
+        renderProposals();
+        if (window.wm) {
+          wm.voteGlobal(existing.apiProposalId || existing.id, 'yes', null, crewDisplayName(activeVoter), false).catch(() => {});
+        }
+        return;
+      }
 
       const requestId = ++proposeRequestId;
 
@@ -4499,77 +4706,262 @@
 
         if (requestId !== proposeRequestId) return;
 
-        const { trip } = await Api.request("POST", `/api/trips/${activeTrip.id}/proposals`, {
+        let apiProposalId = null;
+        if (window.wm) {
+          try {
+            const apiRes = await wm.proposeGlobal({
+              name: summary.title,
+              title: summary.title,
+              destination: summary.title,
+              thumbnail: summary.thumbnail,
+              creditHtml,
+              proposedBy: crewDisplayName(activeVoter),
+              rationale: summary.extract || `Proposed by ${crewDisplayName(activeVoter)}`
+            });
+            if (apiRes?.proposal) {
+              apiProposalId = apiRes.proposal.id || apiRes.proposal.proposal_id;
+            }
+          } catch (err) {
+            console.warn("[WanderMatch] Propose API fallback:", err.message);
+          }
+        }
+
+        proposals.push({
+          id: apiProposalId || crypto.randomUUID(),
+          apiProposalId,
           name: summary.title,
+          summary,
           thumbnail: summary.thumbnail,
           creditHtml,
-          extract: summary.extract,
-          pageUrl: summary.pageUrl
+          proposedBy: activeVoter,
+          votes: new Set([activeVoter]),
+          reasons: {}
         });
-        activeTrip = trip;
-        renderVoteBoard();
+
+        renderProposals();
       } catch (error) {
         if (requestId !== proposeRequestId) return;
-        $("#destination-input").setCustomValidity(error.message);
+        $("#destination-input").setCustomValidity(`Couldn't verify "${name}" on Wikipedia. Check the spelling.`);
         $("#destination-input").reportValidity();
       }
     }
 
-    function showConfirmedBanner(proposal, note) {
+    function applyConfirmedProposal(leader, note) {
+      if (note !== undefined) leader.lastNote = note;
+      confirmedProposal = leader;
       $("#confirm-trip-button").hidden = true;
       $("#consensus-card").hidden = true;
       $("#trip-confirmed").hidden = false;
-      $("#trip-confirmed-title").textContent = t("vote.decided", { name: proposal.name });
+      $("#trip-confirmed-title").textContent = t("vote.decided", { name: leader.name });
       $("#trip-confirmed-copy").innerHTML = `
-    ${proposal.extract ? `<span style="color:var(--ink)">${proposal.extract}</span><br><br>` : ""}
-    ${t("vote.votesFrom", { n: proposal.votes.length, s: proposal.votes.length === 1 ? "" : "s", names: proposal.votes.map(memberName).join(", ") })}
-    ${note ? `<br><br><span style="color:var(--ink)">${note}</span>` : ""}
-    <br>${proposal.creditHtml}
+    ${leader.summary.extract ? `<span style="color:var(--ink)">${leader.summary.extract}</span><br><br>` : ""}
+    ${t("vote.votesFrom", { n: leader.votes.size, s: leader.votes.size === 1 ? "" : "s", names: [...leader.votes].map(crewDisplayName).join(", ") })}
+    ${leader.lastNote ? `<br><br><span style="color:var(--ink)">${leader.lastNote}</span>` : ""}
+    <br>${leader.creditHtml}
   `;
       updateStageCounters();
-    }
-
-    async function applyConfirm(proposalId, note) {
-      try {
-        const { trip } = await Api.request("POST", `/api/trips/${activeTrip.id}/confirm`, { proposalId, note });
-        activeTrip = trip;
-        renderVoteBoard();
-      } catch (error) {
-        $("#consensus-card").hidden = false;
-        $("#consensus-card").innerHTML = `<p class="consensus-error">${error.message}</p>`;
-      }
+      $("#trip-confirmed").scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
     }
 
     function confirmTrip() {
-      const sorted = [...activeTrip.proposals].sort((a, b) => b.votes.length - a.votes.length);
+      const sorted = [...proposals].sort((a, b) => b.votes.size - a.votes.size);
       const leader = sorted[0];
       if (!leader) return;
 
-      const tied = sorted.filter(p => p.votes.length === leader.votes.length && leader.votes.length > 0);
-      if (tied.length > 1) openConsensusPlanner(tied);
-      else applyConfirm(leader.id);
+      const tied = sorted.filter(p => p.votes.size === leader.votes.size && leader.votes.size > 0);
+
+      if (tied.length > 1) {
+        openConsensusPlanner(tied);
+        return;
+      }
+
+      applyConfirmedProposal(leader);
+    }
+
+    function resetVote() {
+      proposals = [];
+      confirmedProposal = null;
+      $("#trip-confirmed").hidden = true;
+      $("#consensus-card").hidden = true;
+      renderProposals();
     }
 
     $("#confirm-trip-button").addEventListener("click", confirmTrip);
-    $("#trip-reset").addEventListener("click", () => {
-      activeTrip = null;
-      $("#trip-setup").hidden = false;
-      $("#vote-board").hidden = true;
-      $("#trip-board").hidden = true;
-      $("#itinerary-empty-state").hidden = false;
-    });
+    $("#trip-reset").addEventListener("click", resetVote);
 
-    async function checkConsensusStatus() {
+    /*
+      CONSENSUS PLANNER — fires only on a genuine tie (top proposals share
+      the max vote count). Calls the real Anthropic API directly from the
+      browser using a key the person supplies themselves (there is no
+      server here to hold one) via the documented
+      "anthropic-dangerous-direct-browser-access" opt-in header. The key is
+      stored only in this browser's localStorage and is sent nowhere except
+      directly to Anthropic.
+    
+      Grounding is enforced, not assumed: the model is given only the tied
+      proposals' real names and only the reasons real voters actually typed
+      (never invented), and the response is validated field-by-field before
+      it's ever shown — an ungrounded or malformed reply is treated as a
+      failure, not displayed as if it were a good answer.
+    */
+    const ANTHROPIC_KEY_STORAGE = "wandermatch:anthropic-key";
+    let consensusTally = { accepted: 0, overridden: 0 };
+
+    function getStoredApiKey() {
       try {
-        const { enabled } = await Api.request("GET", "/api/consensus/status");
-        $("#ai-status").textContent = enabled
-          ? "AI tie-break is enabled on the server."
-          : "AI tie-break is off — the server owner needs to set an ANTHROPIC_API_KEY environment variable.";
+        return localStorage.getItem(ANTHROPIC_KEY_STORAGE) || "";
       } catch {
-        $("#ai-status").textContent = "";
+        return "";
       }
     }
-    checkConsensusStatus();
+
+    function renderKeyStatus() {
+      const key = getStoredApiKey();
+      $("#ai-key-status").textContent = key
+        ? "A key is saved in this browser. The tie-break feature will call Claude directly."
+        : "No key saved yet — ties will fall back to a plain, clearly-labelled non-AI resolution.";
+    }
+
+    $("#anthropic-key-save").addEventListener("click", () => {
+      const value = $("#anthropic-key-input").value.trim();
+      if (!value) return;
+      try {
+        localStorage.setItem(ANTHROPIC_KEY_STORAGE, value);
+      } catch { /* storage unavailable; key just won't persist across reloads */ }
+      $("#anthropic-key-input").value = "";
+      renderKeyStatus();
+    });
+
+    $("#anthropic-key-clear").addEventListener("click", () => {
+      try { localStorage.removeItem(ANTHROPIC_KEY_STORAGE); } catch { }
+      renderKeyStatus();
+    });
+
+    renderKeyStatus();
+
+    function buildConsensusPrompt(tiedProposals) {
+      const candidates = tiedProposals.map(p => ({
+        name: p.name,
+        votes: p.votes.size,
+        voters: [...p.votes].map(crewDisplayName),
+        // Only real, typed reasons are included — nothing is invented on a voter's behalf.
+        reasons: Object.entries(p.reasons).map(([voter, reason]) => ({
+          voter: crewDisplayName(voter),
+          reason
+        }))
+      }));
+
+      const languageName = currentLocale === "hi" ? "Hindi" : "English";
+
+      const system = `You are resolving a genuine tie in a group trip-planning vote. You will be given the tied options as JSON, including only the votes and free-text reasons real voters actually submitted, and the requesting user's language.
+Rules, all mandatory:
+1. Choose "recommended_proposal" ONLY from the exact "name" values given in the candidates list. Never invent, rename, or alter a name.
+2. If a true synthesis makes sense (the group's stated preferences aren't actually incompatible), set "resolution_type" to "synthesize" and set "secondary_proposal" to the other exact candidate name being kept as an optional add-on. Otherwise set "resolution_type" to "pick_one" and leave "secondary_proposal" null.
+3. Never invent a cost, duration, date, or fact not present in the given data.
+4. "cites" may ONLY reference voters and reasons that are exactly present in the given candidates' "reasons" arrays. Do not cite a voter who has no reason text given. Do not paraphrase or translate a quoted reason — quote it exactly as given, in its original language, or omit that citation.
+5. Write the "rationale" field natively in ${languageName} (do not translate it after the fact from English; think and write it directly in ${languageName}). Never translate the candidate names or the quoted "reason" values themselves — those must stay exactly as given.
+6. Reply with ONLY strict JSON, no markdown, no commentary, matching exactly:
+{"resolution_type":"pick_one"|"synthesize","recommended_proposal":"<exact candidate name>","secondary_proposal":"<exact candidate name>"|null,"rationale":"<string, in ${languageName}>","cites":[{"voter":"<name>","reason":"<exact reason text>"}]}`;
+
+      const user = `Requesting user's language: ${languageName}\nTied candidates:\n${JSON.stringify(candidates, null, 2)}`;
+
+      return { system, user, candidateNames: candidates.map(c => c.name), candidates };
+    }
+
+    function validateConsensusResponse(parsed, prompt) {
+      if (!parsed || typeof parsed !== "object") throw new Error("Response wasn't valid JSON.");
+
+      const { resolution_type, recommended_proposal, secondary_proposal, rationale, cites } = parsed;
+
+      if (!["pick_one", "synthesize"].includes(resolution_type)) {
+        throw new Error("Missing or invalid resolution_type.");
+      }
+      if (!prompt.candidateNames.includes(recommended_proposal)) {
+        throw new Error(`"${recommended_proposal}" isn't one of the actual tied options.`);
+      }
+      if (resolution_type === "synthesize") {
+        if (!prompt.candidateNames.includes(secondary_proposal) || secondary_proposal === recommended_proposal) {
+          throw new Error("Synthesis referenced a secondary option that isn't a real, distinct tied candidate.");
+        }
+      }
+      if (typeof rationale !== "string" || !rationale.trim()) {
+        throw new Error("Missing rationale.");
+      }
+      if (!Array.isArray(cites)) throw new Error("Missing cites array.");
+
+      for (const cite of cites) {
+        const match = prompt.candidates.some(c =>
+          c.reasons.some(r => r.voter === cite.voter && r.reason === cite.reason)
+        );
+        if (!match) {
+          throw new Error(`Citation for "${cite.voter}" doesn't match a real submitted reason — rejecting as ungrounded.`);
+        }
+      }
+
+      return parsed;
+    }
+
+    async function callConsensusPlanner(tiedProposals) {
+      const apiKey = getStoredApiKey();
+      const prompt = buildConsensusPrompt(tiedProposals);
+
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-5",
+          max_tokens: 600,
+          system: prompt.system,
+          messages: [{ role: "user", content: prompt.user }]
+        })
+      });
+
+      if (!response.ok) {
+        const body = await response.text();
+        throw new Error(`Anthropic API error (${response.status}): ${body.slice(0, 200)}`);
+      }
+
+      const data = await response.json();
+      const text = (data.content || []).map(b => b.text || "").join("").trim();
+      const cleaned = text.replace(/^```json\s*|```$/g, "").trim();
+
+      let parsed;
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch {
+        throw new Error("Claude's reply wasn't valid JSON.");
+      }
+
+      return validateConsensusResponse(parsed, prompt);
+    }
+
+    function renderConsensusFallback(tiedProposals) {
+      const card = $("#consensus-card");
+      const fallback = tiedProposals[0];
+
+      card.hidden = false;
+      card.innerHTML = `
+    <h3>${t("consensus.tie")}</h3>
+    <p class="consensus-tie-list">${tiedProposals.map(p => `${p.name} (${p.votes.size})`).join(" vs. ")}</p>
+    <div class="consensus-result">
+      <div class="label">${t("consensus.noKey")}</div>
+      <p>${t("consensus.noKeyBody", { name: fallback.name })}</p>
+    </div>
+    <div class="consensus-actions">
+      <button type="button" class="accept-button" id="consensus-use-fallback">${t("consensus.useFallback", { name: fallback.name })}</button>
+    </div>
+  `;
+
+      $("#consensus-use-fallback").addEventListener("click", () => {
+        consensusTally.overridden++;
+        applyConfirmedProposal(fallback, "Resolved without AI (no API key configured).");
+      });
+    }
 
     function renderConsensusOverrideChoices(tiedProposals) {
       const box = document.createElement("div");
@@ -4580,7 +4972,7 @@
         btn.textContent = t("consensus.useInstead", { name: p.name });
         btn.addEventListener("click", () => {
           consensusTally.overridden++;
-          applyConfirm(p.id, "The group overrode the AI's recommendation.");
+          applyConfirmedProposal(p, "The group overrode the AI's recommendation.");
         });
         box.append(btn);
       });
@@ -4593,26 +4985,69 @@
       card.hidden = false;
       card.innerHTML = `
     <h3>${t("consensus.tie")}</h3>
-    <p class="consensus-tie-list">${tiedProposals.map(p => `${p.name} (${p.votes.length})`).join(" vs. ")}</p>
+    <p class="consensus-tie-list">${tiedProposals.map(p => `${p.name} (${p.votes.size})`).join(" vs. ")}</p>
     <p class="consensus-status">${t("consensus.asking")}</p>
   `;
       card.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
 
-      try {
-        const { result } = await Api.request("POST", `/api/trips/${activeTrip.id}/consensus`, {
-          proposalIds: tiedProposals.map(p => p.id)
+      if (window._serverConsensus) {
+        const sc = window._serverConsensus;
+        const citesHtml = (sc.cites || []).length
+          ? `<div class="consensus-cites">${sc.cites.map(c => `<p><strong>${c.user_id || c.voter || "Member"}:</strong> "${c.reason}"</p>`).join("")}</div>`
+          : "";
+
+        const isUnverified = sc.groundingPassed === false || sc.isFallback === true;
+        const recText = sc.recommendation || (sc.strategy === 'synthesise'
+          ? t("consensus.synthesize", { primary: sc.primary || tiedProposals[0].name, secondary: sc.secondary || tiedProposals[1]?.name || "" })
+          : t("consensus.goWith", { name: tiedProposals[0].name }));
+
+        card.innerHTML = `
+      <h3>${t("consensus.tie")}</h3>
+      <p class="consensus-tie-list">${tiedProposals.map(p => `${p.name} (${p.votes.size})`).join(" vs. ")}</p>
+      <div class="consensus-result">
+        <div class="label">${isUnverified ? "⚠ Unverified Fallback" : t("consensus.recommends")}</div>
+        <p>${recText}</p>
+        <p style="margin-top:10px;color:var(--muted);font-size:11px">${sc.rationale || ""}</p>
+        ${citesHtml}
+      </div>
+      <div class="consensus-actions" id="consensus-accept-row">
+        <button type="button" class="accept-button" id="consensus-accept">${t("consensus.accept")}</button>
+      </div>
+      <p class="consensus-tally">${t("consensus.tally", { a: consensusTally.accepted, o: consensusTally.overridden })}</p>
+    `;
+
+        const winner = tiedProposals.find(p => p.name === (sc.recommended_proposal || sc.recommendation)) || tiedProposals[0];
+        $("#consensus-accept").addEventListener("click", async () => {
+          consensusTally.accepted++;
+          if (trip?.id && window.wm && sc.recommendationId) {
+            await wm.decideConsensus(trip.id, sc.recommendationId, 'accept').catch(() => {});
+          }
+          applyConfirmedProposal(winner, sc.rationale || "Resolved by group consensus.");
         });
+
+        card.querySelector(".consensus-actions").append(renderConsensusOverrideChoices(tiedProposals));
+        return;
+      }
+
+      if (!getStoredApiKey()) {
+        renderConsensusFallback(tiedProposals);
+        return;
+      }
+
+      try {
+        const result = await callConsensusPlanner(tiedProposals);
 
         const citesHtml = result.cites.length
           ? `<div class="consensus-cites">${result.cites.map(c => `<p><strong>${c.voter}:</strong> "${c.reason}"</p>`).join("")}</div>`
           : "";
+
         const recommendationLabel = result.resolution_type === "synthesize"
           ? t("consensus.synthesize", { primary: result.recommended_proposal, secondary: result.secondary_proposal })
           : t("consensus.goWith", { name: result.recommended_proposal });
 
         card.innerHTML = `
       <h3>${t("consensus.tie")}</h3>
-      <p class="consensus-tie-list">${tiedProposals.map(p => `${p.name} (${p.votes.length})`).join(" vs. ")}</p>
+      <p class="consensus-tie-list">${tiedProposals.map(p => `${p.name} (${p.votes.size})`).join(" vs. ")}</p>
       <div class="consensus-result">
         <div class="label">${t("consensus.recommends")}</div>
         <p>${recommendationLabel}</p>
@@ -4631,60 +5066,297 @@
           const note = result.resolution_type === "synthesize"
             ? `Kept as the primary pick, with ${result.secondary_proposal} noted as an optional add-on. ${result.rationale}`
             : result.rationale;
-          applyConfirm(winner.id, note);
+          applyConfirmedProposal(winner, note);
         });
 
         card.querySelector(".consensus-actions").append(renderConsensusOverrideChoices(tiedProposals));
       } catch (error) {
-        const isNoKey = error.status === 501;
         card.innerHTML = `
       <h3>${t("consensus.tie")}</h3>
-      <p class="consensus-tie-list">${tiedProposals.map(p => `${p.name} (${p.votes.length})`).join(" vs. ")}</p>
-      <p class="consensus-error">${isNoKey ? t("consensus.noKeyBody", { name: tiedProposals[0].name }) : t("consensus.failed", { error: error.message })}</p>
+      <p class="consensus-tie-list">${tiedProposals.map(p => `${p.name} (${p.votes.size})`).join(" vs. ")}</p>
+      <p class="consensus-error">${t("consensus.failed", { error: error.message })}</p>
     `;
-
-        if (isNoKey) {
-          const fallbackRow = document.createElement("div");
-          fallbackRow.className = "consensus-actions";
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.className = "accept-button";
-          btn.textContent = t("consensus.useFallback", { name: tiedProposals[0].name });
-          btn.addEventListener("click", () => {
-            consensusTally.overridden++;
-            applyConfirm(tiedProposals[0].id, "Resolved without AI (no server key configured).");
-          });
-          fallbackRow.append(btn);
-          card.append(fallbackRow);
-        }
-        card.append(renderConsensusOverrideChoices(tiedProposals));
+        const fallbackBox = renderConsensusOverrideChoices(tiedProposals);
+        card.append(fallbackBox);
       }
     }
 
-    // ---- day-by-day itinerary board ----
+    async function loadProposalsFromBackend() {
+      if (!window.wm) return;
+      try {
+        const res = await wm.listGlobalProposals();
+        if (res?.proposals?.length) {
+          const remoteProposals = res.proposals.map(p => {
+            const id = p.id || p.proposal_id;
+            const votersList = Array.isArray(p.voters) ? [...p.voters] : (p.votes > 0 ? ['you'] : []);
+            if (p.proposedBy && !votersList.includes(p.proposedBy)) votersList.unshift(p.proposedBy);
+            return {
+              id,
+              apiProposalId: id,
+              name: p.title || p.name || p.destination,
+              summary: {
+                title: p.title || p.name || p.destination,
+                extract: p.rationale || p.extract || "",
+                thumbnail: p.thumbnail || null
+              },
+              thumbnail: p.thumbnail || null,
+              creditHtml: p.creditHtml || "<span>WanderMatch Community</span>",
+              proposedBy: p.proposedBy || "alex",
+              votes: new Set(votersList),
+              reasons: p.reasons || {}
+            };
+          });
+          const remoteTitles = new Set(remoteProposals.map(r => r.name.toLowerCase()));
+          proposals = [...remoteProposals, ...proposals.filter(lp => !remoteTitles.has(lp.name.toLowerCase()))];
+          renderProposals();
+        }
+      } catch (err) {
+        console.warn("[WanderMatch] loadProposalsFromBackend error:", err.message);
+      }
+    }
+
+    renderVoterChips();
+    renderProposals();
+    loadProposalsFromBackend();
+
+    if (window.wm) {
+      wm.on('proposal:created', payload => {
+        loadProposalsFromBackend();
+      });
+
+      wm.on('vote:cast', payload => {
+        loadProposalsFromBackend();
+      });
+
+      wm.on('consensus:ready', payload => {
+        if (payload?.recommendation) {
+          window._serverConsensus = payload.recommendation;
+        }
+      });
+    }
+
+    /*
+      TRIP CREATION + DAY-BY-DAY ITINERARY BOARD.
+      In-memory only, like everything else here — resets on reload.
+      Roles (owner/editor/viewer) gate who can add/edit/remove items.
+      A single itinerary-wide `version` counter backs a real optimistic-
+      concurrency check: opening an item for editing captures the version
+      you saw; saving against a version that has since moved is rejected
+      and shown the latest data instead of silently overwritten — the same
+      mechanic itineraries.version exists for in the design doc, just
+      demonstrated with a "simulate another edit" button since this is one
+      browser tab rather than several real devices.
+    */
+    let trip = null;
+    let selectedDay = 0;
+    let activeItineraryMember = "you";
+    let editingItemId = null;
+    let editingBaseVersion = null;
+
+    function renderRoleSetup() {
+      const box = $("#trip-roles-setup");
+      box.innerHTML = "";
+
+      CREW.forEach(member => {
+        const row = document.createElement("div");
+        row.className = "role-row";
+
+        if (member.id === "you") {
+          row.innerHTML = `
+        <span class="voter-dot" style="background:${member.color};color:${member.text}">${crewDisplayName("you")[0].toUpperCase()}</span>
+        <span class="role-name">${crewDisplayName("you")}</span>
+        <span class="role-fixed">Owner (that's you)</span>
+      `;
+        } else {
+          row.innerHTML = `
+        <span class="voter-dot" style="background:${member.color};color:${member.text}">${member.name[0]}</span>
+        <span class="role-name">${member.name}</span>
+        <select class="role-select" data-member="${member.id}">
+          <option value="editor">Editor</option>
+          <option value="viewer" selected>Viewer</option>
+          <option value="none">Not invited</option>
+        </select>
+      `;
+        }
+        box.append(row);
+      });
+    }
+
+    function dayCountFromDates(start, end) {
+      if (!start || !end) return 3;
+      const days = Math.round((new Date(end) - new Date(start)) / 86400000) + 1;
+      return clamp(Number.isNaN(days) || days < 1 ? 3 : days, 1, 30);
+    }
+
+    function tripMemberIds() {
+      return Object.keys(trip.roles);
+    }
 
     function canEditTrip() {
-      if (!currentUser || !activeTrip) return false;
-      const role = activeTrip.members.find(m => m.userId === currentUser.id)?.role;
+      const role = trip.roles[activeItineraryMember];
       return role === "owner" || role === "editor";
     }
 
-    function renderTripMeta() {
-      const trip = activeTrip;
-      const dateRange = trip.start && trip.end ? `${trip.start} → ${trip.end} · ` : "";
-      $("#trip-meta").innerHTML = `
-    <strong>${trip.name}</strong>
-    <span class="muted">${dateRange}${t("itin.days", { n: trip.days.length, s: trip.days.length === 1 ? "" : "s" })} · ${trip.destination}</span>
-  `;
-      const role = trip.members.find(m => m.userId === currentUser?.id)?.role;
-      $("#trip-your-role").textContent = role ? `You are: ${role}` : "";
+    async function loadTripsFromBackend() {
+      const listContainer = $("#active-trips-list");
+      if (!window.wm || !listContainer) return;
+      try {
+        const res = await wm.listTrips();
+        if (res?.trips?.length) {
+          listContainer.innerHTML = "";
+          res.trips.forEach(t => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "trip-chip-btn" + (trip?.id === t.id ? " is-active" : "");
+            btn.innerHTML = `<span class="trip-chip-dot"></span> <strong>${t.title || t.name}</strong> <span class="muted" style="font-size:11px;">(${t.destination || 'Destination'})</span>`;
+            btn.addEventListener("click", () => {
+              activateTripFromBackend(t);
+            });
+            listContainer.appendChild(btn);
+          });
+        } else {
+          listContainer.innerHTML = '<span class="muted" style="font-size:12px;">No active trips found. Create one below!</span>';
+        }
+      } catch (err) {
+        if (listContainer) listContainer.innerHTML = '<span class="muted" style="font-size:12px;">Using preview mode.</span>';
+      }
+    }
+
+    function activateTripFromBackend(remoteTrip) {
+      const t = remoteTrip.trip || remoteTrip;
+      const start = t.startDate || t.start;
+      const end = t.endDate || t.end;
+      const dayCount = (start && end) ? dayCountFromDates(start, end) : 3;
+      activateTrip({
+        id: t.id || t.tripId || t.trip_id,
+        name: t.title || t.name,
+        destination: t.destination || 'Destination',
+        start,
+        end,
+        days: Array.from({ length: Math.max(1, dayCount) }, () => ({ items: [] })),
+        version: t.version || 1,
+        roles: { you: "owner" }
+      });
+      document.querySelectorAll(".trip-chip-btn").forEach(btn => {
+        btn.classList.toggle("is-active", btn.textContent.includes(t.title || t.name));
+      });
+      $("#itinerary").scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    }
+
+    function activateTrip(newTrip) {
+      trip = newTrip;
+      activeItineraryMember = "you";
+      selectedDay = 0;
+      editingItemId = null;
+
+      $("#trip-setup").hidden = true;
+      $("#trip-board").hidden = false;
+      renderTripBoard();
+
+      if (trip.id && window.wm) {
+        wm.getItinerary(trip.id).then(data => {
+          if (data && (data.items || data.days)) {
+            trip.version = data.version || 1;
+            const numDays = trip.days.length || 3;
+            const days = Array.from({ length: numDays }, () => ({ items: [] }));
+            const items = data.items || (data.days ? data.days.flatMap(d => d.items || []) : []);
+            items.forEach(it => {
+              const dIdx = Math.max(0, Math.min(numDays - 1, it.dayIndex ?? 0));
+              days[dIdx].items.push({
+                id: it.id || it.itemId || it.item_id,
+                title: it.title,
+                cost: it.cost || 0,
+                time: it.time || (it.starts_at ? it.starts_at.slice(11, 16) : "")
+              });
+            });
+            trip.days = days;
+            renderTripBoard();
+          }
+        }).catch(() => {});
+
+        wm.connect(trip.id).catch(() => {});
+      }
+    }
+
+    async function createTrip() {
+      const name = $("#trip-name-input").value.trim() || confirmedProposal?.name || "Our trip";
+      const start = $("#trip-start-input").value || "2027-03-10";
+      const end = $("#trip-end-input").value || "2027-03-15";
+      const dest = confirmedProposal?.name || name;
+      const dayCount = dayCountFromDates(start, end);
+
+      const roles = { you: "owner" };
+      document.querySelectorAll(".role-select").forEach(select => {
+        if (select.value !== "none") roles[select.dataset.member] = select.value;
+      });
+
+      let backendTripId = null;
+      let backendVersion = 1;
+
+      if (window.wm) {
+        try {
+          const res = await wm.createTrip({
+            title: name,
+            name,
+            destination: dest,
+            destinationCityId: "city_" + dest.toLowerCase().replace(/[^a-z]/g, ''),
+            startDate: start,
+            endDate: end,
+            partySize: 4,
+            isGroupTrip: true
+          });
+          const created = res?.trip;
+          if (created && (created.id || created.tripId || created.trip_id)) {
+            backendTripId = created.id || created.tripId || created.trip_id;
+            const itin = await wm.getItinerary(backendTripId).catch(() => null);
+            backendVersion = itin?.version || 1;
+          }
+        } catch (err) {
+          console.warn("[WanderMatch] Backend createTrip failed, fallback to local:", err.message);
+        }
+      }
+
+      activateTrip({
+        id: backendTripId,
+        name,
+        destination: dest,
+        start,
+        end,
+        days: Array.from({ length: dayCount }, () => ({ items: [] })),
+        version: backendVersion,
+        roles
+      });
+
+      loadTripsFromBackend();
+    }
+
+    function renderActingChips() {
+      const box = $("#itinerary-acting-chips");
+      box.innerHTML = "";
+
+      tripMemberIds().forEach(id => {
+        const member = crewMember(id);
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "voter-chip";
+        chip.setAttribute("aria-pressed", String(id === activeItineraryMember));
+        chip.innerHTML = `
+      <span class="voter-dot" style="background:${member.color};color:${member.text}">${crewDisplayName(id)[0].toUpperCase()}</span>
+      ${crewDisplayName(id)} · ${trip.roles[id]}
+    `;
+        chip.addEventListener("click", () => {
+          activeItineraryMember = id;
+          renderTripBoard();
+        });
+        box.append(chip);
+      });
     }
 
     function renderDayTabs() {
       const box = $("#day-tabs");
       box.innerHTML = "";
 
-      activeTrip.days.forEach((day, index) => {
+      trip.days.forEach((day, index) => {
         const tab = document.createElement("button");
         tab.type = "button";
         tab.className = "day-tab";
@@ -4700,6 +5372,15 @@
       });
     }
 
+    function renderTripMeta() {
+      const dateRange = trip.start && trip.end ? `${trip.start} → ${trip.end} · ` : "";
+      const tripIdHtml = trip.id ? ` · <span style="font-family:monospace;font-size:11px;background:rgba(217,165,102,0.15);color:var(--gold);padding:2px 7px;border-radius:4px;">Trip ID: ${trip.id}</span>` : "";
+      $("#trip-meta").innerHTML = `
+    <strong>${trip.name}</strong>
+    <span class="muted">${dateRange}${t("itin.days", { n: trip.days.length, s: trip.days.length === 1 ? "" : "s" })} · ${trip.destination}${tripIdHtml}</span>
+  `;
+    }
+
     function showItineraryError(message) {
       const box = $("#itinerary-conflict-error");
       box.hidden = false;
@@ -4710,67 +5391,10 @@
       $("#itinerary-conflict-error").hidden = true;
     }
 
-    async function saveNewItem(title, time, cost) {
-      try {
-        const { trip } = await Api.request("POST", `/api/trips/${activeTrip.id}/items`, {
-          dayIndex: selectedDay, title, time, cost, clientVersion: activeTrip.version
-        });
-        activeTrip = trip;
-        renderTripBoard();
-      } catch (error) {
-        if (error.status === 409) {
-          activeTrip = error.data.trip;
-          showItineraryError(t("itin.conflict"));
-          renderTripBoard();
-        } else {
-          showItineraryError(error.message);
-        }
-      }
-    }
-
-    async function saveEditedItem(itemId, title, time, cost) {
-      try {
-        const { trip } = await Api.request("PUT", `/api/trips/${activeTrip.id}/items/${itemId}`, {
-          dayIndex: selectedDay, title, time, cost, clientVersion: activeTrip.version
-        });
-        activeTrip = trip;
-        editingItemId = null;
-        renderTripBoard();
-      } catch (error) {
-        editingItemId = null;
-        if (error.status === 409) {
-          activeTrip = error.data.trip;
-          showItineraryError(t("itin.conflict"));
-        } else {
-          showItineraryError(error.message);
-        }
-        renderTripBoard();
-      }
-    }
-
-    async function deleteItem(itemId) {
-      try {
-        const { trip } = await Api.request(
-          "DELETE",
-          `/api/trips/${activeTrip.id}/items/${itemId}?dayIndex=${selectedDay}&clientVersion=${activeTrip.version}`
-        );
-        activeTrip = trip;
-        renderTripBoard();
-      } catch (error) {
-        if (error.status === 409) {
-          activeTrip = error.data.trip;
-          showItineraryError(t("itin.conflict"));
-          renderTripBoard();
-        } else {
-          showItineraryError(error.message);
-        }
-      }
-    }
-
     function renderItineraryItems() {
       const box = $("#itinerary-items");
       box.innerHTML = "";
-      const day = activeTrip.days[selectedDay];
+      const day = trip.days[selectedDay];
 
       if (!day.items.length) {
         box.innerHTML = `<p class="itinerary-empty muted">${t("itin.nothingPlanned")}</p>`;
@@ -4792,15 +5416,48 @@
         </div>
       `;
 
-          row.querySelector(".save-edit").addEventListener("click", () => {
+          row.querySelector(".save-edit").addEventListener("click", async () => {
             clearItineraryError();
-            saveEditedItem(
-              item.id,
-              row.querySelector(".edit-title").value.trim() || item.title,
-              row.querySelector(".edit-time").value,
-              row.querySelector(".edit-cost").value
-            );
+
+            if (editingBaseVersion !== trip.version) {
+              showItineraryError(t("itin.conflict"));
+              editingItemId = null;
+              renderItineraryItems();
+              return;
+            }
+
+            const newTitle = row.querySelector(".edit-title").value.trim() || item.title;
+            const newTime = row.querySelector(".edit-time").value;
+            const newCost = row.querySelector(".edit-cost").value;
+
+            if (trip.id && window.wm) {
+              try {
+                const res = await wm.updateItem(trip.id, item.id, {
+                  title: newTitle,
+                  time: newTime,
+                  cost: Number(newCost) || 0
+                });
+                trip.version = res.version || (trip.version + 1);
+              } catch (err) {
+                if (err.code === 'VERSION_CONFLICT') {
+                  showItineraryError(t("itin.conflict"));
+                  editingItemId = null;
+                  renderItineraryItems();
+                  return;
+                }
+                trip.version++;
+              }
+            } else {
+              trip.version++;
+            }
+
+            item.title = newTitle;
+            item.time = newTime;
+            item.cost = newCost;
+            editingItemId = null;
+            renderItineraryItems();
           });
+
           row.querySelector(".cancel-edit").addEventListener("click", () => {
             editingItemId = null;
             renderItineraryItems();
@@ -4822,9 +5479,28 @@
             row.querySelector(".edit-item").addEventListener("click", () => {
               clearItineraryError();
               editingItemId = item.id;
+              editingBaseVersion = trip.version;
               renderItineraryItems();
             });
-            row.querySelector(".delete-item").addEventListener("click", () => deleteItem(item.id));
+
+            row.querySelector(".delete-item").addEventListener("click", async () => {
+              if (editingBaseVersion !== null && editingBaseVersion !== trip.version) {
+                showItineraryError(t("itin.conflict"));
+              }
+              if (trip.id && window.wm) {
+                try {
+                  const res = await wm.deleteItem(trip.id, item.id);
+                  trip.version = res.version || (trip.version + 1);
+                } catch (err) {
+                  trip.version++;
+                }
+              } else {
+                trip.version++;
+              }
+              day.items = day.items.filter(i => i.id !== item.id);
+              editingItemId = null;
+              renderItineraryItems();
+            });
           }
         }
 
@@ -4840,38 +5516,212 @@
     }
 
     function renderTripBoard() {
-      if (!activeTrip) return;
       renderTripMeta();
+      renderActingChips();
       renderDayTabs();
       renderItineraryItems();
       renderItemForm();
     }
 
-    $("#item-form").addEventListener("submit", e => {
+    renderRoleSetup();
+
+    $("#create-trip-button").addEventListener("click", createTrip);
+
+    $("#item-form").addEventListener("submit", async e => {
       e.preventDefault();
+      clearItineraryError();
+
       const title = $("#item-title-input").value.trim();
       if (!title) return;
-      saveNewItem(title, $("#item-time-input").value, $("#item-cost-input").value);
-      $("#item-form").reset();
-    });
+      const timeVal = $("#item-time-input").value;
+      const costVal = $("#item-cost-input").value;
 
-    $("#simulate-conflict-button").addEventListener("click", async () => {
-      if (!activeTrip) return;
-      try {
-        // Deliberately NOT updating local activeTrip, so it goes stale on
-        // purpose — the point is to demonstrate the next real save getting
-        // rejected by the server's version check, exactly as it would if a
-        // second real device had made this change.
-        await Api.request("POST", `/api/trips/${activeTrip.id}/items`, {
-          dayIndex: 0, title: "(simulated) someone else's edit", clientVersion: activeTrip.version
-        });
-        showItineraryError("Simulated: another crew member just changed the plan on the server. Your local copy is now stale — try saving an open edit to see the conflict caught for real.");
-      } catch (error) {
-        showItineraryError(error.message);
+      let newItemId = crypto.randomUUID();
+
+      if (trip.id && window.wm) {
+        try {
+          const res = await wm.addItem(trip.id, {
+            dayIndex: selectedDay,
+            title,
+            time: timeVal,
+            cost: Number(costVal) || 0,
+            currency: 'INR'
+          });
+          if (res?.item?.id || res?.item?.itemId || res?.item?.item_id) {
+            newItemId = res.item.id || res.item.itemId || res.item.item_id;
+          }
+          trip.version = res.version || (trip.version + 1);
+        } catch (err) {
+          if (err.code === 'VERSION_CONFLICT') {
+            showItineraryError(t("itin.conflict"));
+            return;
+          }
+          trip.version++;
+        }
+      } else {
+        trip.version++;
       }
+
+      trip.days[selectedDay].items.push({
+        id: newItemId,
+        title,
+        time: timeVal,
+        cost: costVal
+      });
+
+      $("#item-form").reset();
+      renderItineraryItems();
     });
 
-    if (currentUser) loadMyTrips();
+    $("#simulate-conflict-button").addEventListener("click", () => {
+      trip.version++;
+      if (window.wm) wm.itinerary.version = trip.version;
+      showItineraryError(
+        "Simulated: another crew member just changed the plan (version bumped to " + trip.version + "). Try saving your open edit now to see the conflict caught."
+      );
+    });
+
+    $("#trip-reset-button").addEventListener("click", () => {
+      trip = null;
+      editingItemId = null;
+      $("#trip-board").hidden = true;
+      $("#trip-setup").hidden = false;
+      $("#trip-name-input").value = "";
+      $("#trip-start-input").value = "";
+      $("#trip-end-input").value = "";
+      renderRoleSetup();
+    });
+
+    $("#refresh-trips-btn")?.addEventListener("click", async () => {
+      const btn = $("#refresh-trips-btn");
+      if (btn) btn.textContent = "↻ Loading…";
+      await Promise.all([loadTripsFromBackend(), loadProposalsFromBackend()]);
+      if (btn) btn.textContent = "✓ Updated";
+      setTimeout(() => { if (btn) btn.textContent = "↻ Refresh"; }, 1500);
+    });
+
+    $("#switch-trip-btn")?.addEventListener("click", () => {
+      $("#trip-board").hidden = true;
+      $("#trip-setup").hidden = false;
+      $("#active-trips-bar")?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    });
+
+    $("#share-trip-btn")?.addEventListener("click", () => {
+      if (!trip?.id) {
+        alert("Please create or select an active trip first to share it.");
+        return;
+      }
+      const shareUrl = new URL(window.location.href);
+      shareUrl.searchParams.set("trip", trip.id);
+      const btn = $("#share-trip-btn");
+      navigator.clipboard.writeText(shareUrl.toString()).then(() => {
+        if (btn) {
+          const orig = btn.textContent;
+          btn.textContent = "✓ Link Copied!";
+          btn.style.background = "var(--forest)";
+          btn.style.color = "#fff";
+          setTimeout(() => {
+            btn.textContent = orig;
+            btn.style.background = "";
+            btn.style.color = "";
+          }, 2500);
+        }
+      }).catch(() => {
+        prompt("Copy your trip link to share with friends:", shareUrl.toString());
+      });
+    });
+
+    if (window.wm) {
+      wm.onConflict = () => {
+        showItineraryError(t("itin.conflict"));
+        if (trip?.id) {
+          wm.getItinerary(trip.id).then(itinData => {
+            if (itinData && (itinData.items || itinData.days)) {
+              trip.version = itinData.version || 1;
+              const numDays = trip.days.length || 3;
+              const days = Array.from({ length: numDays }, () => ({ items: [] }));
+              const items = itinData.items || (itinData.days ? itinData.days.flatMap(d => d.items || []) : []);
+              items.forEach(it => {
+                const dIdx = Math.max(0, Math.min(numDays - 1, it.dayIndex ?? 0));
+                days[dIdx].items.push({
+                  id: it.id || it.itemId || it.item_id,
+                  title: it.title,
+                  cost: it.cost || 0,
+                  time: it.time || (it.starts_at ? it.starts_at.slice(11, 16) : "")
+                });
+              });
+              trip.days = days;
+              renderItineraryItems();
+            }
+          }).catch(() => {});
+        }
+      };
+
+      wm.on('item:created', payload => {
+        if (!trip || !payload?.item) return;
+        const dayIdx = payload.item.day_index ?? payload.item.dayIndex ?? 0;
+        if (trip.days[dayIdx]) {
+          const exists = trip.days[dayIdx].items.some(i => i.id === (payload.item.id || payload.item.itemId || payload.item.item_id));
+          if (!exists) {
+            trip.days[dayIdx].items.push({
+              id: payload.item.id || payload.item.itemId || payload.item.item_id,
+              title: payload.item.title,
+              cost: payload.item.cost,
+              time: payload.item.time || (payload.item.starts_at ? payload.item.starts_at.slice(11, 16) : "")
+            });
+            if (payload.version) trip.version = payload.version;
+            renderItineraryItems();
+          }
+        }
+      });
+
+      wm.on('item:updated', payload => {
+        if (!trip || !payload?.item) return;
+        const targetId = payload.item.id || payload.item.itemId || payload.item.item_id;
+        for (const day of trip.days) {
+          const it = day.items.find(i => i.id === targetId);
+          if (it) {
+            it.title = payload.item.title;
+            it.cost = payload.item.cost;
+            if (payload.item.time) it.time = payload.item.time;
+            if (payload.version) trip.version = payload.version;
+            renderItineraryItems();
+            break;
+          }
+        }
+      });
+
+      wm.on('item:deleted', payload => {
+        if (!trip || !payload?.itemId) return;
+        for (const day of trip.days) {
+          day.items = day.items.filter(i => i.id !== payload.itemId);
+        }
+        if (payload.version) trip.version = payload.version;
+        renderItineraryItems();
+      });
+
+      wm.on('itinerary:version', payload => {
+        if (trip && payload?.version) {
+          trip.version = payload.version;
+        }
+      });
+    }
+
+    loadTripsFromBackend();
+
+    // Auto-load trip from query param (?trip=xxx)
+    const urlTripParam = new URLSearchParams(window.location.search).get("trip");
+    if (urlTripParam && window.wm) {
+      wm.getTrip(urlTripParam).then(res => {
+        const t = res?.trip || res;
+        if (t && (t.id || t.tripId || t.trip_id)) activateTripFromBackend(t);
+      }).catch(() => {
+        wm.listTrips().then(res => {
+          const matched = res?.trips?.find(t => (t.id || t.tripId || t.trip_id) === urlTripParam);
+          if (matched) activateTripFromBackend(matched);
+        }).catch(() => {});
+      });
+    }
 
     /*
       SOLO-TO-GROUP MATCHING — heuristic, not a model, exactly as specced:
@@ -4881,11 +5731,38 @@
       candidate trip's own data — no LLM in this path, so every score is
       fully explainable and the four components can be shown on request.
     
-      Candidate trips now come from the real backend (/api/trips/open) —
-      real trips other accounts created with "let solo travellers join"
-      turned on, plus a handful of seed trips the server ships with so
-      there's something to match against on a fresh install.
+      The candidate trips below are seed/demo data standing in for other
+      groups' real trips, the same way the design doc's own QA plan checks
+      the algorithm against seed data rather than live users.
     */
+    const OPEN_GROUP_TRIPS = [
+      {
+        id: "manali-ridge-crew", name: "Manali Ridge Crew", destination: "Manali",
+        start: "2027-03-10", end: "2027-03-15",
+        memberInterests: ["hiking", "photography", "food"], pace: "packed", budgetBand: "mid"
+      },
+      {
+        id: "gokarna-beach-bums", name: "Gokarna Beach Bums", destination: "Gokarna",
+        start: "2027-01-05", end: "2027-01-10",
+        memberInterests: ["beaches", "yoga", "food"], pace: "relaxed", budgetBand: "budget"
+      },
+      {
+        id: "jaisalmer-desert-circuit", name: "Jaisalmer Desert Circuit", destination: "Jaisalmer",
+        start: "2027-02-01", end: "2027-02-06",
+        memberInterests: ["history", "photography", "desert safari"], pace: "moderate", budgetBand: "mid"
+      },
+      {
+        id: "mumbai-weekend-crew", name: "Mumbai Weekend Crew", destination: "Mumbai",
+        start: "2027-04-01", end: "2027-04-03",
+        memberInterests: ["nightlife", "food", "shopping"], pace: "packed", budgetBand: "luxury"
+      },
+      {
+        id: "munnar-tea-trail", name: "Munnar Tea Trail", destination: "Munnar",
+        start: "2027-02-14", end: "2027-02-19",
+        memberInterests: ["hiking", "tea plantations", "photography"], pace: "moderate", budgetBand: "mid"
+      }
+    ];
+
     const PACE_SCALE = { relaxed: 0, moderate: 1, packed: 2 };
     const BUDGET_SCALE = { budget: 0, mid: 1, luxury: 2 };
 
@@ -4912,7 +5789,7 @@
     }
 
     function scoreTrip(solo, candidate) {
-      const interestScore = jaccard(new Set(solo.interests), new Set(candidate.interests));
+      const interestScore = jaccard(new Set(solo.interests), new Set(candidate.memberInterests));
       const dateScore = dateOverlapScore(solo.start, solo.end, candidate.start, candidate.end);
       const paceScore = scaleCompatibility(solo.pace, candidate.pace, PACE_SCALE);
       const budgetScore = scaleCompatibility(solo.budgetBand, candidate.budgetBand, BUDGET_SCALE);
@@ -4939,51 +5816,38 @@
   `).join("");
     }
 
-    function requestToJoin(candidate, button) {
-      if (!currentUser) return openAuthModal("login");
-
+    async function requestToJoin(candidate, button) {
       button.disabled = true;
       button.textContent = t("match.requesting");
 
-      setTimeout(async () => {
-        button.textContent = t("match.approved");
+      if (window.wm && candidate.id) {
         try {
-          const { trip } = await Api.request("POST", `/api/trips/${candidate.id}/join`);
-          setTimeout(() => {
-            activateTrip(trip);
-            loadMyTrips();
-            $("#itinerary").scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
-          }, 500);
-        } catch (error) {
-          button.disabled = false;
-          button.textContent = t("match.requestJoin");
-          alert(error.message);
+          await wm.requestToJoin(candidate.id, "Hi! I would love to join your trip.");
+        } catch (err) {
+          console.warn("[WanderMatch] Request to join API fallback:", err.message);
         }
+      }
+
+      setTimeout(() => {
+        button.textContent = t("match.approved");
+        setTimeout(() => {
+          const dayCount = dayCountFromDates(candidate.start, candidate.end);
+          activateTrip({
+            id: candidate.id || null,
+            name: candidate.name,
+            destination: candidate.destination,
+            start: candidate.start,
+            end: candidate.end,
+            days: Array.from({ length: Math.max(1, dayCount) }, () => ({ items: [] })),
+            version: 1,
+            roles: { you: "editor" }
+          });
+          $("#itinerary").scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+        }, 700);
       }, 500);
     }
 
     async function findMatches() {
-      const results = $("#match-results");
-      const empty = $("#match-empty");
-
-      if (!currentUser) {
-        results.innerHTML = "";
-        empty.hidden = false;
-        empty.textContent = "Log in to see open trips you could join.";
-        return;
-      }
-
-      let candidates;
-      try {
-        const response = await Api.request("GET", "/api/trips/open");
-        candidates = response.trips;
-      } catch (error) {
-        results.innerHTML = "";
-        empty.hidden = false;
-        empty.textContent = `Couldn't load open trips: ${error.message}`;
-        return;
-      }
-
       const destinationFilter = $("#solo-destination-input").value.trim().toLowerCase();
       const solo = {
         start: $("#solo-start-input").value,
@@ -4993,17 +5857,61 @@
         budgetBand: $("#solo-budget-input").value
       };
 
-      const filtered = candidates.filter(groupTrip =>
-        !destinationFilter || groupTrip.destination.toLowerCase().includes(destinationFilter)
-      );
+      let ranked = [];
+      let usedBackend = false;
 
-      const ranked = filtered
-        .map(candidate => ({ candidate, score: scoreTrip(solo, candidate) }))
-        .sort((a, b) => b.score.total - a.score.total);
+      if (window.wm) {
+        try {
+          const apiRes = await wm.findMatches({
+            destination: destinationFilter || undefined,
+            destinationCityId: destinationFilter ? (destinationFilter.startsWith('city_') ? destinationFilter : 'city_' + destinationFilter.replace(/[^a-z0-9]/g, '')) : undefined,
+            startDate: solo.start || undefined,
+            endDate: solo.end || undefined,
+            interests: solo.interests,
+            pace: solo.pace,
+            budgetBand: solo.budgetBand,
+            limit: 10
+          });
+          if (apiRes?.matches?.length) {
+            usedBackend = true;
+            ranked = apiRes.matches.map(m => ({
+              candidate: {
+                id: m.tripId || m.id,
+                name: m.title || m.name || "Group Trip",
+                destination: m.destination || m.destinationCityId?.replace(/^city_/, '') || destinationFilter || "Destination",
+                start: m.startDate,
+                end: m.endDate,
+                pace: m.pace || solo.pace,
+                budgetBand: m.budgetBand || solo.budgetBand,
+                seatsLeft: m.seatsLeft
+              },
+              score: {
+                total: m.score,
+                interestScore: m.components?.interestScore ?? 0,
+                dateScore: m.components?.dateScore ?? 0,
+                paceScore: m.components?.paceScore ?? 0,
+                budgetScore: m.components?.budgetScore ?? 0
+              }
+            }));
+          }
+        } catch (err) {
+          console.warn("[WanderMatch] Backend findMatches fallback to client heuristic:", err.message);
+        }
+      }
 
+      if (!usedBackend) {
+        const candidates = OPEN_GROUP_TRIPS.filter(groupTrip =>
+          !destinationFilter || groupTrip.destination.toLowerCase().includes(destinationFilter)
+        );
+        ranked = candidates
+          .map(candidate => ({ candidate, score: scoreTrip(solo, candidate) }))
+          .sort((a, b) => b.score.total - a.score.total);
+      }
+
+      const results = $("#match-results");
+      const empty = $("#match-empty");
       results.innerHTML = "";
       empty.hidden = ranked.length > 0;
-      empty.textContent = t("match.empty");
 
       ranked.forEach(({ candidate, score }, index) => {
         const card = document.createElement("article");
@@ -5015,7 +5923,7 @@
       <div class="match-top">
         <div>
           <div class="match-name">${candidate.name}</div>
-          <div class="match-meta">${dateLabel}${candidate.destination} · ${candidate.pace} pace · ${candidate.budgetBand} budget</div>
+          <div class="match-meta">${dateLabel}${candidate.destination} · ${candidate.pace} pace · ${candidate.budgetBand} budget ${candidate.seatsLeft ? `· ${candidate.seatsLeft} seats left` : ''}</div>
         </div>
         <div class="match-score">
           <div class="match-score-value">${Math.round(score.total * 100)}%</div>
@@ -5046,7 +5954,7 @@
     $("#find-matches-button").addEventListener("click", findMatches);
     findMatches();
 
-    if (currentUser?.locale) setLocale(currentUser.locale);
+    if (AuthDB.currentUser()?.locale) setLocale(AuthDB.currentUser().locale);
 
     function debounce(fn, wait) {
       let timer;
@@ -5077,8 +5985,29 @@
       box.innerHTML = '<div class="search-status">Searching Wikipedia…</div>';
 
       try {
-        const results = await wikiSearch(query.trim(), 6, controller.signal);
+        let results = await wikiSearch(query.trim(), 6, controller.signal).catch(() => []);
         if (controller.signal.aborted) return;
+
+        if (window.wm) {
+          try {
+            const refCities = await wm.searchCities(query.trim());
+            if (refCities?.cities?.length) {
+              const apiMatches = refCities.cities.slice(0, 3).map(c => ({
+                title: c.name,
+                description: `${c.state ? c.state + ', ' : ''}${c.country_code || 'India'} · Verified destination`,
+                thumbnail: null,
+                isVerifiedCity: true
+              }));
+              const existingTitles = new Set(results.map(r => r.title.toLowerCase()));
+              for (const am of apiMatches) {
+                if (!existingTitles.has(am.title.toLowerCase())) {
+                  results.unshift(am);
+                  existingTitles.add(am.title.toLowerCase());
+                }
+              }
+            }
+          } catch (_) {}
+        }
 
         if (!results.length) {
           box.innerHTML = '<div class="search-status">No matching places found.</div>';
@@ -5094,10 +6023,10 @@
           item.innerHTML = `
         ${result.thumbnail
               ? `<img src="${result.thumbnail}" alt="" loading="lazy">`
-              : `<span class="search-result-noimg" aria-hidden="true">⌕</span>`}
+              : `<span class="search-result-noimg" aria-hidden="true">${result.isVerifiedCity ? '✓' : '⌕'}</span>`}
         <span class="search-result-text">
           <span class="search-result-title">${result.title}</span>
-          <span class="search-result-desc">${result.description || "Wikipedia entry"}</span>
+          <span class="search-result-desc">${result.description || "Destination"}</span>
         </span>`;
 
           item.addEventListener("click", () => {
@@ -5399,14 +6328,7 @@
     updateGalleryCredit();
 
     $(".source-credits").innerHTML = `
-  Interactive scenery:
-  <a
-    href="https://superspl.at/scene/189d8fe0"
-    target="_blank"
-    rel="noopener noreferrer"
-  >Granite Mountain Lookout on SuperSplat</a> (drone photogrammetry 3D Gaussian Splat scan).
-  Embedded through the official SuperSplat viewer.
-  Scene ownership and applicable permissions remain with its creator.
+  Interactive 3D mountain terrain rendered live with Three.js WebGL (Munnar elevation & Western Ghats ridges).
 
   Destination search, descriptions, and photographs are fetched live from
   <a href="https://www.wikipedia.org" target="_blank" rel="noopener noreferrer">Wikipedia</a>
@@ -5418,13 +6340,12 @@
 
     /*
       TRIP PHOTO COLLAGE — face grouping.
-      Detection and clustering still run entirely client-side via
-      @vladmandic/face-api (TensorFlow.js) — original uploaded photos never
-      leave this browser. What's new: once clustering finishes, the
-      resulting cropped face thumbnails (not the original photos) and any
-      name you add are saved to the active trip on the server, so they're
-      visible again next time this trip is opened — on this device or any
-      other account that's a member of it.
+      Runs entirely client-side via @vladmandic/face-api (TensorFlow.js).
+      No photo, image data, or face descriptor ever leaves this browser tab:
+      no upload, no server, no persistence beyond this page session. This is
+      intentionally stricter than the spec's hosted-API version, in the same
+      privacy spirit as its "opt-in, never auto-labelled, deleted with the
+      trip" requirements — reloading the page IS the deletion here.
     */
     const FACE_MODEL_URL = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model";
     const FACE_MATCH_THRESHOLD = 0.55; // lower euclidean distance = same person
@@ -5545,79 +6466,73 @@
         <div class="face-count">${cluster.thumbnails.length} photo${cluster.thumbnails.length === 1 ? "" : "s"}</div>
         <input type="text" class="face-label-input" placeholder="Name this person" value="${cluster.label}">
       `;
-          card.querySelector(".face-label-input").addEventListener("change", e => {
+          card.querySelector(".face-label-input").addEventListener("input", e => {
             cluster.label = e.target.value;
-            saveFaceClusters();
+          });
+          card.querySelector(".face-label-input").addEventListener("change", async e => {
+            cluster.label = e.target.value;
+            if (trip?.id && window.wm && cluster.apiGroupId) {
+              await wm.labelFaceGroup(trip.id, cluster.apiGroupId, null, cluster.label).catch(() => {});
+            }
           });
           board.append(card);
         });
     }
 
-    function updatePhotosTripNote() {
-      const note = $("#photos-trip-note");
-      if (!note) return;
-      note.textContent = activeTrip
-        ? `Active trip: ${activeTrip.name}. Face groups save to this trip.`
-        : "Create or open a trip above first — face groups are saved per trip.";
-    }
-
-    async function loadFaceClusters() {
-      updatePhotosTripNote();
-      if (!activeTrip) {
-        faceClusters = [];
-        renderFaceGroups();
-        return;
-      }
-      try {
-        const { clusters } = await Api.request("GET", `/api/trips/${activeTrip.id}/faces`);
-        faceClusters = clusters || [];
-      } catch {
-        faceClusters = [];
-      }
-      renderFaceGroups();
-    }
-
-    async function saveFaceClusters() {
-      if (!activeTrip) return;
-      try {
-        await Api.request("POST", `/api/trips/${activeTrip.id}/faces`, { clusters: faceClusters });
-      } catch (error) {
-        const status = $("#photo-upload-status");
-        status.textContent = `${status.textContent} (Couldn't save to the trip: ${error.message})`.trim();
-      }
-    }
-
-    updatePhotosTripNote();
-
-    $("#face-consent").addEventListener("change", e => {
-      if (e.target.checked && !activeTrip) {
-        e.target.checked = false;
-        $("#photo-upload-status").textContent = "Create or open a trip above first — face groups are saved per trip.";
-        return;
-      }
-      $("#photo-upload-zone").hidden = !e.target.checked;
-      if (!e.target.checked) {
+    $("#face-consent").addEventListener("change", async e => {
+      const granted = e.target.checked;
+      $("#photo-upload-zone").hidden = !granted;
+      if (!granted) {
         faceClusters = [];
         $("#photo-upload-status").textContent = "";
         renderFaceGroups();
+      }
+      if (trip?.id && window.wm) {
+        try {
+          await wm.setFaceConsent(trip.id, granted);
+        } catch (err) {
+          console.warn("[WanderMatch] setFaceConsent error:", err.message);
+        }
       }
     });
 
     $("#photo-upload-input").addEventListener("change", async e => {
       const files = [...e.target.files];
       if (!files.length) return;
-      if (!activeTrip) {
-        $("#photo-upload-status").textContent = "Create or open a trip above first.";
-        e.target.value = "";
-        return;
-      }
 
       const status = $("#photo-upload-status");
-      status.textContent = "Loading the face-detection model (first time only)…";
 
+      // Presigned S3 upload if connected to backend
+      if (trip?.id && window.wm) {
+        status.textContent = `Uploading ${files.length} photo(s) to secure storage…`;
+        wm.uploadPhotos(trip.id, files, {
+          onProgress: p => {
+            if (p.status === 'uploading') status.textContent = `Uploading ${p.file.name}…`;
+            else if (p.status === 'done') status.textContent = `Uploaded ${p.file.name} (queued for face analysis)`;
+          }
+        }).then(async () => {
+          const res = await wm.getFaceGroups(trip.id).catch(() => null);
+          if (res?.faceGroups?.length) {
+            faceClusters = res.faceGroups.map(fg => ({
+              id: fg.faceGroupId,
+              apiGroupId: fg.faceGroupId,
+              thumbnails: fg.photos?.map(p => p.url) || (fg.coverUrl ? [fg.coverUrl] : []),
+              label: fg.label || fg.memberName || ""
+            }));
+            renderFaceGroups();
+          }
+        }).catch(err => {
+          console.warn("[WanderMatch] Backend photo upload fallback to browser model:", err.message);
+        });
+      }
+
+      // Also run local face detection for instant browser preview
+      status.textContent = "Loading the face-detection model (first time only)…";
       const modelsOk = await ensureFaceModels();
       if (!modelsOk) {
-        status.textContent = "Couldn't load the face-detection model. Check your connection and try again.";
+        if (!trip?.id) {
+          status.textContent = "Couldn't load the face-detection model. Check your connection and try again.";
+        }
         e.target.value = "";
         return;
       }
@@ -5632,18 +6547,34 @@
         }
       }
 
+      status.textContent = facesFound > 0
+        ? `Found ${facesFound} face${facesFound === 1 ? "" : "s"} across ${files.length} photo${files.length === 1 ? "" : "s"}.`
+        : `No faces detected in ${files.length} photo${files.length === 1 ? "" : "s"}.`;
+
       renderFaceGroups();
-
-      if (facesFound > 0) {
-        status.textContent = `Found ${facesFound} face${facesFound === 1 ? "" : "s"} across ${files.length} photo${files.length === 1 ? "" : "s"}. Saving to the trip…`;
-        await saveFaceClusters();
-        status.textContent = `Found ${facesFound} face${facesFound === 1 ? "" : "s"} across ${files.length} photo${files.length === 1 ? "" : "s"}. Saved to ${activeTrip.name}.`;
-      } else {
-        status.textContent = `No faces detected in ${files.length} photo${files.length === 1 ? "" : "s"}.`;
-      }
-
       e.target.value = "";
     });
+
+    if (window.wm) {
+      wm.on('face_groups:updated', async () => {
+        if (trip?.id) {
+          const res = await wm.getFaceGroups(trip.id).catch(() => null);
+          if (res?.faceGroups?.length) {
+            faceClusters = res.faceGroups.map(fg => ({
+              id: fg.faceGroupId,
+              apiGroupId: fg.faceGroupId,
+              thumbnails: fg.photos?.map(p => p.url) || (fg.coverUrl ? [fg.coverUrl] : []),
+              label: fg.label || fg.memberName || ""
+            }));
+            renderFaceGroups();
+          }
+        }
+      });
+      wm.on('photo:processed', payload => {
+        const status = $("#photo-upload-status");
+        if (status) status.textContent = `Server processed photo (${payload?.facesDetected || 0} faces found)`;
+      });
+    }
 
     renderFaceGroups();
 

@@ -2525,6 +2525,89 @@
       display: none
     }
 
+    .active-trips-bar {
+      background: rgba(28, 33, 28, 0.7);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-bottom: 24px;
+    }
+    .active-trips-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 600;
+    }
+    .active-trips-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .trip-chip-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: rgba(15, 18, 15, 0.85);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .trip-chip-btn:hover {
+      border-color: var(--gold);
+      transform: translateY(-1px);
+    }
+    .trip-chip-btn.is-active {
+      border-color: var(--gold);
+      background: rgba(217, 165, 102, 0.15);
+      color: #fff;
+    }
+    .trip-chip-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--gold);
+    }
+    .trip-meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .trip-meta-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .button-sm {
+      padding: 7px 12px !important;
+      font-size: 11px !important;
+      height: auto !important;
+    }
+    .switch-trip-link {
+      font-size: 11px;
+      color: var(--gold);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .active-trips-refresh {
+      font-size: 11px;
+      color: var(--gold);
+      cursor: pointer;
+    }
+
     @media(max-width:900px) {
       .nav-cta {
         display: none
@@ -3094,7 +3177,7 @@
     </form>
 
     <p class="auth-error" id="auth-error" role="alert" hidden></p>
-    <p class="auth-note muted" id="auth-note">Connected to WanderMatch API (/api/v1, Argon2id auth). Password min 10 characters.</p>
+    <p class="auth-note muted" id="auth-note">Connected to WanderMatch API (/api/v1). Password min 6 characters.</p>
   </div>
 
   <div class="api-modal" id="api-modal" role="dialog" aria-modal="true" aria-labelledby="api-title" hidden>
@@ -3294,6 +3377,17 @@
       <h2 class="section-title" id="itinerary-title">Your itinerary,<br>day by day.</h2>
       <p class="muted">Create the trip, invite your crew with a role, and build the plan together.</p>
 
+      <!-- Active / Community Trips Selector Bar -->
+      <div class="active-trips-bar" id="active-trips-bar">
+        <div class="active-trips-header">
+          <span class="active-trips-label">Active &amp; Shared Trips:</span>
+          <button type="button" class="link-reset active-trips-refresh" id="refresh-trips-btn" title="Refresh trips list">↻ Refresh</button>
+        </div>
+        <div class="active-trips-list" id="active-trips-list">
+          <span class="muted" style="font-size:12px;">Loading active trips…</span>
+        </div>
+      </div>
+
       <div class="trip-setup" id="trip-setup">
         <div class="trip-setup-grid">
           <label class="sr-only" for="trip-name-input">Trip name</label>
@@ -3312,7 +3406,13 @@
       </div>
 
       <div class="trip-board" id="trip-board" hidden>
-        <div class="trip-meta" id="trip-meta"></div>
+        <div class="trip-meta-row">
+          <div class="trip-meta" id="trip-meta"></div>
+          <div class="trip-meta-actions">
+            <button type="button" class="button button-sm" id="share-trip-btn" title="Copy link to invite friends">📋 Share Trip Link</button>
+            <button type="button" class="link-reset switch-trip-link" id="switch-trip-btn">Switch Trip</button>
+          </div>
+        </div>
 
         <div class="voter-switch">
           <span class="voter-switch-label" data-i18n="itin.actingAs">Acting as:</span>
@@ -3982,8 +4082,8 @@
             user = await AuthDB.logIn({ email, password });
           }
         } else {
-          if (password.length < 10) {
-            throw new Error("Password must be at least 10 characters (backend requirement).");
+          if (password.length < 6) {
+            throw new Error("Password must be at least 6 characters.");
           }
           try {
             const res = await wm.signup(email, password, name || email.split("@")[0], currentLocale === "hi" ? "hi-IN" : "en-IN");
@@ -4025,8 +4125,9 @@
       const health = await wm.checkHealth();
       if (health.ok) {
         if (dot) dot.className = "status-dot status-online";
-        if (text) text.textContent = "API Live";
-        if (diagStatus) diagStatus.textContent = "Connected (Healthy)";
+        const isKv = health.data?.storage === 'vercel-kv';
+        if (text) text.textContent = isKv ? "KV Live" : "API Live";
+        if (diagStatus) diagStatus.textContent = isKv ? "Connected (Persistent KV)" : "Connected (In-Memory Mode)";
         if (diagLatency) diagLatency.textContent = `${health.latencyMs}ms`;
         if (diagSocket) diagSocket.textContent = window.io ? (wm.socket?.connected ? "Connected" : "Ready") : "Not loaded";
       } else {
@@ -4508,9 +4609,15 @@
           else proposal.votes.add(activeVoter);
           renderProposals();
 
-          if (trip?.id && window.wm && wm.token && proposal.apiProposalId) {
+          if (window.wm) {
             try {
-              const voteRes = await wm.vote(trip.id, proposal.apiProposalId, currentlyVoted ? 'abstain' : 'yes', proposal.reasons[activeVoter] || null);
+              const voteRes = await wm.voteGlobal(
+                proposal.apiProposalId || proposal.id,
+                currentlyVoted ? 'abstain' : 'yes',
+                proposal.reasons[activeVoter] || null,
+                crewDisplayName(activeVoter),
+                currentlyVoted
+              );
               if (voteRes?.outcome === 'tied' && voteRes.consensus) {
                 window._serverConsensus = voteRes.consensus;
               }
@@ -4521,11 +4628,23 @@
         });
 
         const reasonInput = card.querySelector(".proposal-reason-input");
-        reasonInput.addEventListener("change", () => {
+        reasonInput.addEventListener("change", async () => {
           const text = reasonInput.value.trim();
           if (text) proposal.reasons[activeVoter] = text;
           else delete proposal.reasons[activeVoter];
           renderProposals();
+
+          if (window.wm && proposal.id && proposal.votes.has(activeVoter)) {
+            try {
+              await wm.voteGlobal(
+                proposal.apiProposalId || proposal.id,
+                'yes',
+                text || null,
+                crewDisplayName(activeVoter),
+                false
+              );
+            } catch (_) {}
+          }
         });
 
         board.append(card);
@@ -4557,28 +4676,13 @@
       if (existing) {
         existing.votes.add(activeVoter);
         renderProposals();
+        if (window.wm) {
+          wm.voteGlobal(existing.apiProposalId || existing.id, 'yes', null, crewDisplayName(activeVoter), false).catch(() => {});
+        }
         return;
       }
 
       const requestId = ++proposeRequestId;
-
-      let apiProposalId = null;
-      if (trip?.id && window.wm && wm.token) {
-        try {
-          const apiRes = await wm.propose(trip.id, {
-            action: 'add',
-            title: name,
-            rationale: `Proposed by ${crewDisplayName(activeVoter)}`,
-            costDelta: 0,
-            dayIndex: 0
-          });
-          if (apiRes?.proposal?.proposal_id) {
-            apiProposalId = apiRes.proposal.proposal_id;
-          }
-        } catch (err) {
-          console.warn("[WanderMatch] Propose API fallback:", err.message);
-        }
-      }
 
       try {
         let summary, creditHtml;
@@ -4602,8 +4706,28 @@
 
         if (requestId !== proposeRequestId) return;
 
+        let apiProposalId = null;
+        if (window.wm) {
+          try {
+            const apiRes = await wm.proposeGlobal({
+              name: summary.title,
+              title: summary.title,
+              destination: summary.title,
+              thumbnail: summary.thumbnail,
+              creditHtml,
+              proposedBy: crewDisplayName(activeVoter),
+              rationale: summary.extract || `Proposed by ${crewDisplayName(activeVoter)}`
+            });
+            if (apiRes?.proposal) {
+              apiProposalId = apiRes.proposal.id || apiRes.proposal.proposal_id;
+            }
+          } catch (err) {
+            console.warn("[WanderMatch] Propose API fallback:", err.message);
+          }
+        }
+
         proposals.push({
-          id: crypto.randomUUID(),
+          id: apiProposalId || crypto.randomUUID(),
           apiProposalId,
           name: summary.title,
           summary,
@@ -4956,37 +5080,52 @@ Rules, all mandatory:
         card.append(fallbackBox);
       }
     }
+
+    async function loadProposalsFromBackend() {
+      if (!window.wm) return;
+      try {
+        const res = await wm.listGlobalProposals();
+        if (res?.proposals?.length) {
+          const remoteProposals = res.proposals.map(p => {
+            const id = p.id || p.proposal_id;
+            const votersList = Array.isArray(p.voters) ? [...p.voters] : (p.votes > 0 ? ['you'] : []);
+            if (p.proposedBy && !votersList.includes(p.proposedBy)) votersList.unshift(p.proposedBy);
+            return {
+              id,
+              apiProposalId: id,
+              name: p.title || p.name || p.destination,
+              summary: {
+                title: p.title || p.name || p.destination,
+                extract: p.rationale || p.extract || "",
+                thumbnail: p.thumbnail || null
+              },
+              thumbnail: p.thumbnail || null,
+              creditHtml: p.creditHtml || "<span>WanderMatch Community</span>",
+              proposedBy: p.proposedBy || "alex",
+              votes: new Set(votersList),
+              reasons: p.reasons || {}
+            };
+          });
+          const remoteTitles = new Set(remoteProposals.map(r => r.name.toLowerCase()));
+          proposals = [...remoteProposals, ...proposals.filter(lp => !remoteTitles.has(lp.name.toLowerCase()))];
+          renderProposals();
+        }
+      } catch (err) {
+        console.warn("[WanderMatch] loadProposalsFromBackend error:", err.message);
+      }
+    }
+
     renderVoterChips();
     renderProposals();
+    loadProposalsFromBackend();
 
     if (window.wm) {
       wm.on('proposal:created', payload => {
-        if (!payload?.proposal) return;
-        const exists = proposals.some(p => p.name.toLowerCase() === payload.proposal.title.toLowerCase() || p.apiProposalId === payload.proposal.proposal_id);
-        if (!exists) {
-          proposals.push({
-            id: crypto.randomUUID(),
-            apiProposalId: payload.proposal.proposal_id,
-            name: payload.proposal.title,
-            summary: { title: payload.proposal.title, extract: payload.proposal.rationale || "" },
-            thumbnail: null,
-            creditHtml: "",
-            proposedBy: payload.proposal.proposed_by_user_id || "alex",
-            votes: new Set([payload.proposal.proposed_by_user_id || "alex"]),
-            reasons: {}
-          });
-          renderProposals();
-        }
+        loadProposalsFromBackend();
       });
 
       wm.on('vote:cast', payload => {
-        if (!payload?.proposalId) return;
-        const prop = proposals.find(p => p.apiProposalId === payload.proposalId);
-        if (prop) {
-          if (payload.value === 'yes') prop.votes.add(payload.userId || "alex");
-          else prop.votes.delete(payload.userId || "alex");
-          renderProposals();
-        }
+        loadProposalsFromBackend();
       });
 
       wm.on('consensus:ready', payload => {
@@ -5058,6 +5197,52 @@ Rules, all mandatory:
       return role === "owner" || role === "editor";
     }
 
+    async function loadTripsFromBackend() {
+      const listContainer = $("#active-trips-list");
+      if (!window.wm || !listContainer) return;
+      try {
+        const res = await wm.listTrips();
+        if (res?.trips?.length) {
+          listContainer.innerHTML = "";
+          res.trips.forEach(t => {
+            const btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "trip-chip-btn" + (trip?.id === t.id ? " is-active" : "");
+            btn.innerHTML = `<span class="trip-chip-dot"></span> <strong>${t.title || t.name}</strong> <span class="muted" style="font-size:11px;">(${t.destination || 'Destination'})</span>`;
+            btn.addEventListener("click", () => {
+              activateTripFromBackend(t);
+            });
+            listContainer.appendChild(btn);
+          });
+        } else {
+          listContainer.innerHTML = '<span class="muted" style="font-size:12px;">No active trips found. Create one below!</span>';
+        }
+      } catch (err) {
+        if (listContainer) listContainer.innerHTML = '<span class="muted" style="font-size:12px;">Using preview mode.</span>';
+      }
+    }
+
+    function activateTripFromBackend(remoteTrip) {
+      const t = remoteTrip.trip || remoteTrip;
+      const start = t.startDate || t.start;
+      const end = t.endDate || t.end;
+      const dayCount = (start && end) ? dayCountFromDates(start, end) : 3;
+      activateTrip({
+        id: t.id || t.tripId || t.trip_id,
+        name: t.title || t.name,
+        destination: t.destination || 'Destination',
+        start,
+        end,
+        days: Array.from({ length: Math.max(1, dayCount) }, () => ({ items: [] })),
+        version: t.version || 1,
+        roles: { you: "owner" }
+      });
+      document.querySelectorAll(".trip-chip-btn").forEach(btn => {
+        btn.classList.toggle("is-active", btn.textContent.includes(t.title || t.name));
+      });
+      $("#itinerary").scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    }
+
     function activateTrip(newTrip) {
       trip = newTrip;
       activeItineraryMember = "you";
@@ -5070,16 +5255,21 @@ Rules, all mandatory:
 
       if (trip.id && window.wm) {
         wm.getItinerary(trip.id).then(data => {
-          if (data && data.days) {
-            trip.version = data.version;
-            trip.days = data.days.map(d => ({
-              items: (d.items || []).map(it => ({
-                id: it.item_id || it.id,
+          if (data && (data.items || data.days)) {
+            trip.version = data.version || 1;
+            const numDays = trip.days.length || 3;
+            const days = Array.from({ length: numDays }, () => ({ items: [] }));
+            const items = data.items || (data.days ? data.days.flatMap(d => d.items || []) : []);
+            items.forEach(it => {
+              const dIdx = Math.max(0, Math.min(numDays - 1, it.dayIndex ?? 0));
+              days[dIdx].items.push({
+                id: it.id || it.itemId || it.item_id,
                 title: it.title,
-                cost: it.cost,
-                time: it.starts_at ? it.starts_at.slice(11, 16) : ""
-              }))
-            }));
+                cost: it.cost || 0,
+                time: it.time || (it.starts_at ? it.starts_at.slice(11, 16) : "")
+              });
+            });
+            trip.days = days;
             renderTripBoard();
           }
         }).catch(() => {});
@@ -5092,6 +5282,7 @@ Rules, all mandatory:
       const name = $("#trip-name-input").value.trim() || confirmedProposal?.name || "Our trip";
       const start = $("#trip-start-input").value || "2027-03-10";
       const end = $("#trip-end-input").value || "2027-03-15";
+      const dest = confirmedProposal?.name || name;
       const dayCount = dayCountFromDates(start, end);
 
       const roles = { you: "owner" };
@@ -5102,20 +5293,23 @@ Rules, all mandatory:
       let backendTripId = null;
       let backendVersion = 1;
 
-      if (window.wm && wm.token) {
+      if (window.wm) {
         try {
           const res = await wm.createTrip({
             title: name,
-            destinationCityId: "city_manali",
+            name,
+            destination: dest,
+            destinationCityId: "city_" + dest.toLowerCase().replace(/[^a-z]/g, ''),
             startDate: start,
             endDate: end,
             partySize: 4,
             isGroupTrip: true
           });
-          if (res?.trip?.trip_id) {
-            backendTripId = res.trip.trip_id;
-            const itin = await wm.getItinerary(backendTripId);
-            backendVersion = itin.version || 1;
+          const created = res?.trip;
+          if (created && (created.id || created.tripId || created.trip_id)) {
+            backendTripId = created.id || created.tripId || created.trip_id;
+            const itin = await wm.getItinerary(backendTripId).catch(() => null);
+            backendVersion = itin?.version || 1;
           }
         } catch (err) {
           console.warn("[WanderMatch] Backend createTrip failed, fallback to local:", err.message);
@@ -5125,13 +5319,15 @@ Rules, all mandatory:
       activateTrip({
         id: backendTripId,
         name,
-        destination: confirmedProposal?.name || name,
+        destination: dest,
         start,
         end,
         days: Array.from({ length: dayCount }, () => ({ items: [] })),
         version: backendVersion,
         roles
       });
+
+      loadTripsFromBackend();
     }
 
     function renderActingChips() {
@@ -5178,9 +5374,10 @@ Rules, all mandatory:
 
     function renderTripMeta() {
       const dateRange = trip.start && trip.end ? `${trip.start} → ${trip.end} · ` : "";
+      const tripIdHtml = trip.id ? ` · <span style="font-family:monospace;font-size:11px;background:rgba(217,165,102,0.15);color:var(--gold);padding:2px 7px;border-radius:4px;">Trip ID: ${trip.id}</span>` : "";
       $("#trip-meta").innerHTML = `
     <strong>${trip.name}</strong>
-    <span class="muted">${dateRange}${t("itin.days", { n: trip.days.length, s: trip.days.length === 1 ? "" : "s" })} · ${trip.destination}</span>
+    <span class="muted">${dateRange}${t("itin.days", { n: trip.days.length, s: trip.days.length === 1 ? "" : "s" })} · ${trip.destination}${tripIdHtml}</span>
   `;
     }
 
@@ -5233,10 +5430,11 @@ Rules, all mandatory:
             const newTime = row.querySelector(".edit-time").value;
             const newCost = row.querySelector(".edit-cost").value;
 
-            if (trip.id && window.wm && wm.token) {
+            if (trip.id && window.wm) {
               try {
                 const res = await wm.updateItem(trip.id, item.id, {
                   title: newTitle,
+                  time: newTime,
                   cost: Number(newCost) || 0
                 });
                 trip.version = res.version || (trip.version + 1);
@@ -5289,7 +5487,7 @@ Rules, all mandatory:
               if (editingBaseVersion !== null && editingBaseVersion !== trip.version) {
                 showItineraryError(t("itin.conflict"));
               }
-              if (trip.id && window.wm && wm.token) {
+              if (trip.id && window.wm) {
                 try {
                   const res = await wm.deleteItem(trip.id, item.id);
                   trip.version = res.version || (trip.version + 1);
@@ -5340,16 +5538,17 @@ Rules, all mandatory:
 
       let newItemId = crypto.randomUUID();
 
-      if (trip.id && window.wm && wm.token) {
+      if (trip.id && window.wm) {
         try {
           const res = await wm.addItem(trip.id, {
             dayIndex: selectedDay,
             title,
+            time: timeVal,
             cost: Number(costVal) || 0,
             currency: 'INR'
           });
-          if (res?.item?.item_id) {
-            newItemId = res.item.item_id;
+          if (res?.item?.id || res?.item?.itemId || res?.item?.item_id) {
+            newItemId = res.item.id || res.item.itemId || res.item.item_id;
           }
           trip.version = res.version || (trip.version + 1);
         } catch (err) {
@@ -5393,21 +5592,65 @@ Rules, all mandatory:
       renderRoleSetup();
     });
 
+    $("#refresh-trips-btn")?.addEventListener("click", async () => {
+      const btn = $("#refresh-trips-btn");
+      if (btn) btn.textContent = "↻ Loading…";
+      await Promise.all([loadTripsFromBackend(), loadProposalsFromBackend()]);
+      if (btn) btn.textContent = "✓ Updated";
+      setTimeout(() => { if (btn) btn.textContent = "↻ Refresh"; }, 1500);
+    });
+
+    $("#switch-trip-btn")?.addEventListener("click", () => {
+      $("#trip-board").hidden = true;
+      $("#trip-setup").hidden = false;
+      $("#active-trips-bar")?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    });
+
+    $("#share-trip-btn")?.addEventListener("click", () => {
+      if (!trip?.id) {
+        alert("Please create or select an active trip first to share it.");
+        return;
+      }
+      const shareUrl = new URL(window.location.href);
+      shareUrl.searchParams.set("trip", trip.id);
+      const btn = $("#share-trip-btn");
+      navigator.clipboard.writeText(shareUrl.toString()).then(() => {
+        if (btn) {
+          const orig = btn.textContent;
+          btn.textContent = "✓ Link Copied!";
+          btn.style.background = "var(--forest)";
+          btn.style.color = "#fff";
+          setTimeout(() => {
+            btn.textContent = orig;
+            btn.style.background = "";
+            btn.style.color = "";
+          }, 2500);
+        }
+      }).catch(() => {
+        prompt("Copy your trip link to share with friends:", shareUrl.toString());
+      });
+    });
+
     if (window.wm) {
       wm.onConflict = () => {
         showItineraryError(t("itin.conflict"));
         if (trip?.id) {
           wm.getItinerary(trip.id).then(itinData => {
-            if (itinData?.days) {
-              trip.version = itinData.version;
-              trip.days = itinData.days.map(d => ({
-                items: (d.items || []).map(it => ({
-                  id: it.item_id || it.id,
+            if (itinData && (itinData.items || itinData.days)) {
+              trip.version = itinData.version || 1;
+              const numDays = trip.days.length || 3;
+              const days = Array.from({ length: numDays }, () => ({ items: [] }));
+              const items = itinData.items || (itinData.days ? itinData.days.flatMap(d => d.items || []) : []);
+              items.forEach(it => {
+                const dIdx = Math.max(0, Math.min(numDays - 1, it.dayIndex ?? 0));
+                days[dIdx].items.push({
+                  id: it.id || it.itemId || it.item_id,
                   title: it.title,
-                  cost: it.cost,
-                  time: it.starts_at ? it.starts_at.slice(11, 16) : ""
-                }))
-              }));
+                  cost: it.cost || 0,
+                  time: it.time || (it.starts_at ? it.starts_at.slice(11, 16) : "")
+                });
+              });
+              trip.days = days;
               renderItineraryItems();
             }
           }).catch(() => {});
@@ -5416,15 +5659,15 @@ Rules, all mandatory:
 
       wm.on('item:created', payload => {
         if (!trip || !payload?.item) return;
-        const dayIdx = payload.item.day_index ?? 0;
+        const dayIdx = payload.item.day_index ?? payload.item.dayIndex ?? 0;
         if (trip.days[dayIdx]) {
-          const exists = trip.days[dayIdx].items.some(i => i.id === payload.item.item_id);
+          const exists = trip.days[dayIdx].items.some(i => i.id === (payload.item.id || payload.item.itemId || payload.item.item_id));
           if (!exists) {
             trip.days[dayIdx].items.push({
-              id: payload.item.item_id,
+              id: payload.item.id || payload.item.itemId || payload.item.item_id,
               title: payload.item.title,
               cost: payload.item.cost,
-              time: payload.item.starts_at ? payload.item.starts_at.slice(11, 16) : ""
+              time: payload.item.time || (payload.item.starts_at ? payload.item.starts_at.slice(11, 16) : "")
             });
             if (payload.version) trip.version = payload.version;
             renderItineraryItems();
@@ -5434,11 +5677,13 @@ Rules, all mandatory:
 
       wm.on('item:updated', payload => {
         if (!trip || !payload?.item) return;
+        const targetId = payload.item.id || payload.item.itemId || payload.item.item_id;
         for (const day of trip.days) {
-          const it = day.items.find(i => i.id === payload.item.item_id);
+          const it = day.items.find(i => i.id === targetId);
           if (it) {
             it.title = payload.item.title;
             it.cost = payload.item.cost;
+            if (payload.item.time) it.time = payload.item.time;
             if (payload.version) trip.version = payload.version;
             renderItineraryItems();
             break;
@@ -5459,6 +5704,22 @@ Rules, all mandatory:
         if (trip && payload?.version) {
           trip.version = payload.version;
         }
+      });
+    }
+
+    loadTripsFromBackend();
+
+    // Auto-load trip from query param (?trip=xxx)
+    const urlTripParam = new URLSearchParams(window.location.search).get("trip");
+    if (urlTripParam && window.wm) {
+      wm.getTrip(urlTripParam).then(res => {
+        const t = res?.trip || res;
+        if (t && (t.id || t.tripId || t.trip_id)) activateTripFromBackend(t);
+      }).catch(() => {
+        wm.listTrips().then(res => {
+          const matched = res?.trips?.find(t => (t.id || t.tripId || t.trip_id) === urlTripParam);
+          if (matched) activateTripFromBackend(matched);
+        }).catch(() => {});
       });
     }
 
@@ -5559,7 +5820,7 @@ Rules, all mandatory:
       button.disabled = true;
       button.textContent = t("match.requesting");
 
-      if (window.wm && wm.token && candidate.id) {
+      if (window.wm && candidate.id) {
         try {
           await wm.requestToJoin(candidate.id, "Hi! I would love to join your trip.");
         } catch (err) {
@@ -5577,7 +5838,7 @@ Rules, all mandatory:
             destination: candidate.destination,
             start: candidate.start,
             end: candidate.end,
-            days: Array.from({ length: dayCount }, () => ({ items: [] })),
+            days: Array.from({ length: Math.max(1, dayCount) }, () => ({ items: [] })),
             version: 1,
             roles: { you: "editor" }
           });
@@ -5599,10 +5860,11 @@ Rules, all mandatory:
       let ranked = [];
       let usedBackend = false;
 
-      if (window.wm && wm.token) {
+      if (window.wm) {
         try {
           const apiRes = await wm.findMatches({
-            destinationCityId: destinationFilter || undefined,
+            destination: destinationFilter || undefined,
+            destinationCityId: destinationFilter ? (destinationFilter.startsWith('city_') ? destinationFilter : 'city_' + destinationFilter.replace(/[^a-z0-9]/g, '')) : undefined,
             startDate: solo.start || undefined,
             endDate: solo.end || undefined,
             interests: solo.interests,
@@ -5614,13 +5876,13 @@ Rules, all mandatory:
             usedBackend = true;
             ranked = apiRes.matches.map(m => ({
               candidate: {
-                id: m.tripId,
-                name: m.title || "Group Trip",
-                destination: m.destinationCityId?.replace(/^city_/, '') || destinationFilter || "Destination",
+                id: m.tripId || m.id,
+                name: m.title || m.name || "Group Trip",
+                destination: m.destination || m.destinationCityId?.replace(/^city_/, '') || destinationFilter || "Destination",
                 start: m.startDate,
                 end: m.endDate,
-                pace: solo.pace,
-                budgetBand: solo.budgetBand,
+                pace: m.pace || solo.pace,
+                budgetBand: m.budgetBand || solo.budgetBand,
                 seatsLeft: m.seatsLeft
               },
               score: {
@@ -6209,7 +6471,7 @@ Rules, all mandatory:
           });
           card.querySelector(".face-label-input").addEventListener("change", async e => {
             cluster.label = e.target.value;
-            if (trip?.id && window.wm && wm.token && cluster.apiGroupId) {
+            if (trip?.id && window.wm && cluster.apiGroupId) {
               await wm.labelFaceGroup(trip.id, cluster.apiGroupId, null, cluster.label).catch(() => {});
             }
           });
@@ -6225,7 +6487,7 @@ Rules, all mandatory:
         $("#photo-upload-status").textContent = "";
         renderFaceGroups();
       }
-      if (trip?.id && window.wm && wm.token) {
+      if (trip?.id && window.wm) {
         try {
           await wm.setFaceConsent(trip.id, granted);
         } catch (err) {
@@ -6241,7 +6503,7 @@ Rules, all mandatory:
       const status = $("#photo-upload-status");
 
       // Presigned S3 upload if connected to backend
-      if (trip?.id && window.wm && wm.token) {
+      if (trip?.id && window.wm) {
         status.textContent = `Uploading ${files.length} photo(s) to secure storage…`;
         wm.uploadPhotos(trip.id, files, {
           onProgress: p => {

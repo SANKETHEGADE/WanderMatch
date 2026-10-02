@@ -1,6 +1,12 @@
 /**
  * WanderMatch API Client — Universal Browser & Module SDK
- * Connects frontend with WanderMatch Fastify API (/api/v1) and Socket.io.
+ * Connects frontend (index1.html) with WanderMatch Fastify API (/api/v1) and Socket.io.
+ *
+ * Capabilities:
+ *  1. Automatic Itinerary Version Tracking (expectedVersion on writes + 409 conflict handling).
+ *  2. Realtime WebSocket subscription (room-per-trip, echo suppression, live sync).
+ *  3. Presigned direct-to-S3 photo uploading pipeline with bounded concurrency.
+ *  4. Health check and configurable base URL with localStorage persistence.
  */
 
 (function (root, factory) {
@@ -25,6 +31,12 @@
       if (typeof window !== 'undefined' && window.WANDERMATCH_API) {
         return window.WANDERMATCH_API.replace(/\/$/, '');
       }
+      // Auto-detect: if deployed (not localhost), use same origin
+      if (typeof window !== 'undefined' && window.location &&
+          !window.location.hostname.includes('localhost') &&
+          !window.location.hostname.includes('127.0.0.1')) {
+        return window.location.origin;
+      }
     } catch (_) {}
     return 'http://localhost:8080';
   }
@@ -38,6 +50,7 @@
       this.socket = null;
       this.tripId = null;
 
+      // Current itinerary version contract
       this.itinerary = { id: null, version: null };
 
       this._handlers = new Map();
@@ -211,6 +224,10 @@
       return this._fetch('/trips');
     }
 
+    listMyTrips() {
+      return this._fetch('/trips/mine');
+    }
+
     getTrip(tripId) {
       return this._fetch(`/trips/${tripId}`);
     }
@@ -289,6 +306,24 @@
     }
 
     /* ---------------- Proposals & Voting ---------------- */
+
+    listGlobalProposals() {
+      return this._fetch('/proposals');
+    }
+
+    proposeGlobal(proposal) {
+      return this._fetch('/proposals', {
+        method: 'POST',
+        body: proposal
+      });
+    }
+
+    voteGlobal(proposalId, value = 'yes', comment = null, voterName = 'you', remove = false) {
+      return this._fetch(`/proposals/${proposalId}/vote`, {
+        method: 'POST',
+        body: { value, comment, voterName, remove }
+      });
+    }
 
     propose(tripId, proposal) {
       return this._fetch(`/trips/${tripId}/proposals`, {
